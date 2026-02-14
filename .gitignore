@@ -1,8 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# venv
 .venv/
 venv/
+
+# env
+.env
+.env.*
+
+# OS/editor
+.DS_Store
+.vscode/
+.idea/
+
+# Node (if any ever returns)
 node_modules/
 .next/
-.pytest_cache/
-.env
-__pycache__/
-.DS_Store
+out/
+coverage/
