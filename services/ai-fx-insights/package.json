@@ -1,0 +1,7 @@
+{
+  "name": "ai-fx-insights",
+  "private": true,
+  "scripts": {
+    "dev": "bash scripts/dev.sh"
+  }
+}

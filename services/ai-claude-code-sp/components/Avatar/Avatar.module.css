@@ -1,0 +1,9 @@
+@reference "../../app/globals.css";
+
+.avatar {
+  @apply flex items-center justify-center rounded-full font-semibold text-white;
+  width: 48px;
+  height: 48px;
+  background-color: var(--color-primary);
+  font-size: 1.125rem;
+}

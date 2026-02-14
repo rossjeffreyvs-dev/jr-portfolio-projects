@@ -1,0 +1,7 @@
+rules:
+  - name: heater_on
+    condition: temp < 18
+  - name: all_off
+    condition: 18 <= temp <= 26
+  - name: cooler_on
+    condition: temp > 26

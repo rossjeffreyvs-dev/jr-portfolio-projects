@@ -1,0 +1,43 @@
+﻿eligibility_decision_reasoning,eligibility_decision,id,name,gender,age,diagnosis,disease_stage,treatment_history,health_status,lab_results,pregnancy_status,contraception,informed_consent,lifestyle_factors
+N/A,Pending,P001,Rajesh Kumar,Male,45,Type 2 Diabetes Mellitus,Stable,Metformin (3+ months),Good,"HbA1c: 8.0%, eGFR: 65",N/A,N/A,Yes,Non-smoker
+N/A,Pending,P002,Anjali Patel,Female,60,Type 2 Diabetes Mellitus,Stable,Metformin (5 months),Good,"HbA1c: 7.5%, eGFR: 70",Negative,Yes,Yes,Non-smoker
+N/A,Pending,P013,Arjun Singh,Male,33,Type 2 Diabetes Mellitus,Stable,Metformin (6 months),Good,"HbA1c: 7.2%, eGFR: 80",N/A,N/A,Yes,Non-smoker
+N/A,Pending,P005,Meena Sharma,Female,50,Type 2 Diabetes Mellitus,Stable,Metformin (8 months),Good,"HbA1c: 8.5%, eGFR: 68",Negative,Yes,Yes,Non-smoker
+N/A,Pending,P006,Vikram Desai,Male,62,Type 2 Diabetes Mellitus,Stable,Metformin (10 months),Good,"HbA1c: 7.8%, eGFR: 72",N/A,N/A,Yes,Non-smoker
+N/A,Pending,P015,Priya Nair,Female,40,Type 2 Diabetes Mellitus,Stable,Metformin (9 months),Good,"HbA1c: 9.2%, eGFR: 66",Negative,Yes,Yes,Non-smoker
+N/A,Pending,P008,Karan Mehta,Male,48,Type 2 Diabetes Mellitus,Stable,Metformin (7 months),Good,"HbA1c: 8.3%, eGFR: 74",N/A,N/A,Yes,Non-smoker
+N/A,Pending,P011,Ravi Bhatt,Male,50,Type 1 Diabetes Mellitus,Stable,Insulin (5 years),Good,"HbA1c: 8.5%, eGFR: 68",N/A,N/A,Yes,Non-smoker
+N/A,Pending,P012,Sita Menon,Female,45,Type 2 Diabetes Mellitus,Stable,Metformin (2 months),Good,"HbA1c: 9.0%, eGFR: 75",Negative,Yes,Yes,Non-smoker
+N/A,Pending,P004,Amit Joshi,Male,55,Type 2 Diabetes Mellitus,Stable,Metformin (6 months),Good,"HbA1c: 6.5%, eGFR: 80",N/A,N/A,Yes,Non-smoker
+N/A,Pending,P014,Kavita Reddy,Female,35,Type 2 Diabetes Mellitus,Stable,Metformin (8 months),Good,"HbA1c: 8.0%, eGFR: 50",Negative,Yes,Yes,Non-smoker
+N/A,Pending,P007,Deepak Chawla,Male,40,Type 2 Diabetes Mellitus,Stable,Metformin (6 months),Good,"HbA1c: 8.0%, eGFR: 65",N/A,N/A,No,Non-smoker
+N/A,Pending,P035,Nisha Agarwal,Female,38,Type 2 Diabetes Mellitus,Stable,Metformin (4 months),Good,"HbA1c: 8.1%, eGFR: 70",Negative,Yes,Yes,Non-smoker
+N/A,Pending,P017,Vikram Sinha,Male,65,Type 2 Diabetes Mellitus,Stable,Metformin (6 months),Good,"HbA1c: 9.0%, eGFR: 78",N/A,N/A,Yes,Non-smoker
+N/A,Pending,P030,Ananya Bose,Female,50,Type 2 Diabetes Mellitus,Stable,Metformin (9 months),Good,"HbA1c: 7.3%, eGFR: 69",Negative,Yes,Yes,Non-smoker
+N/A,Pending,P019,Rajiv Tandon,Male,44,Type 2 Diabetes Mellitus,Stable,Metformin (1 year),Good,"HbA1c: 8.5%, eGFR: 72",N/A,N/A,Yes,Non-smoker
+N/A,Pending,P020,Meera Chauhan,Female,37,Type 2 Diabetes Mellitus,Stable,Metformin (5 months),Good,"HbA1c: 7.9%, eGFR: 67",Negative,Yes,Yes,Non-smoker
+N/A,Pending,P021,Sanjay Yadav,Male,59,Type 2 Diabetes Mellitus,Stable,Metformin (8 months),Good,"HbA1c: 9.1%, eGFR: 76",N/A,N/A,Yes,Non-smoker
+N/A,Pending,P022,Ritu Thakur,Female,42,Type 2 Diabetes Mellitus,Stable,Metformin (7 months),Good,"HbA1c: 8.2%, eGFR: 74",Negative,Yes,Yes,Non-smoker
+N/A,Pending,P031,Ashok Menon,Male,53,Type 2 Diabetes Mellitus,Stable,Metformin (10 months),Good,"HbA1c: 7.6%, eGFR: 68",N/A,N/A,Yes,Non-smoker
+N/A,Pending,P024,Kavya Bhatt,Female,49,Type 2 Diabetes Mellitus,Stable,Metformin (11 months),Good,"HbA1c: 8.4%, eGFR: 71",Negative,Yes,Yes,Non-smoker
+N/A,Pending,P025,Aditya Joshi,Male,61,Type 2 Diabetes Mellitus,Stable,Metformin (6 months),Good,"HbA1c: 7.7%, eGFR: 73",N/A,N/A,Yes,Non-smoker
+N/A,Pending,P026,Manish Gupta,Male,29,Type 2 Diabetes Mellitus,Stable,Metformin (5 months),Good,"HbA1c: 8.0%, eGFR: 70",N/A,N/A,Yes,Smoker
+N/A,Pending,P028,Arjun Malhotra,Male,54,Secondary Diabetes,Stable,Metformin (6 months),Good,"HbA1c: 8.5%, eGFR: 75",N/A,N/A,Yes,Occasional drinker
+N/A,Pending,P029,Neha Vyas,Female,46,Type 2 Diabetes Mellitus,Stable,Metformin (2 months),Good,"HbA1c: 9.2%, eGFR: 68",Negative,Yes,Yes,Non-smoker
+N/A,Pending,P018,Pranav Desai,Male,51,Type 2 Diabetes Mellitus,Stable,Metformin (7 months),Good,"HbA1c: 6.9%, eGFR: 80",N/A,N/A,Yes,Smoker
+N/A,Pending,P023,Shalini Iyer,Female,60,Type 2 Diabetes Mellitus,Stable,Metformin (6 months),Good,"HbA1c: 8.0%, eGFR: 55",Negative,Yes,Yes,Non-smoker
+N/A,Pending,P033,Deepa Rathi,Female,36,Type 2 Diabetes Mellitus,Stable,Metformin (8 months),Good,"HbA1c: 8.0%, eGFR: 70",Positive,No,Yes,Non-smoker
+N/A,Pending,P062,Sameer Chauhan,Unknown / Undefined,60,Stage II Hypertension,Stage II,No recent investigational drugs,ECOG 1,"Creatinine: 1.4 mg/dL, BP: 165/97 mmHg",N/A,N/A,No,Non-smoker
+N/A,Pending,P086,Rahul Mehta,Male,45,Type 2 Diabetes,Stable,No recent investigational drugs,ECOG 0,"Creatinine: Normal, LFT: Normal, HbA1c: 7.5%",N/A,N/A,Yes,"Non-smoker, alcohol: 10 units/week"
+N/A,Pending,P080,Yash Rajan,Male,55,Type 2 Diabetes,Stable,No recent investigational drugs,ECOG 0,"Creatinine: Normal, LFT: Normal, HbA1c: 8.2%",N/A,N/A,Yes,"Non-smoker, alcohol: 14 units/week"
+N/A,Pending,P074,Anjali Sood,Female,48,Type 2 Diabetes,Stable,No recent investigational drugs,ECOG 1,"Creatinine: Normal, LFT: Normal, HbA1c: 7.3%",Negative,Yes,Yes,"Non-smoker, alcohol: 7 units/week"
+N/A,Pending,P075,Deepak Trivedi,Unknown / Undefined,62,Type 2 Diabetes,Stable,Metformin (5 months),Good,"Creatinine: Normal, LFT: Normal, HbA1c: 8.5%, eGFR: 80",N/A,N/A,Yes,"Non-smoker, alcohol: 11 units/week"
+N/A,Pending,P079,Pradeep Sethi,Male,36,Type 2 Diabetes,Stable,Metformin (4 months),Good,"Creatinine: Normal, LFT: Normal, HbA1c: 9.2%, eGFR: 79",N/A,N/A,N/A,"Non-smoker, alcohol: 4 units/week"
+N/A,Pending,P073,Rina Dasgupta,Female,29,Type 2 Diabetes,Stable,No recent investigational drugs,ECOG 0,"Creatinine: Normal, LFT: Normal, HbA1c: 7.5%",Negative,Yes,N/A,"Non-smoker, alcohol: 10 units/week"
+N/A,Pending,P070,Vivek Kapoor,Male,72,Type 2 Diabetes,Stable,No recent investigational drugs,ECOG 1,"Creatinine: Normal, LFT: Normal, HbA1c: 8.0%",N/A,N/A,N/A,"Non-smoker, alcohol: 8 units/week"
+N/A,Pending,P082,Sunita Joshi,Female,55,Type 1 Diabetes,Stable,No recent investigational drugs,ECOG 0,"Creatinine: Normal, LFT: Normal, HbA1c: 9.0%",Negative,Yes,Yes,"Non-smoker, alcohol: 6 units/week"
+N/A,Pending,P083,Rohit Malhotra,Male,50,Type 2 Diabetes,Stable,Recent treatment with Glucoril,ECOG 0,"Creatinine: Normal, LFT: Normal, HbA1c: 7.8%",N/A,N/A,Yes,"Non-smoker, alcohol: 12 units/week"
+N/A,Pending,P085,Sanjay Ahuja,Male,60,Type 2 Diabetes,Stable,No recent investigational drugs,ECOG 1,"Creatinine: High, LFT: Normal, HbA1c: 7.3% and eGFR: 78",N/A,N/A,Yes,"Non-smoker, alcohol: 7 units/week"
+N/A,Pending,P034,Mohit Verma,Male,58,Type 2 Diabetes Mellitus,Stable,Metformin (5 months),Good,"HbA1c: 7.8%, eGFR: 72",N/A,N/A,Yes,Heavy drinker
+N/A,Pending,P016,Anjali Sethi,Female,39,Type 2 Diabetes Mellitus,Stable,Metformin (6 months),Good,"HbA1c: 8.0%, eGFR: 65",Negative,Yes,Yes,Smoker
+N/A,Pending,P115,Anjali Rane,Female,60,COPD,Moderate,No recent investigational drugs,ECOG 1,"FEV1: 66% predicted, Chest X-ray: Normal",Negative,Yes,No,Non-smoker

@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom global overrides (if needed) */
+body {
+  @apply bg-gray-50 text-gray-800 font-sans;
+}
+
+.table-header {
+  @apply bg-gray-100 uppercase text-sm font-semibold text-gray-600;
+}
+
+.badge-suitable {
+  @apply bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium;
+}
+
+.badge-not-suitable {
+  @apply bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium;
+}
+
+.badge-manual {
+  @apply bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium;
+}
