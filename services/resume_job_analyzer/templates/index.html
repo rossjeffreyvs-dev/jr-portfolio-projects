@@ -6,467 +6,15 @@
     <title>AI Résumé Match | JR Projects</title>
 
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
       rel="stylesheet"
     />
     <link rel="icon" href="https://www.jeffrey-ross.me/favicon.ico" />
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
-    <style>
-      body {
-        margin: 0;
-        font-family: "Inter", sans-serif;
-        background-color: #f9fafb;
-        color: #111827;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        min-height: 100vh;
-        scroll-behavior: smooth;
-      }
-
-      nav {
-        width: 100%;
-        background: white;
-        border-bottom: 1px solid #e5e7eb;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
-        position: sticky;
-        top: 0;
-        z-index: 100;
-      }
-
-      .nav-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0.75rem 2rem;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-      }
-
-      .nav-left {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-weight: 600;
-        font-size: 1.25rem;
-        color: #111827;
-        text-decoration: none;
-      }
-
-      .nav-left span.logo {
-        border: 2px solid #111827;
-        padding: 0.25rem 0.5rem;
-        border-radius: 0.25rem;
-        font-weight: 700;
-      }
-
-      .nav-right {
-        display: flex;
-        align-items: center;
-        gap: 1.75rem;
-      }
-
-      .nav-right a {
-        color: #374151;
-        text-decoration: none;
-        font-weight: 500;
-        font-size: 0.95rem;
-        transition: color 0.2s ease;
-      }
-
-      .nav-right a:hover,
-      .nav-right a.active {
-        color: #111827;
-        text-decoration: underline;
-        text-underline-offset: 6px;
-      }
-
-      header {
-        text-align: center;
-        margin: 1.1rem 0 1rem;
-      }
-
-      header h1 {
-        font-size: 2.25rem;
-        font-weight: 600;
-      }
-
-      header p {
-        color: #6b7280;
-        font-size: 1.1rem;
-      }
-
-      .case-study p,
-      li {
-        font-size: 0.8rem;
-      }
-
-      .case-study h2 {
-        margin-top: 0rem;
-      }
-
-      .case-study h3 {
-        color: #2563eb;
-        font-size: 1rem;
-        margin-top: 1.25rem;
-        margin-bottom: 0.25rem;
-      }
-
-      .case-study h3 + p {
-        margin-top: 0rem;
-      }
-
-      .case-study h4 {
-        margin: 0rem;
-        padding: 0rem;
-      }
-
-      .case-study ul {
-        margin: 0rem;
-        padding: 0rem;
-        padding-left: 1rem;
-      }
-
-      .case-study h4 {
-        font-size: 0.9rem;
-        margin-bottom: 0.25rem;
-      }
-      .case-study h4 + p {
-        margin-top: 0;
-      }
-
-      .case-study h2 + section {
-        margin-top: 0rem;
-        margin-bottom: 0rem;
-      }
-
-      .case-study section {
-        margin: 0rem;
-      }
-
-      .case-study section section {
-        margin-top: 0rem;
-        margin-left: 1rem;
-      }
-
-      .tabs {
-        display: flex;
-        justify-content: center;
-        gap: 1rem;
-        margin-bottom: 1.5rem;
-      }
-
-      .tab-btn {
-        padding: 0.6rem 1.25rem;
-        border-radius: 0.5rem;
-        font-weight: 600;
-        border: 1px solid #d1d5db;
-        cursor: pointer;
-        background: white;
-        color: #111827;
-        transition: all 0.25s ease;
-      }
-
-      .tab-btn:hover {
-        background: #f3f4f6;
-      }
-
-      .tab-btn.active {
-        background-color: #2563eb;
-        color: white;
-        border-color: #111827;
-      }
-
-      .card {
-        background: #fff;
-        border-radius: 1rem;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-        padding: 2rem;
-        width: 90%;
-        max-width: 700px;
-        margin-bottom: 2rem;
-        opacity: 0;
-        transform: translateY(10px);
-        transition:
-          opacity 0.4s ease,
-          transform 0.4s ease;
-      }
-
-      .card.active {
-        opacity: 1;
-        transform: translateY(0);
-      }
-
-      form {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-      }
-
-      textarea {
-        border: 1px solid #e5e7eb;
-        border-radius: 0.5rem;
-        padding: 0.75rem;
-        font-size: 1rem;
-        font-family: inherit;
-        min-height: 150px;
-        resize: vertical;
-      }
-
-      /* ===== Unified primary button styling (Analyze Match + Upload Zone) ===== */
-      .primary-btn {
-        background-color: #111827;
-        color: white;
-        border: none;
-        padding: 0.9rem 1.25rem;
-        border-radius: 0.5rem;
-        cursor: pointer;
-        font-size: 1rem;
-        font-weight: 500;
-        transition: all 0.2s ease;
-        position: relative;
-        overflow: hidden;
-      }
-
-      .primary-btn:hover {
-        background-color: #2563eb;
-      }
-
-      .primary-btn.loading {
-        background-color: #1f2937;
-        cursor: not-allowed;
-        pointer-events: none;
-      }
-
-      .primary-btn.loading::after {
-        content: "";
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 1.2rem;
-        height: 1.2rem;
-        margin: -0.6rem 0 0 -0.6rem;
-        border: 2px solid white;
-        border-top-color: transparent;
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
-      }
-
-      /* ===== Drag-and-drop upload zone (styled exactly like primary button) ===== */
-      .upload-zone {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.6rem;
-        text-align: center;
-        user-select: none;
-      }
-
-      .upload-zone small {
-        display: block;
-        opacity: 0.85;
-        font-weight: 400;
-        margin-top: 0.15rem;
-      }
-
-      .upload-zone.dragover {
-        transform: translateY(-1px);
-        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.15);
-      }
-
-      /* File name "selected" animation */
-      .file-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        background: #f3f4f6;
-        color: #111827;
-        border: 1px solid #e5e7eb;
-        border-radius: 999px;
-        padding: 0.45rem 0.75rem;
-        font-size: 0.95rem;
-        line-height: 1;
-        max-width: 100%;
-        overflow: hidden;
-      }
-
-      .file-pill .name {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 520px;
-      }
-
-      .file-pill .clear {
-        border: none;
-        background: transparent;
-        cursor: pointer;
-        font-size: 1.05rem;
-        line-height: 1;
-        opacity: 0.7;
-        padding: 0;
-      }
-
-      .file-pill .clear:hover {
-        opacity: 1;
-      }
-
-      .file-animate-in {
-        animation: fileIn 0.35s ease forwards;
-      }
-
-      @keyframes fileIn {
-        from {
-          opacity: 0;
-          transform: translateY(6px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      button {
-        /* keep existing button selector for other buttons if needed */
-      }
-
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-
-      .progress-bar {
-        width: 0%;
-        height: 4px;
-        background: #2563eb;
-        border-radius: 2px;
-        margin-top: 0.5rem;
-        opacity: 1;
-        transition:
-          width 1s ease,
-          opacity 0.6s ease;
-      }
-
-      .progress-bar.fade-out {
-        opacity: 0;
-      }
-
-      .result {
-        margin-top: 2rem;
-        background-color: #f3f4f6;
-        padding: 1.5rem;
-        border-radius: 0.75rem;
-        font-size: 0.95rem;
-        line-height: 1.6;
-      }
-
-      .hidden {
-        display: none;
-      }
-
-      .match-item {
-        margin-bottom: 0.75rem;
-        background: white;
-        border-radius: 0.5rem;
-        padding: 0.75rem 1rem;
-        border-left: 4px solid #22c55e;
-        display: flex;
-        align-items: flex-start;
-        gap: 0.5rem;
-        opacity: 0;
-        transform: translateY(10px);
-      }
-
-      .match-item.not {
-        border-left-color: #ef4444;
-      }
-
-      .match-item span.icon {
-        font-size: 1.3rem;
-        flex-shrink: 0;
-        color: #22c55e;
-      }
-
-      .match-item.not span.icon {
-        color: #ef4444;
-      }
-
-      @keyframes fadeInSeq {
-        from {
-          opacity: 0;
-          transform: translateY(10px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      footer {
-        margin-top: auto;
-        margin-bottom: 1rem;
-        color: #9ca3af;
-        font-size: 0.9rem;
-        text-align: center;
-      }
-
-      /* small helper text styling (your existing class is not defined; keep it simple) */
-      .helper-text {
-        color: #6b7280;
-        font-size: 0.9rem;
-        margin-top: -0.35rem;
-      }
-
-      .file-meta {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.75rem;
-        flex-wrap: wrap;
-        margin-top: -0.35rem;
-      }
-
-      /* ✅ NEW: put "Choose resume" and "Use sample" side-by-side, 50/50 */
-      .dual-action-row {
-        display: flex;
-        gap: 0.75rem;
-        width: 100%;
-      }
-
-      .dual-action-row > * {
-        flex: 1 1 0;
-        width: 50%;
-      }
-
-      /* Ensure both controls fill their half */
-      .dual-action-row .primary-btn {
-        width: 100%;
-      }
-
-      /* ✅ NEW: blue background for sample button */
-      .sample-btn {
-        background-color: #2563eb;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-      }
-
-      .sample-btn:hover {
-        background-color: #1d4ed8;
-      }
-
-      @media (max-width: 640px) {
-        .dual-action-row {
-          flex-direction: column;
-        }
-        .dual-action-row > * {
-          width: 100%;
-        }
-      }
-    </style>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='resume_job_analyzer_project.css') }}"
+    />
   </head>
 
   <body class="case-study">
@@ -513,14 +61,12 @@
       id="demo"
       class="card {{ '' if active_tab == 'demo' else 'hidden' }} {{ 'active' if active_tab == 'demo' else '' }}"
     >
-      <!-- ✅ Optional: show errors (doesn’t affect your animations) -->
       {% if error %}
       <div style="margin-top: 0.75rem; color: #991b1b; font-weight: 600">
         {{ error }}
       </div>
       {% endif %}
 
-      <!-- Main form -->
       <form
         id="matchForm"
         method="post"
@@ -535,9 +81,7 @@
 {{ job_desc or "" }}</textarea
         >
 
-        <!-- ✅ UPDATED: 50/50 row: Choose resume (left) + Use sample (right) -->
         <div class="dual-action-row">
-          <!-- Choose resume (upload zone) -->
           <label
             for="resume_file"
             id="uploadZone"
@@ -548,7 +92,6 @@
             <small>(or drag & drop here)</small>
           </label>
 
-          <!-- Use sample (submits to /demo) -->
           <button
             id="demoBtn"
             class="primary-btn sample-btn"
@@ -561,7 +104,6 @@
           </button>
         </div>
 
-        <!-- Native file input hidden -->
         <input
           type="file"
           name="resume_file"
@@ -571,7 +113,6 @@
           hidden
         />
 
-        <!-- Animated filename / clear control -->
         <div class="file-meta">
           <p class="helper-text">
             Accepted file types: <strong>PDF, DOCX</strong>
@@ -579,7 +120,6 @@
           <div id="fileInfo" class="hidden"></div>
         </div>
 
-        <!-- Analyze button -->
         <button id="analyzeBtn" class="primary-btn" type="submit">
           Analyze Match
         </button>
@@ -621,7 +161,6 @@
           container.appendChild(item);
         });
 
-        // Fade out progress bar, reset button, and scroll to results
         if (bar) {
           bar.style.width = "100%";
           setTimeout(() => {
@@ -639,150 +178,391 @@
 
     <div
       id="description"
-      class="card {{ '' if active_tab != 'demo' else 'hidden' }} {{ 'active' if active_tab != 'demo' else '' }}"
+      class="card description-card {{ '' if active_tab != 'demo' else 'hidden' }} {{ 'active' if active_tab != 'demo' else '' }}"
     >
-      <h2>
-        <strong>AI-Assisted Résumé Match</strong>
-      </h2>
+      <section class="project-hero">
+        <div class="eyebrow">AI-Powered Job Search Workflow</div>
+        <h2>AI Résumé Analyzer</h2>
+        <p class="hero-copy">
+          AI Résumé Analyzer is a generative AI web application that helps
+          candidates evaluate how well their résumé aligns with a target job
+          description. Users upload a résumé, paste a job posting, and receive a
+          structured analysis of matched skills, missing qualifications, and
+          explanatory context.
+        </p>
+
+        <div class="callout-grid">
+          <div class="callout-card">
+            <span class="callout-label">Live Demo</span>
+            <span class="callout-value">resume-analyzer.jeffrey-ross.me</span>
+          </div>
+          <div class="callout-card">
+            <span class="callout-label">Architecture</span>
+            <span class="callout-value"
+              >Gateway-routed multi-service AI platform</span
+            >
+          </div>
+          <div class="callout-card">
+            <span class="callout-label">Typical Flow</span>
+            <span class="callout-value"
+              >~5–15 seconds depending on file size and model latency</span
+            >
+          </div>
+        </div>
+
+        <div class="highlights-panel">
+          <div class="highlights-title">System Highlights</div>
+          <div class="highlight-pills">
+            <span class="highlight-pill">LLM-powered semantic matching</span>
+            <span class="highlight-pill">PDF and DOCX parsing</span>
+            <span class="highlight-pill">Explainable output formatting</span>
+            <span class="highlight-pill">Gateway-based routing</span>
+            <span class="highlight-pill">Container-ready deployment</span>
+          </div>
+        </div>
+      </section>
 
       <section id="overview">
         <h3>Overview</h3>
         <p>
-          AI Résumé Match is a
-          <strong>generative AI web application</strong> that helps candidates
-          quickly evaluate how well their résumé aligns with a job description.
-          Users upload a résumé and paste a job posting, and the system returns
-          a clear breakdown of matched skills, missing qualifications, and
-          explanatory context using large language models.
+          The application addresses a common problem in the job search process:
+          candidates often know they are broadly qualified for a role, but they
+          lack fast, actionable feedback on how their experience maps to a
+          specific job description. Rather than relying on simple keyword
+          matching, the system uses large language models to compare résumé
+          content and job requirements semantically, then returns structured
+          findings that are easier to interpret and act on.
         </p>
         <p>
-          Beyond the end-user functionality, this project also served as a case
-          study in AI-assisted software development, using
-          <strong>Claude Code as an in-repo pair programmer</strong> to
-          accelerate refactoring, debugging, and deployment.
+          Résumé Analyzer is also part of a broader project,
+          <strong>jr-portfolio-projects</strong>, a multi-service platform
+          designed to host independent AI-driven demos behind a unified gateway.
+          That architecture lets each application evolve independently while
+          still being served through a single public entry point.
         </p>
       </section>
 
       <section id="problem">
         <h3>Problem</h3>
         <p>
-          As the application evolved, the codebase grew to include multiple
-          routes, parsing paths (PDF/DOCX), UI states, and deployment
-          configurations. Making cross-cutting changes—while preserving behavior
-          and testability—became increasingly time-consuming and error-prone.
+          Candidates frequently tailor résumés manually, which makes it
+          difficult to quickly understand where they align strongly with a role
+          and where they may be underselling relevant experience. Existing tools
+          often reduce the problem to keyword frequency, which can miss context,
+          transferable skills, and reasoning behind a match decision.
+        </p>
+        <p>
+          On the implementation side, the application needed to support multiple
+          document formats, file upload flows, AI prompt orchestration, and
+          deployment into a larger multi-service environment without becoming
+          tightly coupled to the rest of the platform.
         </p>
       </section>
 
-      <section id="why-claude-code">
-        <h3>Why Claude Code</h3>
+      <section id="solution">
+        <h3>Solution</h3>
         <p>
-          I used Claude Code from Anthropic because it operates directly inside
-          the repository, understands cross-file dependencies, and can run and
-          react to real command output—unlike chat-only coding assistants.
+          The solution combines document parsing, prompt construction, and
+          LLM-based reasoning in a simple workflow. Users upload a PDF or DOCX
+          résumé, provide a target job description, and receive analysis that
+          focuses on:
         </p>
-        <p>
-          This allowed me to safely iterate on a real production codebase rather
-          than isolated snippets.
-        </p>
-      </section>
-
-      <section id="how-claude-code-was-used">
-        <h3>How Claude Code Was Used</h3>
-
         <ul>
+          <li>matched qualifications and skills</li>
+          <li>missing or weakly represented requirements</li>
+          <li>explanatory context behind the assessment</li>
           <li>
-            <h4>Repo-aware refactoring</h4>
-            <p>
-              Claude Code analyzed the full project structure and proposed
-              multi-file refactors to consolidate duplicated logic across résumé
-              parsing, request handling, and response formatting—while
-              preserving existing interfaces.
-            </p>
-          </li>
-
-          <li>
-            <h4>Command-loop debugging</h4>
-            <p>
-              I used Claude Code to run the application locally, inspect runtime
-              and container logs, and iteratively fix issues based on actual
-              execution output rather than static analysis.
-            </p>
-          </li>
-
-          <li>
-            <h4>Safe, reviewable changes</h4>
-            <p>
-              All suggested updates were surfaced as diffs and manually reviewed
-              before applying, ensuring full developer control over production
-              code.
-            </p>
-          </li>
-
-          <li>
-            <h4>Deployment validation</h4>
-            <p>
-              Claude Code assisted with Docker and AWS Lightsail configuration
-              changes, validating container behavior during build and runtime.
-            </p>
+            clearer visibility into how a résumé might be improved for a target
+            role
           </li>
         </ul>
+      </section>
+
+      <section id="diagram-request-flow">
+        <h3>Diagram: End-to-End Request Flow</h3>
+        <figure class="diagram-card">
+          <svg
+            viewBox="0 0 980 260"
+            role="img"
+            aria-label="End-to-end application flow"
+          >
+            <defs>
+              <marker
+                id="arrow-a"
+                markerWidth="10"
+                markerHeight="10"
+                refX="8"
+                refY="5"
+                orient="auto"
+              >
+                <path d="M0,0 L10,5 L0,10 z"></path>
+              </marker>
+            </defs>
+            <rect x="30" y="70" width="170" height="90" rx="18"></rect>
+            <text x="115" y="108" text-anchor="middle" class="svg-title">
+              Candidate
+            </text>
+            <text x="115" y="132" text-anchor="middle" class="svg-text">
+              Upload résumé
+            </text>
+            <text x="115" y="152" text-anchor="middle" class="svg-text">
+              Paste job description
+            </text>
+
+            <rect x="255" y="70" width="190" height="90" rx="18"></rect>
+            <text x="350" y="108" text-anchor="middle" class="svg-title">
+              Flask UI
+            </text>
+            <text x="350" y="132" text-anchor="middle" class="svg-text">
+              Form handling
+            </text>
+            <text x="350" y="152" text-anchor="middle" class="svg-text">
+              Upload validation
+            </text>
+
+            <rect x="500" y="50" width="190" height="70" rx="18"></rect>
+            <text x="595" y="82" text-anchor="middle" class="svg-title">
+              Parsing Layer
+            </text>
+            <text x="595" y="104" text-anchor="middle" class="svg-text">
+              PyPDF2 / python-docx
+            </text>
+
+            <rect x="500" y="140" width="190" height="70" rx="18"></rect>
+            <text x="595" y="172" text-anchor="middle" class="svg-title">
+              Prompt Orchestration
+            </text>
+            <text x="595" y="194" text-anchor="middle" class="svg-text">
+              Structured comparison prompt
+            </text>
+
+            <rect x="745" y="70" width="205" height="90" rx="18"></rect>
+            <text x="847.5" y="108" text-anchor="middle" class="svg-title">
+              OpenAI Model
+            </text>
+            <text x="847.5" y="132" text-anchor="middle" class="svg-text">
+              Skill extraction
+            </text>
+            <text x="847.5" y="152" text-anchor="middle" class="svg-text">
+              Semantic match explanation
+            </text>
+
+            <line
+              x1="200"
+              y1="115"
+              x2="255"
+              y2="115"
+              marker-end="url(#arrow-a)"
+            ></line>
+            <line
+              x1="445"
+              y1="95"
+              x2="500"
+              y2="85"
+              marker-end="url(#arrow-a)"
+            ></line>
+            <line
+              x1="445"
+              y1="135"
+              x2="500"
+              y2="175"
+              marker-end="url(#arrow-a)"
+            ></line>
+            <line
+              x1="690"
+              y1="85"
+              x2="745"
+              y2="115"
+              marker-end="url(#arrow-a)"
+            ></line>
+            <line
+              x1="690"
+              y1="175"
+              x2="745"
+              y2="125"
+              marker-end="url(#arrow-a)"
+            ></line>
+          </svg>
+          <figcaption>
+            The application flow combines file parsing, structured prompt
+            construction, and LLM reasoning to produce explainable match output.
+          </figcaption>
+        </figure>
       </section>
 
       <section id="technical-architecture">
         <h3>Technical Architecture</h3>
 
-        <ul>
-          <li>
+        <div class="architecture-grid">
+          <div class="arch-block">
             <h4>Frontend</h4>
             <ul>
               <li>HTML, CSS, JavaScript</li>
-              <li>
-                Responsive UI with progress animations for file upload and
-                analysis
-              </li>
+              <li>Responsive upload and results UI</li>
+              <li>Progress feedback and structured result display</li>
             </ul>
-          </li>
+          </div>
 
-          <li>
+          <div class="arch-block">
             <h4>Backend</h4>
             <ul>
-              <li>Flask (Python)</li>
-              <li>PDF and DOCX résumé parsing</li>
-              <li>Structured prompt orchestration</li>
+              <li>Python with Flask</li>
+              <li>PDF parsing with PyPDF2</li>
+              <li>DOCX parsing with python-docx</li>
+              <li>Prompt preparation and response formatting</li>
             </ul>
-          </li>
+          </div>
 
-          <li>
-            <h4>AI Model</h4>
+          <div class="arch-block">
+            <h4>AI Layer</h4>
             <ul>
-              <li>OpenAI GPT-4o for skill extraction and comparison</li>
+              <li>OpenAI model integration</li>
+              <li>Semantic comparison of résumé vs. role requirements</li>
+              <li>Human-readable explanation of strengths and gaps</li>
             </ul>
-          </li>
+          </div>
 
-          <li>
-            <h4>Deployment</h4>
+          <div class="arch-block">
+            <h4>Deployment Pattern</h4>
             <ul>
-              <li>Dockerized application</li>
-              <li>AWS Lightsail Container Service</li>
+              <li>Standalone local execution for rapid testing</li>
+              <li>Gateway-routed multi-service architecture</li>
+              <li>Container-ready design for AWS Lightsail deployment</li>
             </ul>
-          </li>
-        </ul>
+          </div>
+        </div>
+      </section>
+
+      <section id="diagram-platform">
+        <h3>
+          Diagram: Platform Architecture in <code>jr-portfolio-projects</code>
+        </h3>
+        <figure class="diagram-card">
+          <svg
+            viewBox="0 0 980 360"
+            role="img"
+            aria-label="Platform architecture diagram"
+          >
+            <defs>
+              <marker
+                id="arrow-b"
+                markerWidth="10"
+                markerHeight="10"
+                refX="8"
+                refY="5"
+                orient="auto"
+              >
+                <path d="M0,0 L10,5 L0,10 z"></path>
+              </marker>
+            </defs>
+
+            <rect x="365" y="20" width="250" height="70" rx="18"></rect>
+            <text x="490" y="50" text-anchor="middle" class="svg-title">
+              Public Entry Point
+            </text>
+            <text x="490" y="72" text-anchor="middle" class="svg-text">
+              Subdomains / gateway host routing
+            </text>
+
+            <rect x="315" y="125" width="350" height="80" rx="20"></rect>
+            <text x="490" y="160" text-anchor="middle" class="svg-title">
+              Gateway (FastAPI / ASGI)
+            </text>
+            <text x="490" y="182" text-anchor="middle" class="svg-text">
+              Routes requests to independent services
+            </text>
+
+            <rect x="40" y="255" width="200" height="75" rx="18"></rect>
+            <text x="140" y="285" text-anchor="middle" class="svg-title">
+              Résumé Analyzer
+            </text>
+            <text x="140" y="307" text-anchor="middle" class="svg-text">
+              Flask app
+            </text>
+
+            <rect x="280" y="255" width="200" height="75" rx="18"></rect>
+            <text x="380" y="285" text-anchor="middle" class="svg-title">
+              FX Insights
+            </text>
+            <text x="380" y="307" text-anchor="middle" class="svg-text">
+              Independent service
+            </text>
+
+            <rect x="520" y="255" width="200" height="75" rx="18"></rect>
+            <text x="620" y="285" text-anchor="middle" class="svg-title">
+              Clinical Trial Evaluator
+            </text>
+            <text x="620" y="307" text-anchor="middle" class="svg-text">
+              Independent service
+            </text>
+
+            <rect x="760" y="255" width="180" height="75" rx="18"></rect>
+            <text x="850" y="285" text-anchor="middle" class="svg-title">
+              Smart Thermostat
+            </text>
+            <text x="850" y="307" text-anchor="middle" class="svg-text">
+              Independent service
+            </text>
+
+            <line
+              x1="490"
+              y1="90"
+              x2="490"
+              y2="125"
+              marker-end="url(#arrow-b)"
+            ></line>
+            <line
+              x1="490"
+              y1="205"
+              x2="140"
+              y2="255"
+              marker-end="url(#arrow-b)"
+            ></line>
+            <line
+              x1="490"
+              y1="205"
+              x2="380"
+              y2="255"
+              marker-end="url(#arrow-b)"
+            ></line>
+            <line
+              x1="490"
+              y1="205"
+              x2="620"
+              y2="255"
+              marker-end="url(#arrow-b)"
+            ></line>
+            <line
+              x1="490"
+              y1="205"
+              x2="850"
+              y2="255"
+              marker-end="url(#arrow-b)"
+            ></line>
+          </svg>
+          <figcaption>
+            Résumé Analyzer is one of several small applications designed to run
+            behind a unified gateway, making the overall platform easier to
+            extend and deploy.
+          </figcaption>
+        </figure>
       </section>
 
       <section id="results-impact">
         <h3>Results &amp; Impact</h3>
         <ul>
-          <li>Reduced duplicated backend logic by ~40%</li>
           <li>
-            Accelerated refactoring and debugging cycles from hours to minutes
+            Delivered a working AI-powered application for résumé-to-role
+            evaluation
           </li>
           <li>
-            Improved clarity and maintainability of résumé parsing and analysis
-            flow
+            Created a reusable project pattern for additional AI-driven demos
           </li>
           <li>
-            Successfully deployed and validated in a containerized production
-            environment
+            Validated standalone execution and gateway-based routing locally
+          </li>
+          <li>
+            Established a clear path toward Docker and AWS Lightsail deployment
           </li>
         </ul>
       </section>
@@ -791,17 +571,17 @@
         <h3>Key Takeaways</h3>
         <ul>
           <li>
-            AI tools are most effective when used inside the development
-            workflow, not alongside it
+            Useful AI applications depend on solid integration between file
+            ingestion, prompt design, output formatting, and user experience.
           </li>
           <li>
-            Claude Code functioned as a context-aware implementation assistant,
-            allowing focus on architecture and product decisions rather than
-            mechanical refactors
+            Multi-service architecture makes it easier to add new demos without
+            tightly coupling them into one codebase runtime.
           </li>
           <li>
-            Human-in-the-loop review remains critical for safe, production-grade
-            AI-assisted development
+            Gateway-based routing provides a clean operational pattern for
+            hosting several independent AI applications behind a single public
+            entry point.
           </li>
         </ul>
       </section>
@@ -818,9 +598,6 @@
     </footer>
 
     <script>
-      // ✅ NEW: Route-aware submit handler (keeps existing behavior)
-      // - If user clicked "Use Sample..." -> skip file validation, just run progress + submit to /demo
-      // - Otherwise -> run normal validation + progress
       function handleSubmit(e) {
         const submitter = e && e.submitter;
         const isDemo = submitter && submitter.id === "demoBtn";
@@ -831,7 +608,6 @@
         return validateFileType() && startProgress();
       }
 
-      // ===== File validation updated to work with hidden input + drag & drop =====
       function validateFileType() {
         const fileInput = document.getElementById("resume_file");
         const file = fileInput.files && fileInput.files[0];
@@ -850,22 +626,17 @@
         return true;
       }
 
-      // ===== Tabs =====
       function showTab(tabId) {
         try {
           localStorage.setItem("ai-resume-match.activeTab", tabId);
-        } catch (e) {
-          // ignore storage issues (private browsing, etc.)
-        }
+        } catch (e) {}
 
-        // Keep URL in sync so refresh/share preserves the selected tab
         try {
           const url = new URL(window.location.href);
           url.searchParams.set("tab", tabId);
           window.history.replaceState({}, "", url.toString());
-        } catch (e) {
-          // ignore URL manipulation issues
-        }
+        } catch (e) {}
+
         document
           .querySelectorAll(".card")
           .forEach((card) => card.classList.remove("active"));
@@ -884,7 +655,6 @@
           .classList.add("active");
       }
 
-      // Restore active tab after full page reloads (e.g., POST->render)
       (function restoreActiveTab() {
         const serverPreferredTab = "{{ active_tab or '' }}";
         let tab = "";
@@ -894,7 +664,6 @@
           tab = "";
         }
 
-        // URL override (handy for debugging / deep-linking)
         const params = new URLSearchParams(window.location.search);
         const urlTab = params.get("tab") || "";
 
@@ -905,9 +674,6 @@
           "description"
         ).toLowerCase();
         const finalTab = resolved === "demo" ? "demo" : "description";
-        // Run after initial paint so the transition classes behave nicely.
-        // Note: this script is at the end of <body>, so DOMContentLoaded may
-        // already have fired on some browsers; handle both cases.
         if (document.readyState === "loading") {
           window.addEventListener("DOMContentLoaded", () => showTab(finalTab));
         } else {
@@ -915,7 +681,6 @@
         }
       })();
 
-      // ===== Progress =====
       function startProgress() {
         const btn = document.getElementById("analyzeBtn");
         const bar = document.getElementById("progressBar");
@@ -942,7 +707,6 @@
         return true;
       }
 
-      // ===== Upload UI: filename animation + drag/drop zone =====
       const fileInput = document.getElementById("resume_file");
       const uploadZone = document.getElementById("uploadZone");
       const fileInfo = document.getElementById("fileInfo");
@@ -954,7 +718,6 @@
           return;
         }
 
-        // animated pill
         fileInfo.classList.remove("hidden");
         fileInfo.innerHTML = `
           <div class="file-pill file-animate-in" aria-live="polite">
@@ -970,15 +733,12 @@
         renderSelectedFile(null);
       }
 
-      // When file is chosen via picker
       fileInput.addEventListener("change", () => {
         const file = fileInput.files && fileInput.files[0];
         renderSelectedFile(file || null);
       });
 
-      // Drag & drop handling
       function isValidDrag(e) {
-        // Avoid interfering with text dragging
         return (
           e.dataTransfer && Array.from(e.dataTransfer.types).includes("Files")
         );
@@ -1008,7 +768,6 @@
         const droppedFiles = e.dataTransfer.files;
         if (!droppedFiles || !droppedFiles.length) return;
 
-        // Only take the first file
         const dt = new DataTransfer();
         dt.items.add(droppedFiles[0]);
         fileInput.files = dt.files;
