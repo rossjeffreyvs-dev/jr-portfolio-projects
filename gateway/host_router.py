@@ -6,7 +6,8 @@ from services.clinical_trial_evaluator.service import app as trial_app
 HOST_MAP = {
     # production subdomains
     "ai-fx-insights.jeffrey-ross.me": fx_app,
-    "resume-analyzer.jeffrey-ross.me": resume_app,
+    # "resume-analyzer.jeffrey-ross.me": resume_app,
+    "resume-analyzer.jeffrey-ross.me": "http://127.0.0.1:5000",
     "smart-thermostat.jeffrey-ross.me": thermo_app,
     "ai-clinical-trial-evaluator.jeffrey-ross.me": trial_app,
 
@@ -15,4 +16,8 @@ HOST_MAP = {
 }
 
 def get_app_for_host(host: str):
+    host = host.split(":")[0].lower()
     return HOST_MAP.get(host)
+
+# def get_app_for_host(host: str):
+#     return HOST_MAP.get(host)

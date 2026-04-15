@@ -24,6 +24,7 @@ SAMPLE_RESUME_PATH = os.path.join("tests", "test-resume.docx")
 #  Initialize OpenAI Client
 # ==========================================================
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+print("API key present:", bool(os.getenv("OPENAI_API_KEY")))
 
 if not OPENAI_API_KEY:
     raise RuntimeError(
@@ -80,8 +81,10 @@ Resume:
             temperature=0.4,
             max_tokens=1200,
         )
+        print("OpenAI call succeeded")
         return response.choices[0].message.content.strip()
     except Exception as e:
+        print("OpenAI error:", type(e).__name__, str(e))
         return f"⚠️ Error generating match response: {e}"
 
 # ==========================================================
