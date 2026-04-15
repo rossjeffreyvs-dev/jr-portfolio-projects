@@ -1,28 +1,89 @@
 # Python
 __pycache__/
 *.py[cod]
-*.egg-info/
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
+*$py.class
+*.pyo
+*.pyd
 
-# venv
-.venv/
+# Virtual environments
 venv/
+env/
+ENV/
+.venv/
+.Python
 
-# env
+# OS / system files
+.DS_Store
+Thumbs.db
+
+# Environment variables / secrets
 .env
 .env.*
+*.key
+*.pem
 
-# OS/editor
-.DS_Store
-.vscode/
+# Logs and reports
+*.log
+logs/
+*.out
+*.err
+
+# IDE / editors
 .idea/
+.vscode/
+*.swp
+*.swo
 
-# Node (if any ever returns)
+# Uploaded / generated data
+uploads/
+*.tmp
+*.bak
+
+# Build & deployment artifacts
+*.tar
+*.pkg
+lightsailctl
+lightsail.resolved.yaml
+.aws/
+.aws-sam/
+
+# Docker
+docker-compose.override.yml
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage / testing
+htmlcov/
+.tox/
+.nox/
+.coverage
+coverage.xml
+.cache
+.pytest_cache/
+
+# Distribution / packaging
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Node / frontend
 node_modules/
-.next/
-out/
-coverage/
-.sfdx/
-.sfdx/
+npm-debug.log
+yarn-error.log
+
+# Temporary / misc
+*.orig
+*.old
+*.save
