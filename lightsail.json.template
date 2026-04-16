@@ -1,0 +1,28 @@
+{
+  "serviceName": "__SERVICE_NAME__",
+  "containers": {
+    "gateway": {
+      "image": "__IMAGE__",
+      "environment": {
+        "OPENAI_API_KEY": "__OPENAI_API_KEY__",
+        "NEWS_API_KEY": "__NEWS_API_KEY__",
+        "FX_API_KEY": "__FX_API_KEY__"
+      },
+      "ports": {
+        "8080": "HTTP"
+      }
+    }
+  },
+  "publicEndpoint": {
+    "containerName": "gateway",
+    "containerPort": 8080,
+    "healthCheck": {
+      "path": "/health",
+      "successCodes": "200-399",
+      "intervalSeconds": 10,
+      "timeoutSeconds": 5,
+      "healthyThreshold": 2,
+      "unhealthyThreshold": 2
+    }
+  }
+}

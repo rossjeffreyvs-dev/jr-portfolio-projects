@@ -28,3 +28,7 @@ logs/
 .DS_Store
 .aws/
 .aws-sam/
+
+lightsail.json
+lightsail.*.json
+api_keys.env

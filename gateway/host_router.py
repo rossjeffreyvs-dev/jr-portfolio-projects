@@ -2,22 +2,20 @@ from services.fx_insights.service import app as fx_app
 from services.smart_thermostat.service import app as thermo_app
 from services.clinical_trial_evaluator.service import app as trial_app
 
-# 🔥 NEW: wrap Flask app so FastAPI gateway can call it
 from asgiref.wsgi import WsgiToAsgi
 from services.resume_job_analyzer.app import app as flask_resume_app
 
-# Convert Flask (WSGI) → ASGI
 resume_app = WsgiToAsgi(flask_resume_app)
 
 HOST_MAP = {
     # production subdomains
-    "ai-fx-insights.jeffrey-ross.me": fx_app,
+    "fx-insights.jeffrey-ross.me": fx_app,
     "resume-analyzer.jeffrey-ross.me": resume_app,
     "smart-thermostat.jeffrey-ross.me": thermo_app,
-    "ai-clinical-trial-evaluator.jeffrey-ross.me": trial_app,
+    "clinical-trial-evaluator.jeffrey-ross.me": trial_app,
 
     # optional aliases
-    "fx-insights.jeffrey-ross.me": fx_app,
+    # "fx-insights.jeffrey-ross.me": fx_app,
 
     # local development aliases
     "localhost": resume_app,

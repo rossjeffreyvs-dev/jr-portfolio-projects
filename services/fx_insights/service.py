@@ -1,7 +1,6 @@
-from fastapi import FastAPI
+from asgiref.wsgi import WsgiToAsgi
 
-app = FastAPI()
+from services.fx_insights.backend.local_server import app as flask_fx_app
 
-@app.get("/")
-def home():
-    return {"service": "fx_insights", "status": "ok"}
+# Expose the Flask app as ASGI so the FastAPI/ASGI gateway can dispatch to it
+app = WsgiToAsgi(flask_fx_app)

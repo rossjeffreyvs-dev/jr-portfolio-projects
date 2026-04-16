@@ -96,3 +96,8 @@ services/**/__pycache__/
 
 # macOS / temp files inside nested app folders
 services/**/.DS_Store
+
+# lightsail deployment
+lightsail.json
+lightsail.*.json
+api_keys.env
