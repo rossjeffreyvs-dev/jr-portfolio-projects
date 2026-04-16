@@ -12,13 +12,19 @@ from docx import Document
 # Load .env for local development; Lightsail provides env vars directly
 load_dotenv()
 
-app = Flask(__name__)
-app.config["UPLOAD_FOLDER"] = "uploads"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+app = Flask(
+    __name__,
+    template_folder=os.path.join(BASE_DIR, "templates"),
+    static_folder=os.path.join(BASE_DIR, "static"),
+)
+
+app.config["UPLOAD_FOLDER"] = os.path.join(BASE_DIR, "uploads")
 os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
-# Demo sample files
-SAMPLE_JOB_DESC_PATH = os.path.join("tests", "test-job-description.docx")
-SAMPLE_RESUME_PATH = os.path.join("tests", "test-resume.docx")
+SAMPLE_JOB_DESC_PATH = os.path.join(BASE_DIR, "tests", "test-job-description.docx")
+SAMPLE_RESUME_PATH = os.path.join(BASE_DIR, "tests", "test-resume.docx")
 
 # ==========================================================
 #  Initialize OpenAI Client
