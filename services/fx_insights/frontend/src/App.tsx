@@ -1,305 +1,762 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
-interface DonePayload {
-  timestamp: string;
-  base: string;
-  rates: Record<string, number>;
-  insight: string;
-}
+type TabKey = "description" | "demo";
 
-type Stage = "idle" | "rates" | "news" | "report" | "done" | "error";
+type StageKey = "idle" | "rates" | "news" | "report" | "done" | "error";
+
+type RatesMap = Record<string, number>;
+
+type InsightResponse = {
+  timestamp?: string;
+  base?: string;
+  rates?: RatesMap;
+  insight?: string;
+  error?: string;
+  raw?: string;
+};
+
+const DEFAULT_BASE = "EUR";
+const DEFAULT_SYMBOLS = "USD,GBP,JPY";
+const DEFAULT_COUNTRIES = "us,gb,jp";
+const TAB_STORAGE_KEY = "ai-fx-insights.activeTab";
 
 const App: React.FC = () => {
-  const [stage, setStage] = useState<Stage>("idle");
+  const [activeTab, setActiveTab] = useState<TabKey>(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const urlTab = (params.get("tab") || "").toLowerCase();
+      const savedTab = (
+        localStorage.getItem(TAB_STORAGE_KEY) || ""
+      ).toLowerCase();
+      const resolved = urlTab || savedTab || "description";
+      return resolved === "demo" ? "demo" : "description";
+    } catch {
+      return "description";
+    }
+  });
+
+  const [base, setBase] = useState<string>(DEFAULT_BASE);
+  const [symbols, setSymbols] = useState<string>(DEFAULT_SYMBOLS);
+  const [countries, setCountries] = useState<string>(DEFAULT_COUNTRIES);
+
+  const [loading, setLoading] = useState<boolean>(false);
+  const [stage, setStage] = useState<StageKey>("idle");
+  const [stageText, setStageText] = useState<string>("");
+
   const [progress, setProgress] = useState<number>(0);
+  const progressIntervalRef = useRef<number | null>(null);
 
+  const [rates, setRates] = useState<RatesMap>({});
+  const [headlineCount, setHeadlineCount] = useState<number>(0);
+  const [report, setReport] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
-  const [done, setDone] = useState<DonePayload | null>(null);
 
-  const [streamText, setStreamText] = useState<string>("");
+  const eventSourceRef = useRef<EventSource | null>(null);
+  const resultRef = useRef<HTMLDivElement | null>(null);
 
-  const [base] = useState("EUR");
-  const [symbols] = useState("USD,GBP,JPY");
-  const [countries] = useState("us,gb,jp");
+  const extractStreamText = (raw: string): string => {
+    try {
+      const parsed = JSON.parse(raw);
 
-  const esRef = useRef<EventSource | null>(null);
+      if (typeof parsed === "string") return parsed;
+      if (parsed && typeof parsed.text === "string") return parsed.text;
+      if (parsed && typeof parsed.token === "string") return parsed.token;
+      if (parsed && typeof parsed.content === "string") return parsed.content;
 
-  const isLoading = stage === "rates" || stage === "news" || stage === "report";
+      return raw;
+    } catch {
+      return raw;
+    }
+  };
 
-  const embedMode = useMemo(() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get("embed") === "1";
+  const sortedRates = useMemo(() => {
+    return Object.entries(rates).sort(([a], [b]) => a.localeCompare(b));
+  }, [rates]);
+
+  const showTab = (tab: TabKey) => {
+    setActiveTab(tab);
+
+    try {
+      localStorage.setItem(TAB_STORAGE_KEY, tab);
+    } catch {
+      // ignore storage issues
+    }
+
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set("tab", tab);
+      window.history.replaceState({}, "", url.toString());
+    } catch {
+      // ignore URL update issues
+    }
+  };
+
+  const resetProgressLoop = () => {
+    if (progressIntervalRef.current) {
+      window.clearInterval(progressIntervalRef.current);
+      progressIntervalRef.current = null;
+    }
+  };
+
+  const startProgressLoop = () => {
+    resetProgressLoop();
+    setProgress(6);
+
+    progressIntervalRef.current = window.setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 90) {
+          return 90;
+        }
+
+        if (stage === "rates") {
+          return Math.min(prev + 6, 28);
+        }
+
+        if (stage === "news") {
+          return Math.min(prev + 4, 58);
+        }
+
+        if (stage === "report") {
+          return Math.min(prev + 2.5, 90);
+        }
+
+        return Math.min(prev + 1.5, 90);
+      });
+    }, 350);
+  };
+
+  const finishProgress = () => {
+    resetProgressLoop();
+    setProgress(100);
+    window.setTimeout(() => {
+      setProgress(0);
+    }, 1000);
+  };
+
+  const closeStream = () => {
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+      eventSourceRef.current = null;
+    }
+  };
+
+  const resetRunState = () => {
+    setError(null);
+    setRates({});
+    setHeadlineCount(0);
+    setReport("");
+    setStage("idle");
+    setStageText("");
+    setProgress(0);
+  };
+
+  const resolveStageLabel = (value: string): string => {
+    const normalized = value.trim().toLowerCase();
+
+    if (normalized.includes("exchange") || normalized.includes("rate")) {
+      return "Getting exchange rates...";
+    }
+    if (
+      normalized.includes("headline") ||
+      normalized.includes("news") ||
+      normalized.includes("market")
+    ) {
+      return "Getting market news...";
+    }
+    if (
+      normalized.includes("report") ||
+      normalized.includes("generate") ||
+      normalized.includes("analysis") ||
+      normalized.includes("client")
+    ) {
+      return "Generating client report...";
+    }
+    if (normalized.includes("done") || normalized.includes("complete")) {
+      return "Report complete";
+    }
+
+    return value;
+  };
+
+  const setStageFromMessage = (value: string) => {
+    const normalized = value.trim().toLowerCase();
+
+    if (normalized.includes("exchange") || normalized.includes("rate")) {
+      setStage("rates");
+      setStageText("Getting exchange rates...");
+      return;
+    }
+
+    if (
+      normalized.includes("headline") ||
+      normalized.includes("news") ||
+      normalized.includes("market")
+    ) {
+      setStage("news");
+      setStageText("Getting market news...");
+      return;
+    }
+
+    if (
+      normalized.includes("report") ||
+      normalized.includes("generate") ||
+      normalized.includes("analysis") ||
+      normalized.includes("client")
+    ) {
+      setStage("report");
+      setStageText("Generating client report...");
+      return;
+    }
+
+    if (normalized.includes("done") || normalized.includes("complete")) {
+      setStage("done");
+      setStageText("Report complete");
+      return;
+    }
+
+    setStageText(resolveStageLabel(value));
+  };
+
+  const fallbackFetch = async () => {
+    const params = new URLSearchParams({
+      base,
+      symbols,
+      countries,
+    });
+
+    const response = await fetch(`/api/insight?${params.toString()}`);
+    const payload = (await response.json()) as InsightResponse;
+
+    if (!response.ok || payload.error) {
+      throw new Error(payload.error || "Failed to fetch insight.");
+    }
+
+    setRates(payload.rates || {});
+    setReport(payload.insight || payload.raw || "");
+    setStage("done");
+    setStageText("Report complete");
+    finishProgress();
+    setLoading(false);
+  };
+
+  const runReport = async () => {
+    closeStream();
+    resetRunState();
+    setLoading(true);
+    setActiveTab("demo");
+    setStage("rates");
+    setStageText("Getting exchange rates...");
+    startProgressLoop();
+
+    const params = new URLSearchParams({
+      base,
+      symbols,
+      countries,
+    });
+
+    try {
+      const streamUrl = `/api/report/stream?${params.toString()}`;
+      const es = new EventSource(streamUrl);
+      eventSourceRef.current = es;
+
+      es.addEventListener("open", () => {
+        setStage("rates");
+        setStageText("Getting exchange rates...");
+      });
+
+      es.addEventListener("stage", (event) => {
+        const message = (event as MessageEvent).data || "";
+        setStageFromMessage(String(message));
+      });
+
+      es.addEventListener("rates", (event) => {
+        try {
+          const parsed = JSON.parse((event as MessageEvent).data);
+          if (parsed && parsed.rates) {
+            setRates(parsed.rates as RatesMap);
+          } else if (parsed && typeof parsed === "object") {
+            setRates(parsed as RatesMap);
+          }
+        } catch {
+          // ignore parse errors for optional event
+        }
+      });
+
+      es.addEventListener("news", (event) => {
+        try {
+          const parsed = JSON.parse((event as MessageEvent).data);
+          if (Array.isArray(parsed)) {
+            setHeadlineCount(parsed.length);
+          } else if (Array.isArray(parsed.headlines)) {
+            setHeadlineCount(parsed.headlines.length);
+          } else if (typeof parsed.count === "number") {
+            setHeadlineCount(parsed.count);
+          }
+        } catch {
+          // ignore parse errors for optional event
+        }
+      });
+
+      es.addEventListener("token", (event) => {
+        const raw = String((event as MessageEvent).data || "");
+        const chunk = extractStreamText(raw);
+
+        setStage("report");
+        setStageText("Generating client report...");
+        setReport((prev) => prev + chunk);
+      });
+
+      es.addEventListener("done", () => {
+        setStage("done");
+        setStageText("Report complete");
+        setLoading(false);
+        finishProgress();
+        closeStream();
+
+        window.setTimeout(() => {
+          resultRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }, 150);
+      });
+
+      es.addEventListener("error", async (event) => {
+        const messageEvent = event as MessageEvent;
+        const streamError =
+          typeof messageEvent?.data === "string" && messageEvent.data.trim()
+            ? messageEvent.data
+            : null;
+
+        closeStream();
+
+        if (streamError) {
+          setError(streamError);
+          setStage("error");
+          setStageText("An error occurred");
+          setLoading(false);
+          finishProgress();
+          return;
+        }
+
+        // Sometimes browsers emit a generic SSE error on unexpected close.
+        // If we already have report content, treat it as completed.
+        if (report.trim().length > 0) {
+          setStage("done");
+          setStageText("Report complete");
+          setLoading(false);
+          finishProgress();
+          return;
+        }
+
+        try {
+          await fallbackFetch();
+        } catch (fallbackError) {
+          const message =
+            fallbackError instanceof Error
+              ? fallbackError.message
+              : "Streaming connection error (check backend logs)";
+          setError(message);
+          setStage("error");
+          setStageText("An error occurred");
+          setLoading(false);
+          finishProgress();
+        }
+      });
+    } catch (streamInitError) {
+      try {
+        await fallbackFetch();
+      } catch (fallbackError) {
+        const message =
+          fallbackError instanceof Error
+            ? fallbackError.message
+            : "Unable to start report generation.";
+        setError(message);
+        setStage("error");
+        setStageText("An error occurred");
+        setLoading(false);
+        finishProgress();
+      }
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      closeStream();
+      resetProgressLoop();
+    };
   }, []);
 
+  useEffect(() => {
+    if (stage === "report" && resultRef.current) {
+      resultRef.current.scrollTop = resultRef.current.scrollHeight;
+    }
+  }, [report, stage]);
+
   const buttonLabel = useMemo(() => {
-    switch (stage) {
-      case "rates":
-        return "Getting exchange rates...";
-      case "news":
-        return "Getting market news...";
-      case "report":
-        return "Generating client report...";
-      default:
-        return "Generate Insight Now";
+    if (!loading) {
+      return "Generate FX report";
     }
-  }, [stage]);
 
-  const stageHint = useMemo(() => {
-    switch (stage) {
-      case "idle":
-        return "Ready";
-      case "rates":
-        return "Step 1/3: Fetching FX rates";
-      case "news":
-        return "Step 2/3: Fetching market news";
-      case "report":
-        return "Step 3/3: Generating the report (streaming)";
-      case "done":
-        return "Done";
-      case "error":
-        return "Error";
+    if (stage === "rates") {
+      return "Getting exchange rates...";
     }
-  }, [stage]);
-
-  const reset = () => {
-    if (esRef.current) {
-      esRef.current.close();
-      esRef.current = null;
+    if (stage === "news") {
+      return "Getting market news...";
     }
-    setStage("idle");
-    setProgress(0);
-    setError(null);
-    setDone(null);
-    setStreamText("");
-  };
+    if (stage === "report") {
+      return "Generating client report...";
+    }
 
-  const startSSE = () => {
-    reset();
-    setStage("rates");
-    setProgress(1);
-
-    const url =
-      `/api/report/stream?base=${encodeURIComponent(base)}` +
-      `&symbols=${encodeURIComponent(symbols)}` +
-      `&countries=${encodeURIComponent(countries)}`;
-
-    const es = new EventSource(url);
-    esRef.current = es;
-
-    es.addEventListener("stage", (evt: MessageEvent) => {
-      try {
-        const payload = JSON.parse(evt.data);
-        const nextStage = payload?.stage as Stage;
-        const nextProgress = Number(payload?.progress ?? 0);
-
-        if (nextStage) setStage(nextStage);
-        if (!Number.isNaN(nextProgress)) setProgress(nextProgress);
-      } catch {
-        // ignore
-      }
-    });
-
-    es.addEventListener("token", (evt: MessageEvent) => {
-      try {
-        const payload = JSON.parse(evt.data);
-        const text = payload?.text ?? "";
-        if (text) setStreamText((prev) => prev + text);
-      } catch {
-        // ignore
-      }
-    });
-
-    es.addEventListener("done", (evt: MessageEvent) => {
-      try {
-        const payload = JSON.parse(evt.data) as DonePayload;
-        setDone(payload);
-        setStage("done");
-        setProgress(100);
-      } catch {
-        setError("Failed to parse completion payload.");
-        setStage("error");
-        setProgress(100);
-      } finally {
-        es.close();
-        esRef.current = null;
-      }
-    });
-
-    es.addEventListener("error", (evt: MessageEvent) => {
-      try {
-        const data = (evt as any)?.data;
-        if (data) {
-          const payload = JSON.parse(data);
-          setError(payload?.error || "Streaming error.");
-        } else {
-          setError("Streaming connection error (check backend logs).");
-        }
-      } catch {
-        setError("Streaming connection error (check backend logs).");
-      } finally {
-        setStage("error");
-        setProgress(100);
-        es.close();
-        esRef.current = null;
-      }
-    });
-  };
+    return "Working...";
+  }, [loading, stage]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
-      {!embedMode && (
-        <header className="border-b bg-white">
-          <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold">
-                FX
+    <div className="fx-page case-study">
+      <nav>
+        <div className="nav-container">
+          <a href="https://www.jeffrey-ross.me" className="nav-left">
+            <span className="logo">JR</span> Projects
+          </a>
+
+          <div className="nav-right">
+            <a href="https://www.jeffrey-ross.me">Home</a>
+            <a href="https://www.jeffrey-ross.me/projects" className="active">
+              Projects
+            </a>
+            <a href="https://www.jeffrey-ross.me/blog">Blog</a>
+            <a href="https://www.jeffrey-ross.me/about">About</a>
+            <a href="https://www.jeffrey-ross.me/contact">Contact</a>
+          </div>
+        </div>
+      </nav>
+
+      <header>
+        <h1>AI FX Insights</h1>
+        <p>
+          Stream client-ready FX commentary from live rates, headlines, and AI
+          analysis
+        </p>
+      </header>
+
+      <main className="page-shell">
+        <div className="tabs">
+          <button
+            className={`tab-btn ${activeTab === "description" ? "active" : ""}`}
+            onClick={() => showTab("description")}
+            type="button"
+          >
+            Project Description
+          </button>
+          <button
+            className={`tab-btn ${activeTab === "demo" ? "active" : ""}`}
+            onClick={() => showTab("demo")}
+            type="button"
+          >
+            Demo
+          </button>
+        </div>
+
+        <section
+          id="description"
+          className={`card description-card ${activeTab !== "description" ? "hidden" : ""} ${
+            activeTab === "description" ? "active" : ""
+          }`}
+        >
+          <section className="project-hero">
+            <div className="eyebrow">AI-Powered Market Commentary Workflow</div>
+            <h2>AI FX Insights</h2>
+            <p className="hero-copy">
+              AI FX Insights is a market commentary demo that combines foreign
+              exchange data, current market headlines, and large language model
+              output to generate a concise, client-ready report. The workflow is
+              streamed to the browser in stages so users can see progress as the
+              system moves from data retrieval to narrative generation.
+            </p>
+
+            <div className="callout-grid">
+              <div className="callout-card">
+                <span className="callout-label">Live Demo Pattern</span>
+                <span className="callout-value">Rates → News → Report</span>
               </div>
-              <div>
-                <div className="font-semibold leading-tight">
-                  AI FX Insights
-                </div>
-                <div className="text-sm text-gray-600 leading-tight">
-                  Streaming market commentary demo
-                </div>
+              <div className="callout-card">
+                <span className="callout-label">Streaming</span>
+                <span className="callout-value">Server-Sent Events (SSE)</span>
+              </div>
+              <div className="callout-card">
+                <span className="callout-label">Deployment Style</span>
+                <span className="callout-value">
+                  Independent app in multi-service platform
+                </span>
               </div>
             </div>
 
-            <nav className="flex items-center gap-4 text-sm">
-              <a
-                href="https://jeffrey-ross.me/projects"
-                className="text-gray-700 hover:text-blue-600"
-              >
-                &lt;- Back to Portfolio
-              </a>
-            </nav>
+            <div className="highlights-panel">
+              <div className="highlights-title">System Highlights</div>
+              <div className="highlight-pills">
+                <span className="highlight-pill">Live FX data retrieval</span>
+                <span className="highlight-pill">
+                  Market headline aggregation
+                </span>
+                <span className="highlight-pill">
+                  Streaming AI-generated report
+                </span>
+                <span className="highlight-pill">
+                  Progressive user feedback
+                </span>
+                <span className="highlight-pill">
+                  Container-ready architecture
+                </span>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h3>Overview</h3>
+            <p>
+              The application demonstrates how real-time market inputs can be
+              transformed into a polished narrative summary suitable for client
+              communication. Rather than presenting users with raw JSON or
+              isolated data points, the system orchestrates a sequence of
+              retrieval and summarization steps and surfaces them through a more
+              guided interface.
+            </p>
+            <p>
+              This project is designed as one of several small, independent
+              applications hosted within the broader{" "}
+              <strong>jr-portfolio-projects</strong> platform. That pattern
+              allows each demo to evolve on its own while still fitting into a
+              shared operational and presentation model.
+            </p>
+          </section>
+
+          <section>
+            <h3>Problem</h3>
+            <p>
+              Financial users often need a quick market readout that blends
+              quantitative changes with qualitative context. Pulling exchange
+              rates, scanning current headlines, and converting both into a
+              short, coherent market summary usually requires switching across
+              multiple tools or manually writing commentary.
+            </p>
+            <p>
+              The UX challenge is not just generating the final output. It is
+              also making the multi-step process feel responsive and
+              understandable while the application is waiting on several
+              external systems.
+            </p>
+          </section>
+
+          <section>
+            <h3>Solution</h3>
+            <p>
+              AI FX Insights addresses that problem through a staged pipeline:
+            </p>
+            <ul>
+              <li>retrieve current FX rates for selected currency pairs</li>
+              <li>retrieve recent market headlines for selected countries</li>
+              <li>generate a concise client-ready narrative using an LLM</li>
+              <li>stream progress and report content to the UI in real time</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>Technical Architecture</h3>
+            <div className="architecture-grid">
+              <div className="arch-block">
+                <h4>Frontend</h4>
+                <ul>
+                  <li>React + TypeScript</li>
+                  <li>Tab-based case study and demo shell</li>
+                  <li>Live stage indicators and streaming report display</li>
+                </ul>
+              </div>
+
+              <div className="arch-block">
+                <h4>Backend</h4>
+                <ul>
+                  <li>
+                    Python service for rates, headlines, and report generation
+                  </li>
+                  <li>SSE endpoint for incremental report delivery</li>
+                  <li>REST fallback for non-streaming request handling</li>
+                </ul>
+              </div>
+
+              <div className="arch-block">
+                <h4>Data + AI Layer</h4>
+                <ul>
+                  <li>FX rate API integration</li>
+                  <li>Market news API integration</li>
+                  <li>LLM-based narrative synthesis</li>
+                </ul>
+              </div>
+
+              <div className="arch-block">
+                <h4>Platform Fit</h4>
+                <ul>
+                  <li>Standalone local execution for rapid testing</li>
+                  <li>Gateway-routed service structure</li>
+                  <li>Portable deployment to Docker / Lightsail</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h3>Why the Streaming UX Matters</h3>
+            <p>
+              The UI intentionally exposes intermediate stages instead of
+              waiting for one final response. That makes the system feel faster,
+              helps users understand what the app is doing, and provides a more
+              polished demonstration of how data retrieval and AI generation can
+              work together in one workflow.
+            </p>
+          </section>
+        </section>
+
+        <section
+          id="demo"
+          className={`card ${activeTab !== "demo" ? "hidden" : ""} ${
+            activeTab === "demo" ? "active" : ""
+          }`}
+        >
+          <div className="demo-intro">
+            <h3>Generate a market summary</h3>
+            <p>
+              Choose a base currency, select quote currencies and countries,
+              then stream a client-ready FX report.
+            </p>
           </div>
-        </header>
-      )}
 
-      <main className="flex-1">
-        <div className="p-8 max-w-3xl mx-auto">
-          <h1 className="text-3xl font-bold mb-2">
-            FX & Market Insight Dashboard
-          </h1>
-          <p className="text-gray-600 mb-6">
-            Fetch FX rates + market headlines, then stream a client-ready report
-            via SSE.
-          </p>
-
-          <div className="flex items-center gap-3 mb-3">
-            <button
-              onClick={startSSE}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-60 inline-flex items-center gap-2"
-              disabled={isLoading}
-            >
-              {isLoading && <Spinner />}
-              {isLoading ? buttonLabel : "Generate Insight Now"}
-            </button>
-
-            {!isLoading && (stage === "done" || stage === "error") && (
-              <button
-                onClick={reset}
-                className="px-4 py-2 rounded border hover:bg-gray-50"
-              >
-                Reset
-              </button>
-            )}
-          </div>
-
-          <div className="mb-6">
-            <div className="h-2 w-full bg-gray-200 rounded overflow-hidden">
-              <div
-                className="h-full bg-blue-600 transition-all duration-500"
-                style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
+          <div className="fx-form-grid">
+            <div className="field-group">
+              <label htmlFor="base">Base currency</label>
+              <input
+                id="base"
+                type="text"
+                value={base}
+                onChange={(e) => setBase(e.target.value.toUpperCase())}
+                placeholder="EUR"
+                maxLength={6}
               />
             </div>
-            <div className="text-sm text-gray-600 mt-2">{stageHint}</div>
+
+            <div className="field-group">
+              <label htmlFor="symbols">Quote currencies</label>
+              <input
+                id="symbols"
+                type="text"
+                value={symbols}
+                onChange={(e) => setSymbols(e.target.value.toUpperCase())}
+                placeholder="USD,GBP,JPY"
+              />
+            </div>
+
+            <div className="field-group">
+              <label htmlFor="countries">News countries</label>
+              <input
+                id="countries"
+                type="text"
+                value={countries}
+                onChange={(e) => setCountries(e.target.value.toLowerCase())}
+                placeholder="us,gb,jp"
+              />
+            </div>
           </div>
+
+          <div className="demo-actions">
+            <button
+              className={`primary-btn ${loading ? "loading" : ""}`}
+              onClick={runReport}
+              disabled={loading}
+            >
+              {buttonLabel}
+            </button>
+          </div>
+
+          <div className={`progress-wrap ${progress > 0 ? "visible" : ""}`}>
+            <div className="progress-bar">
+              <div
+                className="progress-bar-fill"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
+
+          {(stageText || error) && (
+            <div className="status-row">
+              {stageText && (
+                <div className={`status-pill status-${stage}`}>{stageText}</div>
+              )}
+              {headlineCount > 0 && (
+                <div className="meta-pill">{headlineCount} headlines</div>
+              )}
+              {sortedRates.length > 0 && (
+                <div className="meta-pill">{sortedRates.length} rates</div>
+              )}
+            </div>
+          )}
 
           {error && (
-            <div className="text-red-500 mb-4 whitespace-pre-wrap">
-              Error: {error}
+            <div className="error-banner">
+              <strong>Error:</strong> {error}
             </div>
           )}
 
-          {stage === "report" && (
-            <div className="bg-gray-100 p-4 rounded mb-6">
-              <div className="text-sm text-gray-600 mb-2">
-                Generating report…
-              </div>
-              <p className="whitespace-pre-wrap">{streamText || "…"}</p>
-            </div>
-          )}
-
-          {done && (
-            <div>
-              <div className="mb-4">
-                <strong>Timestamp:</strong> {done.timestamp}
-              </div>
-              <div className="mb-4">
-                <strong>Base Currency:</strong> {done.base}
-              </div>
-
-              <table className="min-w-full bg-white border-collapse mb-6">
-                <thead>
-                  <tr>
-                    <th className="border px-4 py-2">Currency</th>
-                    <th className="border px-4 py-2">Rate</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Object.entries(done?.rates ?? {}).map(([sym, rate]) => (
-                    <tr key={sym}>
-                      <td className="border px-4 py-2">{sym}</td>
-                      <td className="border px-4 py-2">
-                        {typeof rate === "number"
-                          ? rate.toFixed(4)
-                          : String(rate)}
-                      </td>
+          {sortedRates.length > 0 && (
+            <div className="data-card">
+              <h4>Exchange rates</h4>
+              <div className="rates-table-wrap">
+                <table className="rates-table">
+                  <thead>
+                    <tr>
+                      <th>Pair</th>
+                      <th>Rate</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              <div className="bg-gray-100 p-4 rounded">
-                <p className="whitespace-pre-wrap">{done.insight}</p>
+                  </thead>
+                  <tbody>
+                    {sortedRates.map(([symbol, value]) => (
+                      <tr key={symbol}>
+                        <td>
+                          {base}/{symbol}
+                        </td>
+                        <td>
+                          {typeof value === "number"
+                            ? value.toFixed(4)
+                            : String(value)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           )}
-        </div>
-      </main>
 
-      {!embedMode && (
-        <footer className="border-t bg-white">
-          <div className="max-w-5xl mx-auto px-6 py-5 text-sm text-gray-600 flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
-            <div>
-              © {new Date().getFullYear()} Jeffrey Ross • AI FX Insights
-            </div>
-            <div className="flex gap-4">
-              <a className="hover:text-blue-600" href="https://jeffrey-ross.me">
-                Portfolio
-              </a>
-              <a
-                className="hover:text-blue-600"
-                href="https://github.com/rossjeffreyvs-dev"
-              >
-                GitHub
-              </a>
+          <div ref={resultRef} className="result-card">
+            <h4>Client-ready market report</h4>
+            <div className={`report-output ${loading ? "is-streaming" : ""}`}>
+              {report ? (
+                <pre>{report}</pre>
+              ) : (
+                <div className="report-placeholder">
+                  Your generated market summary will appear here.
+                </div>
+              )}
             </div>
           </div>
-        </footer>
-      )}
+        </section>
+      </main>
+
+      <footer>
+        Built by{" "}
+        <a href="https://www.jeffrey-ross.me" target="_blank" rel="noreferrer">
+          Jeffrey Ross
+        </a>
+      </footer>
     </div>
   );
 };
 
 export default App;
-
-function Spinner() {
-  return (
-    <span
-      className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
-      aria-label="Loading"
-    />
-  );
-}
