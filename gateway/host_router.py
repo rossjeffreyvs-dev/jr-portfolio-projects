@@ -9,13 +9,13 @@ resume_app = WsgiToAsgi(flask_resume_app)
 
 HOST_MAP = {
     # production subdomains
-    "fx-insights.jeffrey-ross.me": fx_app,
     "resume-analyzer.jeffrey-ross.me": resume_app,
+    "fx-insights.jeffrey-ross.me": fx_app,
     "smart-thermostat.jeffrey-ross.me": thermo_app,
     "clinical-trial-evaluator.jeffrey-ross.me": trial_app,
 
-    # optional aliases
-    # "fx-insights.jeffrey-ross.me": fx_app,
+    # optional lightsail domain aliases
+    "jr-portfolio-projects.dtw628ha8cm94.us-west-2.cs.amazonlightsail.com": fx_app,
 
     # local development aliases
     "localhost": resume_app,
