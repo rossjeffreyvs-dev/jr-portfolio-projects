@@ -87,3 +87,12 @@ yarn-error.log
 *.orig
 *.old
 *.save
+
+# Frontend build output
+services/fx_insights/frontend/dist/
+
+# Python caches inside nested services
+services/**/__pycache__/
+
+# macOS / temp files inside nested app folders
+services/**/.DS_Store
