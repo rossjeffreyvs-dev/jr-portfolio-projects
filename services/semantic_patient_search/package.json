@@ -1,0 +1,7 @@
+{
+  "name": "semantic-patient-search",
+  "private": true,
+  "scripts": {
+    "dev": "bash scripts/dev.sh"
+  }
+}
