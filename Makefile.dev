@@ -128,6 +128,19 @@ semantic-backend: $(VENV)/bin/activate
 semantic-frontend:
 	cd $(SEM_FRONTEND_DIR) && $(NPM) run dev
 
+semantic-wait:
+	@echo "Waiting for semantic backend on :$(SEM_BACKEND_PORT)..."
+	@attempts=0; \
+	until curl -sf http://127.0.0.1:$(SEM_BACKEND_PORT)/api/health > /dev/null; do \
+		attempts=$$((attempts+1)); \
+		if [ $$attempts -ge 30 ]; then \
+			echo "Semantic backend failed to become ready."; \
+			exit 1; \
+		fi; \
+		sleep 1; \
+	done
+	@echo "Semantic backend is ready."
+	
 semantic: semantic-setup
 	@echo "Semantic Patient Search is starting..."
 	@echo "Frontend: http://127.0.0.1:$(SEM_FRONTEND_PORT)"
@@ -137,11 +150,11 @@ semantic: semantic-setup
 	@trap 'echo ""; echo "Stopping services..."; kill 0' EXIT INT TERM; \
 	$(MAKE) -f $(MAKEFILE_NAME) semantic-backend & \
 	BACKEND_PID=$$!; \
-	sleep 2; \
+	$(MAKE) -f $(MAKEFILE_NAME) semantic-wait; \
 	$(MAKE) -f $(MAKEFILE_NAME) semantic-frontend & \
 	FRONTEND_PID=$$!; \
 	wait $$BACKEND_PID $$FRONTEND_PID
-
+	
 semantic-run: semantic
 
 semantic-build:
