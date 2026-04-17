@@ -628,10 +628,6 @@
 
       function showTab(tabId) {
         try {
-          localStorage.setItem("ai-resume-match.activeTab", tabId);
-        } catch (e) {}
-
-        try {
           const url = new URL(window.location.href);
           url.searchParams.set("tab", tabId);
           window.history.replaceState({}, "", url.toString());
@@ -647,6 +643,7 @@
           () => document.getElementById(tabId).classList.add("active"),
           20,
         );
+
         document
           .querySelectorAll(".tab-btn")
           .forEach((btn) => btn.classList.remove("active"));
@@ -656,24 +653,12 @@
       }
 
       (function restoreActiveTab() {
-        const serverPreferredTab = "{{ active_tab or '' }}";
-        let tab = "";
-        try {
-          tab = localStorage.getItem("ai-resume-match.activeTab") || "";
-        } catch (e) {
-          tab = "";
-        }
-
         const params = new URLSearchParams(window.location.search);
-        const urlTab = params.get("tab") || "";
+        const urlTab = (params.get("tab") || "").toLowerCase();
 
-        const resolved = (
-          urlTab ||
-          tab ||
-          serverPreferredTab ||
-          "description"
-        ).toLowerCase();
-        const finalTab = resolved === "demo" ? "demo" : "description";
+        // Default to Project Description unless URL explicitly requests demo
+        const finalTab = urlTab === "demo" ? "demo" : "description";
+
         if (document.readyState === "loading") {
           window.addEventListener("DOMContentLoaded", () => showTab(finalTab));
         } else {
@@ -720,12 +705,12 @@
 
         fileInfo.classList.remove("hidden");
         fileInfo.innerHTML = `
-          <div class="file-pill file-animate-in" aria-live="polite">
-            <span>📎</span>
-            <span class="name" title="${file.name}">${file.name}</span>
-            <button type="button" class="clear" aria-label="Clear selected file" onclick="clearSelectedFile()">×</button>
-          </div>
-        `;
+      <div class="file-pill file-animate-in" aria-live="polite">
+        <span>📎</span>
+        <span class="name" title="${file.name}">${file.name}</span>
+        <button type="button" class="clear" aria-label="Clear selected file" onclick="clearSelectedFile()">×</button>
+      </div>
+    `;
       }
 
       function clearSelectedFile() {

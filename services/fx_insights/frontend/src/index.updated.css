@@ -172,38 +172,6 @@ header p {
   box-shadow: 0 10px 28px rgba(15, 23, 42, 0.16);
 }
 
-/* Simplified tab styling (no underline animation) */
-
-.fx-tab-btn {
-  position: relative;
-}
-
-/* remove underline completely */
-.fx-tab-btn .tab-indicator {
-  display: none;
-}
-
-/* accessibility: reduce motion */
-@media (prefers-reduced-motion: reduce) {
-  .fx-tab-btn,
-  .fx-tab-btn .tab-indicator,
-  .tab-btn,
-  .card,
-  .progress-wrap,
-  .progress-bar-fill,
-  .primary-btn,
-  .nav-right a,
-  .field-group input {
-    transition: none;
-  }
-
-  .tab-btn:hover,
-  .tab-btn.active,
-  .primary-btn:hover:not(:disabled) {
-    transform: none;
-  }
-}
-
 /* Cards */
 
 .card {

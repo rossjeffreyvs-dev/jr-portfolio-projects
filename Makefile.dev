@@ -1,0 +1,122 @@
+SHELL := /bin/bash
+
+ROOT_DIR := $(CURDIR)
+VENV := .venv
+PYTHON := python3
+PIP := $(VENV)/bin/pip
+PY := $(VENV)/bin/python
+UVICORN := $(VENV)/bin/uvicorn
+NPM := npm
+MAKEFILE_NAME := Makefile.dev
+
+FX_DIR := services/fx_insights
+FX_BACKEND_MODULE := services.fx_insights.backend.local_server
+FX_FRONTEND_DIR := $(FX_DIR)/frontend
+FX_SETUP_SCRIPT := $(FX_DIR)/setup_local.sh
+FX_BACKEND_PORT := 5001
+FX_FRONTEND_PORT := 5173
+FX_DOCKER_IMAGE := fx-insights-local
+
+.DEFAULT_GOAL := help
+
+help:
+	@echo "Available dev commands:"
+	@echo "  make -f $(MAKEFILE_NAME) setup         - create root venv and install root requirements"
+	@echo "  make -f $(MAKEFILE_NAME) install       - install/update root requirements"
+	@echo "  make -f $(MAKEFILE_NAME) gateway       - run FastAPI gateway on port 8080"
+	@echo "  make -f $(MAKEFILE_NAME) resume        - run Resume Analyzer directly"
+	@echo "  make -f $(MAKEFILE_NAME) fx-setup      - prepare FX local environment"
+	@echo "  make -f $(MAKEFILE_NAME) fx-install    - install FX frontend dependencies"
+	@echo "  make -f $(MAKEFILE_NAME) fx-backend    - run FX backend locally on port $(FX_BACKEND_PORT)"
+	@echo "  make -f $(MAKEFILE_NAME) fx-frontend   - run FX frontend locally on port $(FX_FRONTEND_PORT)"
+	@echo "  make -f $(MAKEFILE_NAME) fx            - setup and run FX backend + frontend together"
+	@echo "  make -f $(MAKEFILE_NAME) fx-run        - alias for fx"
+	@echo "  make -f $(MAKEFILE_NAME) fx-build      - build FX Insights Docker image locally"
+	@echo "  make -f $(MAKEFILE_NAME) fx-docker-run - run FX Insights Docker container locally"
+	@echo "  make -f $(MAKEFILE_NAME) fx-smoke      - quick local health checks for FX endpoints"
+	@echo "  make -f $(MAKEFILE_NAME) thermo        - run Smart Thermostat directly"
+	@echo "  make -f $(MAKEFILE_NAME) trial         - run Clinical Trial Evaluator directly"
+	@echo "  make -f $(MAKEFILE_NAME) check         - verify key packages are installed"
+	@echo "  make -f $(MAKEFILE_NAME) clean         - remove root virtual environment"
+	@echo "  make -f $(MAKEFILE_NAME) fx-clean      - remove FX frontend node_modules/dist"
+
+$(VENV)/bin/activate:
+	$(PYTHON) -m venv $(VENV)
+	$(PIP) install --upgrade pip
+	$(PIP) install -r requirements.txt
+
+setup: $(VENV)/bin/activate
+
+install: $(VENV)/bin/activate
+	$(PIP) install -r requirements.txt
+
+gateway: $(VENV)/bin/activate
+	PYTHONPATH=. $(UVICORN) gateway.main:app --port 8080 --reload
+
+resume: $(VENV)/bin/activate
+	PYTHONPATH=. $(PY) -m services.resume_job_analyzer.app
+
+fx-setup: $(VENV)/bin/activate
+	chmod +x $(FX_SETUP_SCRIPT)
+	cd $(FX_DIR) && ./setup_local.sh
+
+fx-install: $(VENV)/bin/activate
+	cd $(FX_FRONTEND_DIR) && $(NPM) install
+
+fx-backend: $(VENV)/bin/activate
+	PYTHONPATH=. $(PY) -m $(FX_BACKEND_MODULE)
+
+fx-frontend:
+	cd $(FX_FRONTEND_DIR) && $(NPM) run dev
+
+fx: fx-setup
+	@echo "FX Insights is starting..."
+	@echo "Frontend: http://127.0.0.1:$(FX_FRONTEND_PORT)"
+	@echo "Backend:  http://127.0.0.1:$(FX_BACKEND_PORT)"
+	@echo ""
+	@echo "Press Ctrl+C to stop both services."
+	@trap 'echo ""; echo "Stopping services..."; kill 0' EXIT INT TERM; \
+	$(MAKE) -f $(MAKEFILE_NAME) fx-backend & \
+	BACKEND_PID=$$!; \
+	sleep 2; \
+	$(MAKE) -f $(MAKEFILE_NAME) fx-frontend & \
+	FRONTEND_PID=$$!; \
+	wait $$BACKEND_PID $$FRONTEND_PID
+
+fx-run: fx
+
+fx-build:
+	docker build -t $(FX_DOCKER_IMAGE) $(FX_DIR)
+
+fx-docker-run:
+	docker run --rm -p $(FX_BACKEND_PORT):5001 --name $(FX_DOCKER_IMAGE) $(FX_DOCKER_IMAGE)
+
+fx-smoke:
+	@echo "Checking backend on http://127.0.0.1:$(FX_BACKEND_PORT)"
+	@curl -fsS http://127.0.0.1:$(FX_BACKEND_PORT)/ || (echo "Backend check failed" && exit 1)
+	@echo ""
+	@echo "Checking frontend on http://127.0.0.1:$(FX_FRONTEND_PORT)"
+	@curl -fsS http://127.0.0.1:$(FX_FRONTEND_PORT)/ > /dev/null || (echo "Frontend check failed" && exit 1)
+	@echo "FX local smoke check passed"
+
+thermo: $(VENV)/bin/activate
+	PYTHONPATH=. $(PY) -m services.smart_thermostat.service
+
+trial: $(VENV)/bin/activate
+	PYTHONPATH=. $(PY) -m services.clinical_trial_evaluator.service
+
+check: $(VENV)/bin/activate
+	@echo "Python:"
+	@$(PY) --version
+	@echo ""
+	@echo "Key packages:"
+	@$(PIP) show fastapi uvicorn Flask asgiref requests openai python-docx PyPDF2 || true
+
+clean:
+	rm -rf $(VENV)
+
+fx-clean:
+	rm -rf $(FX_FRONTEND_DIR)/node_modules
+	rm -rf $(FX_FRONTEND_DIR)/dist
+
+.PHONY: help setup install gateway resume fx-setup fx-install fx-backend fx-frontend fx fx-run fx-build fx-docker-run fx-smoke thermo trial check clean fx-clean
