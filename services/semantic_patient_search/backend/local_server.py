@@ -5,8 +5,8 @@ from pathlib import Path
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 
-from sample_data import SAMPLE_PATIENTS
-from patient_search import SemanticPatientSearch
+from .sample_data import SAMPLE_PATIENTS
+from .patient_search import SemanticPatientSearch
 
 app = Flask(__name__, static_folder="static", static_url_path="")
 CORS(app)
