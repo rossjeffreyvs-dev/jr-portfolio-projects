@@ -101,3 +101,7 @@ services/**/.DS_Store
 lightsail.json
 lightsail.*.json
 api_keys.env
+
+# Next.js build output
+.next/
+out/
