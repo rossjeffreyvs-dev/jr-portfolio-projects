@@ -173,7 +173,7 @@ export default function ClinicalTrialProjectPage() {
       <div className="page-shell">
         <main className="container">
           <section className="hero">
-            <h1>Clinical Trial Matching Agent System</h1>
+            <h1>Multi-Agent Clinical Trial Matching System</h1>
             <p>Loading dashboard data from the local API…</p>
           </section>
         </main>
@@ -199,7 +199,7 @@ export default function ClinicalTrialProjectPage() {
 
       <main className="container">
         <section className="hero">
-          <h1>Clinical Trial Matching Agent System</h1>
+          <h1>Multi-Agent Clinical Trial Matching System</h1>
           <p>
             Evaluate patient eligibility against clinical trial criteria using a simulated
             agent workflow spanning patient context building, matching, explanation, and
