@@ -477,10 +477,50 @@ th {
   outline-offset: 2px;
 }
 
+.control-status-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.control-status-card {
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: #f9fbff;
+  padding: 14px 16px;
+}
+
+.control-status-card strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 15px;
+  color: var(--ink);
+  line-height: 1.35;
+}
+
+.queue-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .error-text {
-  margin: 12px 0 0;
+  margin-top: 12px;
   color: #8b1f1f;
+  font-size: 14px;
   font-weight: 700;
+}
+
+@media (max-width: 860px) {
+  .control-status-row {
+    grid-template-columns: 1fr;
+  }
+
+  .queue-footer-actions {
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
 }
 
 button:disabled {

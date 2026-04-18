@@ -51,6 +51,7 @@ export default function ClinicalTrialProjectPage() {
   const [isStartingEvaluation, setIsStartingEvaluation] = useState(false);
   const [isChangingTrial, setIsChangingTrial] = useState(false);
   const [error, setError] = useState<string>('');
+  const [patientActionLabel, setPatientActionLabel] = useState('Select Patient');
 
   async function loadDashboard(preferredEvaluationId?: string) {
     setError('');
@@ -110,27 +111,38 @@ export default function ClinicalTrialProjectPage() {
     [reviews],
   );
 
-  async function handleSimulatePatient() {
-    if (!activeTrial || isStartingEvaluation || patients.length === 0) return;
+  const handleSimulatePatient = async () => {
+    if (!activeTrial || patients.length === 0) return;
 
+    const currentIndex = selectedPatient
+      ? patients.findIndex((patient) => patient.id === selectedPatient.id)
+      : -1;
+
+    const nextPatient = patients[(currentIndex + 1) % patients.length];
+
+    setError(null);
     setIsStartingEvaluation(true);
-    setError('');
-    try {
-      const usedPatientIds = new Set(evaluations.map((evaluation) => evaluation.patient_id));
-      const nextPatient =
-        patients.find((patient) => !usedPatientIds.has(patient.id)) ||
-        patients[(patients.findIndex((patient) => patient.id === selectedPatient?.id) + 1) % patients.length] ||
-        patients[0];
+    setPatientActionLabel('Starting Evaluation…');
 
-      const evaluation = await startEvaluation(nextPatient.id, activeTrial.id);
-      await loadDashboard(evaluation.id);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unable to start a new evaluation.';
-      setError(message);
+    try {
+      const created = await startEvaluation(nextPatient.id, activeTrial.id);
+
+      await loadDashboard(created.id);
+      setSelectedEvaluationId(created.id);
+
+      setPatientActionLabel('Patient Updated');
+
+      window.setTimeout(() => {
+        setPatientActionLabel('Select Patient');
+      }, 1500);
+    } catch (error) {
+      console.error(error);
+      setError(error instanceof Error ? error.message : 'Failed to start evaluation');
+      setPatientActionLabel('Select Patient');
     } finally {
       setIsStartingEvaluation(false);
     }
-  }
+  };
 
   async function handleChangeTrial() {
     if (trials.length <= 1 || isChangingTrial) return;
@@ -210,17 +222,52 @@ export default function ClinicalTrialProjectPage() {
               </p>
             </div>
           </div>
+
           <div className="control-actions">
-            <button className="primary-btn" onClick={handleSimulatePatient} disabled={isStartingEvaluation}>
-              {isStartingEvaluation ? 'Starting Evaluation…' : 'Select Patient'}
+            <button
+              className="primary-btn"
+              onClick={handleSimulatePatient}
+              disabled={isStartingEvaluation}
+            >
+              {isStartingEvaluation ? 'Starting Evaluation…' : patientActionLabel}
             </button>
-            <button className="secondary-btn" onClick={handleChangeTrial} disabled={isChangingTrial}>
+
+            <button
+              className="secondary-btn"
+              onClick={handleChangeTrial}
+              disabled={isChangingTrial}
+            >
               {isChangingTrial ? 'Changing Trial…' : 'Select Trial'}
             </button>
-            <button className="secondary-btn" onClick={handleReplayWorkflow}>
+
+            <button
+              className="secondary-btn"
+              onClick={handleReplayWorkflow}
+              disabled={!selectedEvaluation}
+            >
               Replay Evaluation
             </button>
           </div>
+
+          <div className="control-status-row">
+            <div className="control-status-card">
+              <span className="eyebrow">Current Trial</span>
+              <strong>{activeTrial?.title || 'No trial selected'}</strong>
+            </div>
+
+            <div className="control-status-card">
+              <span className="eyebrow">Current Patient</span>
+              <strong>
+                {selectedPatient?.display_name || selectedPatient?.id || 'No patient selected'}
+              </strong>
+            </div>
+
+            <div className="control-status-card">
+              <span className="eyebrow">Latest Recommendation</span>
+              <strong>{selectedEvaluation?.recommendation || 'No evaluation loaded'}</strong>
+            </div>
+          </div>
+
           {error ? <p className="error-text">{error}</p> : null}
         </section>
 
@@ -281,6 +328,9 @@ export default function ClinicalTrialProjectPage() {
                       <div className="eyebrow">Match Score</div>
                       <strong className="queue-score">{evaluation.match_score}%</strong>
                     </div>
+                    {selectedPatient?.id === patient.id ? (
+                      <span className="badge info">Selected</span>
+                    ) : null}
                     <button className="text-btn">View Details</button>
                   </div>
                 </article>
