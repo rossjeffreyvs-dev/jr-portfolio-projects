@@ -1,0 +1,48 @@
+[
+  {
+    "id": "trial_nsclc_001",
+    "title": "Phase II Immunotherapy Study for Metastatic NSCLC",
+    "disease_area": "Thoracic Oncology",
+    "phase": "II",
+    "indication": "Metastatic non-small cell lung cancer",
+    "protocol_status": "active",
+    "inclusion_criteria": [
+      {"id": "INC_001", "type": "inclusion", "category": "Diagnosis", "text": "Histologically confirmed metastatic NSCLC", "required": true},
+      {"id": "INC_002", "type": "inclusion", "category": "Performance Status", "text": "ECOG performance status of 0 or 1", "required": true},
+      {"id": "INC_003", "type": "inclusion", "category": "Imaging", "text": "Documented CNS metastasis status within 28 days", "required": true}
+    ],
+    "exclusion_criteria": [
+      {"id": "EXC_001", "type": "exclusion", "category": "Prior Therapy", "text": "No prior PD-1 or PD-L1 inhibitor therapy", "required": true},
+      {"id": "EXC_002", "type": "exclusion", "category": "Autoimmune", "text": "No uncontrolled autoimmune disease requiring systemic therapy", "required": true}
+    ]
+  },
+  {
+    "id": "trial_breast_001",
+    "title": "Targeted Therapy Trial for Metastatic Breast Cancer",
+    "disease_area": "Breast Oncology",
+    "phase": "Ib/II",
+    "indication": "HER2-low metastatic breast cancer",
+    "protocol_status": "parsed",
+    "inclusion_criteria": [
+      {"id": "INC_101", "type": "inclusion", "category": "Diagnosis", "text": "Metastatic breast cancer with HER2-low disease", "required": true},
+      {"id": "INC_102", "type": "inclusion", "category": "Age", "text": "Age 18 years or older", "required": true}
+    ],
+    "exclusion_criteria": [
+      {"id": "EXC_101", "type": "exclusion", "category": "Cardiac", "text": "No uncontrolled cardiac disease", "required": true}
+    ]
+  },
+  {
+    "id": "trial_heme_001",
+    "title": "Cell Therapy Study in Relapsed Hematologic Malignancy",
+    "disease_area": "Hematologic Oncology",
+    "phase": "I",
+    "indication": "Relapsed or refractory hematologic malignancy",
+    "protocol_status": "parsed",
+    "inclusion_criteria": [
+      {"id": "INC_201", "type": "inclusion", "category": "Disease Status", "text": "Relapsed or refractory disease after standard therapy", "required": true}
+    ],
+    "exclusion_criteria": [
+      {"id": "EXC_201", "type": "exclusion", "category": "Infection", "text": "No active uncontrolled infection", "required": true}
+    ]
+  }
+]

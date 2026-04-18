@@ -14,10 +14,10 @@ HOST_MAP = {
     "fx-insights.jeffrey-ross.me": fx_app,
     "smart-thermostat.jeffrey-ross.me": thermo_app,
     "clinical-trial-evaluator.jeffrey-ross.me": trial_app,
-    "semantic-patient-search": semantic_app,
+    "semantic-patient-search.jeffrey-ross.me": semantic_app,
 
     # optional lightsail domain aliases
-    "jr-portfolio-projects.dtw628ha8cm94.us-west-2.cs.amazonlightsail.com": fx_app,
+    # "jr-portfolio-projects.dtw628ha8cm94.us-west-2.cs.amazonlightsail.com": fx_app,
 
     # local development aliases
     "localhost": resume_app,

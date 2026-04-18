@@ -1,0 +1,13 @@
+[
+  {
+    "id": "review_001",
+    "evaluation_id": "seed_eval_001",
+    "patient_id": "patient_003",
+    "trial_id": "trial_nsclc_001",
+    "reason": ["Missing recent CNS imaging evidence", "Ambiguous autoimmune history in note summary"],
+    "priority": "High",
+    "review_status": "Open",
+    "reviewer_decision": null,
+    "reviewer_note": null
+  }
+]
