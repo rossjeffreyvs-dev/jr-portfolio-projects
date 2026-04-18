@@ -122,9 +122,12 @@ semantic-setup: $(VENV)/bin/activate
 semantic-install: $(VENV)/bin/activate
 	cd $(SEM_FRONTEND_DIR) && $(NPM) install
 
-semantic-backend: $(VENV)/bin/activate
-	PYTHONPATH=. $(PY) -m $(SEM_BACKEND_MODULE)
-
+semantic-backend:
+	@set -a; \
+	[ -f ./api_keys.env ] && source ./api_keys.env; \
+	set +a; \
+	PYTHONPATH=. .venv/bin/python -m services.semantic_patient_search.backend.local_server
+	
 semantic-frontend:
 	cd $(SEM_FRONTEND_DIR) && $(NPM) run dev
 
