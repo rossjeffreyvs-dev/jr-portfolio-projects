@@ -1,4 +1,5 @@
 from services.fx_insights.service import app as fx_app
+from services.semantic_patient_search.service import app as semantic_app
 from services.smart_thermostat.service import app as thermo_app
 from services.clinical_trial_evaluator.service import app as trial_app
 
@@ -13,6 +14,7 @@ HOST_MAP = {
     "fx-insights.jeffrey-ross.me": fx_app,
     "smart-thermostat.jeffrey-ross.me": thermo_app,
     "clinical-trial-evaluator.jeffrey-ross.me": trial_app,
+    "semantic-patient-search": semantic_app,
 
     # optional lightsail domain aliases
     "jr-portfolio-projects.dtw628ha8cm94.us-west-2.cs.amazonlightsail.com": fx_app,

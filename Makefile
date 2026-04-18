@@ -16,7 +16,7 @@ generate-lightsail-json:
 	./scripts/generate_lightsail_json.sh
 
 deploy:
-	./scripts/deploy_lightsail.sh
+	PUSH_DEBUG=$(PUSH_DEBUG) ./scripts/deploy_lightsail.sh
 
 clean-lightsail-json:
 	rm -f lightsail.json

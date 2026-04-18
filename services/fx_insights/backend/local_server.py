@@ -15,7 +15,7 @@ STATIC_DIR = Path(__file__).resolve().parent / "static"
 # Load local env file if present; container env vars still override normally
 load_dotenv(PROJECT_ROOT / ".env")
 
-from lambda_function import (  # noqa: E402
+from .lambda_function import (  # noqa: E402
     generate_report_payload,
     generate_report_stream,
     get_news_payload,
