@@ -52,6 +52,7 @@ function sortPatientsForTrial(items: Patient[]) {
   return [...items].sort((a, b) => {
     const outcomeDelta =
       outcomeOrder(a.seeded_outcome) - outcomeOrder(b.seeded_outcome);
+
     if (outcomeDelta !== 0) return outcomeDelta;
     return b.seeded_score - a.seeded_score;
   });
@@ -68,8 +69,6 @@ export default function ClinicalTrialProjectPage() {
   const [isStartingEvaluation, setIsStartingEvaluation] = useState(false);
   const [isChangingTrial, setIsChangingTrial] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [patientActionLabel, setPatientActionLabel] =
-    useState("Select Patient");
   const [isPatientModalOpen, setIsPatientModalOpen] = useState(false);
   const [trialPatients, setTrialPatients] = useState<Patient[]>([]);
   const [isLoadingTrialPatients, setIsLoadingTrialPatients] = useState(false);
@@ -205,6 +204,7 @@ export default function ClinicalTrialProjectPage() {
 
     setIsChangingTrial(true);
     setError("");
+
     try {
       const currentIndex = trials.findIndex(
         (trial) => trial.id === activeTrialId,
@@ -341,6 +341,7 @@ export default function ClinicalTrialProjectPage() {
           <span className="section-label">
             Eligibility Operations Dashboard
           </span>
+
           <div className="callout-grid">
             <div className="callout">
               <div>
@@ -358,6 +359,7 @@ export default function ClinicalTrialProjectPage() {
                 Change Trial
               </button>
             </div>
+
             <div className="callout">
               <div>
                 <div className="eyebrow">Patients ready for evaluation</div>
@@ -377,54 +379,80 @@ export default function ClinicalTrialProjectPage() {
             </p>
           </div>
 
-          <div className="queue-grid">
-            {activeTrialEvaluations.map((evaluation, index) => {
-              const patient = patients.find(
-                (item) => item.id === evaluation.patient_id,
-              );
-              return (
-                <article
-                  key={evaluation.id}
-                  className={`queue-card queue-card-button ${evaluation.id === selectedEvaluation?.id ? "selected" : ""}`}
-                  onClick={() => setSelectedEvaluationId(evaluation.id)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      setSelectedEvaluationId(evaluation.id);
-                    }
-                  }}
-                >
-                  <div className="queue-top-row">
-                    <div className="eyebrow">
-                      Rank #{index + 1} •{" "}
-                      {patient?.display_name || evaluation.patient_id}
+          {activeTrialEvaluations.length === 0 ? (
+            <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-center">
+              <p className="text-base font-semibold text-slate-900">
+                No evaluations yet for this trial
+              </p>
+              <p className="mt-2 text-sm text-slate-600">
+                Use Select Patient to open the ranked candidate list and start a
+                new evaluation.
+              </p>
+            </div>
+          ) : (
+            <div className="queue-grid">
+              {activeTrialEvaluations.map((evaluation, index) => {
+                const patient = patients.find(
+                  (item) => item.id === evaluation.patient_id,
+                );
+
+                return (
+                  <article
+                    key={evaluation.id}
+                    className={`queue-card queue-card-button ${
+                      evaluation.id === selectedEvaluation?.id ? "selected" : ""
+                    }`}
+                    onClick={() => setSelectedEvaluationId(evaluation.id)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        setSelectedEvaluationId(evaluation.id);
+                      }
+                    }}
+                  >
+                    <div className="queue-top-row">
+                      <div className="eyebrow">
+                        Rank #{index + 1} •{" "}
+                        {patient?.display_name || evaluation.patient_id}
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {index === 0 ? (
+                          <span className="badge match">Top Candidate</span>
+                        ) : null}
+                        <span
+                          className={statusClass(evaluation.recommendation)}
+                        >
+                          {evaluation.recommendation}
+                        </span>
+                      </div>
                     </div>
-                    {index === 0 && (
-                      <span className="badge match">Top Candidate</span>
-                    )}{" "}
-                    <span className={statusClass(evaluation.recommendation)}>
-                      {evaluation.recommendation}
-                    </span>
-                  </div>
-                  <h3>{patient?.diagnosis?.[0] || "Diagnosis unavailable"}</h3>
-                  <p className="queue-note">{evaluation.explanation}</p>
-                  <div className="queue-footer">
-                    <div>
-                      <div className="eyebrow">Match Score</div>
-                      <strong className="queue-score">
-                        {evaluation.match_score}%
-                      </strong>
+
+                    <h3>
+                      {patient?.diagnosis?.[0] || "Diagnosis unavailable"}
+                    </h3>
+                    <p className="queue-note">{evaluation.explanation}</p>
+
+                    <div className="queue-footer">
+                      <div>
+                        <div className="eyebrow">Match Score</div>
+                        <strong className="queue-score">
+                          {evaluation.match_score}%
+                        </strong>
+                      </div>
+
+                      {patient && selectedPatient?.id === patient.id ? (
+                        <span className="badge info">Selected</span>
+                      ) : null}
+
+                      <button className="text-btn">View Details</button>
                     </div>
-                    {patient && selectedPatient?.id === patient.id ? (
-                      <span className="badge info">Selected</span>
-                    ) : null}
-                    <button className="text-btn">View Details</button>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
         </section>
 
         <section className="dashboard-grid">
@@ -641,32 +669,46 @@ export default function ClinicalTrialProjectPage() {
           <article className="card col-4">
             <span className="section-label">Human Review Queue</span>
             <h2>Flagged cases</h2>
-            {reviewCards.map((item) => {
-              const patient = patients.find(
-                (candidate) => candidate.id === item.patient_id,
-              );
-              return (
-                <div key={item.id} className="queue-card review-card">
-                  <div className="review-card-top">
-                    <strong>{patient?.display_name || item.patient_id}</strong>
-                    <span
-                      className={
-                        item.priority === "High" ? "badge review" : "badge info"
-                      }
-                    >
-                      {item.priority}
-                    </span>
-                  </div>
 
-                  <p>{item.reason.join(", ")}</p>
+            {reviewCards.length === 0 ? (
+              <div className="queue-card review-card">
+                <p>No open review tasks for the active trial.</p>
+              </div>
+            ) : (
+              reviewCards.map((item) => {
+                const patient = patients.find(
+                  (candidate) => candidate.id === item.patient_id,
+                );
 
-                  <div className="review-card-footer">
-                    <span className="badge info">{item.review_status}</span>
-                    <button className="secondary-btn small">Review Case</button>
+                return (
+                  <div key={item.id} className="queue-card review-card">
+                    <div className="review-card-top">
+                      <strong>
+                        {patient?.display_name || item.patient_id}
+                      </strong>
+                      <span
+                        className={
+                          item.priority === "High"
+                            ? "badge review"
+                            : "badge info"
+                        }
+                      >
+                        {item.priority}
+                      </span>
+                    </div>
+
+                    <p>{item.reason.join(", ")}</p>
+
+                    <div className="review-card-footer">
+                      <span className="badge info">{item.review_status}</span>
+                      <button className="secondary-btn small">
+                        Review Case
+                      </button>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </article>
 
           <article className="card col-12">
@@ -743,7 +785,7 @@ export default function ClinicalTrialProjectPage() {
                 </div>
               ) : (
                 <div className="grid gap-4 md:grid-cols-2">
-                  {trialPatients.map((patient) => (
+                  {trialPatients.map((patient, index) => (
                     <button
                       key={patient.id}
                       type="button"
@@ -751,15 +793,28 @@ export default function ClinicalTrialProjectPage() {
                       className="rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
                     >
                       <div className="flex items-center justify-between gap-3">
-                        <h4 className="text-lg font-semibold text-slate-900">
-                          {patient.display_name}
-                        </h4>
-                        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
-                          {patient.seeded_outcome}
-                        </span>
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                            Rank #{index + 1}
+                          </p>
+                          <h4 className="text-lg font-semibold text-slate-900">
+                            {patient.display_name}
+                          </h4>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          {index === 0 ? (
+                            <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                              Top Candidate
+                            </span>
+                          ) : null}
+                          <span className={statusClass(patient.seeded_outcome)}>
+                            {patient.seeded_outcome}
+                          </span>
+                        </div>
                       </div>
 
-                      <div className="mt-3 space-y-1 text-sm text-slate-600">
+                      <div className="mt-4 space-y-2 text-sm text-slate-600">
                         <p>
                           <span className="font-medium text-slate-900">
                             Diagnosis:
@@ -779,6 +834,23 @@ export default function ClinicalTrialProjectPage() {
                           {patient.ecog || "—"}
                         </p>
                       </div>
+
+                      <div className="mt-4">
+                        <div className="mb-1 flex items-center justify-between text-xs font-medium text-slate-600">
+                          <span>Match Score</span>
+                          <span>{patient.seeded_score}%</span>
+                        </div>
+                        <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                          <div
+                            className="h-full rounded-full bg-slate-900 transition-all"
+                            style={{ width: `${patient.seeded_score}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      <p className="mt-4 text-sm text-slate-600">
+                        {patient.seeded_reason}
+                      </p>
 
                       <div className="mt-4">
                         <span className="inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
