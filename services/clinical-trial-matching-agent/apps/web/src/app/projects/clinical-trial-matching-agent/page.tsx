@@ -155,7 +155,6 @@ export default function ClinicalTrialProjectPage() {
     if (!activeTrial || isStartingEvaluation) return;
 
     setError("");
-    setPatientModalError(null);
     setTrialPatients([]);
     setIsPatientModalOpen(true);
     setIsLoadingTrialPatients(true);
@@ -168,8 +167,7 @@ export default function ClinicalTrialProjectPage() {
         err instanceof Error
           ? err.message
           : "Unable to load patients for this trial.";
-
-      setPatientModalError(message);
+      setError(message);
       setTrialPatients([]);
     } finally {
       setIsLoadingTrialPatients(false);
