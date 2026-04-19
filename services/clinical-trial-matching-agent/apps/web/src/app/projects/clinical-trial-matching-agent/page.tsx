@@ -124,18 +124,12 @@ export default function ClinicalTrialProjectPage() {
     [trials, activeTrialId],
   );
 
-  const activeTrialEvaluations = useMemo(
-    () =>
-      evaluations.filter((evaluation) => evaluation.trial_id === activeTrialId),
-    [evaluations, activeTrialId],
-  );
-
   const selectedEvaluation = useMemo(
     () =>
-      activeTrialEvaluations.find(
+      evaluations.find(
         (evaluation) => evaluation.id === selectedEvaluationId,
-      ) || activeTrialEvaluations[0],
-    [activeTrialEvaluations, selectedEvaluationId],
+      ) || evaluations[0],
+    [evaluations, selectedEvaluationId],
   );
 
   const selectedPatient = useMemo(
@@ -378,7 +372,7 @@ export default function ClinicalTrialProjectPage() {
             </p>
           </div>
 
-          {activeTrialEvaluations.length === 0 ? (
+          {evaluations.length === 0 ? (
             <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-center">
               <p className="text-base font-semibold text-slate-900">
                 No evaluations yet for this trial
@@ -390,7 +384,7 @@ export default function ClinicalTrialProjectPage() {
             </div>
           ) : (
             <div className="queue-grid">
-              {activeTrialEvaluations.map((evaluation, index) => {
+              {evaluations.map((evaluation, index) => {
                 const patient = patients.find(
                   (item) => item.id === evaluation.patient_id,
                 );
@@ -417,9 +411,9 @@ export default function ClinicalTrialProjectPage() {
                       </div>
 
                       <div className="flex items-center gap-2">
-                        {index === 0 ? (
+                        {index === 0 && (
                           <span className="badge match">Top Candidate</span>
-                        ) : null}
+                        )}
                         <span
                           className={statusClass(evaluation.recommendation)}
                         >
@@ -431,6 +425,7 @@ export default function ClinicalTrialProjectPage() {
                     <h3>
                       {patient?.diagnosis?.[0] || "Diagnosis unavailable"}
                     </h3>
+
                     <p className="queue-note">{evaluation.explanation}</p>
 
                     <div className="queue-footer">
@@ -441,9 +436,9 @@ export default function ClinicalTrialProjectPage() {
                         </strong>
                       </div>
 
-                      {patient && selectedPatient?.id === patient.id ? (
+                      {patient && selectedPatient?.id === patient.id && (
                         <span className="badge info">Selected</span>
-                      ) : null}
+                      )}
 
                       <button className="text-btn">View Details</button>
                     </div>
