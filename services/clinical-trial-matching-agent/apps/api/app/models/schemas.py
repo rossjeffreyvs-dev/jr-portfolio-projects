@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from typing import Dict, List, Literal, Optional
-from pydantic import BaseModel, Field
 
+from pydantic import BaseModel, Field, field_validator
 
 StatusType = Literal["Likely Match", "Not Eligible", "Requires Review", "In Progress"]
+
 WorkflowStage = Literal[
     "patient_selected",
     "event_published",
@@ -48,12 +49,30 @@ class Patient(BaseModel):
     labs: Dict[str, str | float | int] = {}
     comorbidities: List[str] = []
     notes: List[str] = []
-    eligible_trial_ids: List[str] = []   # <-- add this
+    eligible_trial_ids: List[str] = []
     seeded_outcome: StatusType
     seeded_score: int
     seeded_reason: str
-    
-        
+
+    @field_validator("seeded_outcome", mode="before")
+    @classmethod
+    def normalize_seeded_outcome(cls, value: str) -> str:
+        if not isinstance(value, str):
+            return value
+
+        normalized = value.strip().lower()
+
+        aliases = {
+            "review required": "Requires Review",
+            "requires review": "Requires Review",
+            "likely match": "Likely Match",
+            "not eligible": "Not Eligible",
+            "in progress": "In Progress",
+        }
+
+        return aliases.get(normalized, value)
+
+
 class CriterionResult(BaseModel):
     criterion_id: str
     criterion_text: str

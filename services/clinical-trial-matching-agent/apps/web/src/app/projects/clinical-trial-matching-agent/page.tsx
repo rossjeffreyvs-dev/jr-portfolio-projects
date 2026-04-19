@@ -69,6 +69,9 @@ export default function ClinicalTrialProjectPage() {
   const [isStartingEvaluation, setIsStartingEvaluation] = useState(false);
   const [isChangingTrial, setIsChangingTrial] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [patientModalError, setPatientModalError] = useState<string | null>(
+    null,
+  );
   const [isPatientModalOpen, setIsPatientModalOpen] = useState(false);
   const [trialPatients, setTrialPatients] = useState<Patient[]>([]);
   const [isLoadingTrialPatients, setIsLoadingTrialPatients] = useState(false);
@@ -152,18 +155,22 @@ export default function ClinicalTrialProjectPage() {
     if (!activeTrial || isStartingEvaluation) return;
 
     setError("");
+    setPatientModalError(null);
+    setTrialPatients([]);
+    setIsPatientModalOpen(true);
     setIsLoadingTrialPatients(true);
 
     try {
       const response = await getPatientsForTrial(activeTrial.id);
       setTrialPatients(sortPatientsForTrial(response.items));
-      setIsPatientModalOpen(true);
     } catch (err) {
       const message =
         err instanceof Error
           ? err.message
           : "Unable to load patients for this trial.";
-      setError(message);
+
+      setPatientModalError(message);
+      setTrialPatients([]);
     } finally {
       setIsLoadingTrialPatients(false);
     }
@@ -174,6 +181,7 @@ export default function ClinicalTrialProjectPage() {
 
     setIsStartingEvaluation(true);
     setError("");
+    setPatientModalError(null);
 
     try {
       const evaluation = await startEvaluation(patient.id, activeTrial.id);
@@ -186,6 +194,7 @@ export default function ClinicalTrialProjectPage() {
           ? err.message
           : "Unable to start a new evaluation.";
       setError(message);
+      setPatientModalError(message);
     } finally {
       setIsStartingEvaluation(false);
     }
@@ -218,6 +227,13 @@ export default function ClinicalTrialProjectPage() {
     if (selectedEvaluation) {
       setSelectedEvaluationId(selectedEvaluation.id);
     }
+  }
+
+  function handleClosePatientModal() {
+    setIsPatientModalOpen(false);
+    setIsLoadingTrialPatients(false);
+    setPatientModalError(null);
+    setTrialPatients([]);
   }
 
   if (isLoading) {
@@ -761,20 +777,37 @@ export default function ClinicalTrialProjectPage() {
 
                 <button
                   type="button"
-                  onClick={() => setIsPatientModalOpen(false)}
+                  onClick={handleClosePatientModal}
                   className="rounded-full border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
                 >
                   Close
                 </button>
               </div>
 
-              {trialPatients.length === 0 ? (
+              {patientModalError ? (
+                <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+                  {patientModalError}
+                </div>
+              ) : null}
+
+              {isLoadingTrialPatients ? (
                 <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
                   <p className="text-base font-medium text-slate-900">
-                    No seeded patients available
+                    Loading available patients…
                   </p>
                   <p className="mt-2 text-sm text-slate-600">
-                    Add trial-linked patients in the API seed data for this
+                    Retrieving trial-linked patients who have not yet been
+                    evaluated for this trial.
+                  </p>
+                </div>
+              ) : trialPatients.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
+                  <p className="text-base font-medium text-slate-900">
+                    No patients available to add
+                  </p>
+                  <p className="mt-2 text-sm text-slate-600">
+                    All trial-linked patients have already been evaluated for
+                    this trial, or no patients are currently mapped to this
                     protocol.
                   </p>
                 </div>
@@ -785,7 +818,8 @@ export default function ClinicalTrialProjectPage() {
                       key={patient.id}
                       type="button"
                       onClick={() => handleSelectPatient(patient)}
-                      className="rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+                      disabled={isStartingEvaluation}
+                      className="rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div>
@@ -849,7 +883,9 @@ export default function ClinicalTrialProjectPage() {
 
                       <div className="mt-4">
                         <span className="inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
-                          Start evaluation
+                          {isStartingEvaluation
+                            ? "Starting evaluation…"
+                            : "Start evaluation"}
                         </span>
                       </div>
                     </button>
