@@ -10,7 +10,11 @@ def list_patients(trial_id: str | None = Query(default=None)):
     patients = list(PATIENTS.values())
 
     if trial_id:
-        patients = [patient for patient in patients if trial_id in patient.trial_tags]
+        patients = [
+            patient
+            for patient in patients
+            if trial_id in patient.eligible_trial_ids
+        ]
 
         evaluated_patient_ids = {
             evaluation.patient_id
