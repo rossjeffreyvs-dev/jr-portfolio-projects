@@ -208,6 +208,7 @@ export default function ClinicalTrialProjectPage() {
         (trial) => trial.id === activeTrialId,
       );
       const nextTrial = trials[(currentIndex + 1) % trials.length] || trials[0];
+
       await activateTrial(nextTrial.id);
       await loadDashboard();
     } catch (err) {
