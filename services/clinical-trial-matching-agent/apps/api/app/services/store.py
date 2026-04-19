@@ -36,21 +36,19 @@ REVIEWS: Dict[str, ReviewTask] = {
 }
 
 EVALUATIONS: Dict[str, Evaluation] = {}
+
 ACTIVE_TRIAL_ID: str = "trial_nsclc_001"
 
 
 def set_active_trial(trial_id: str) -> Trial:
     global ACTIVE_TRIAL_ID
-
     if trial_id not in TRIALS:
         raise KeyError(trial_id)
 
     ACTIVE_TRIAL_ID = trial_id
-
     for tid, trial in list(TRIALS.items()):
         status = "active" if tid == trial_id else "parsed"
         TRIALS[tid] = trial.model_copy(update={"protocol_status": status})
-
     return TRIALS[trial_id]
 
 
@@ -101,7 +99,6 @@ STAGE_LABELS = [
 def build_workflow_events() -> List[WorkflowEvent]:
     timestamp = utc_now()
     events: List[WorkflowEvent] = []
-
     for stage, label, detail in STAGE_LABELS:
         events.append(
             WorkflowEvent(
@@ -112,13 +109,11 @@ def build_workflow_events() -> List[WorkflowEvent]:
                 detail=detail,
             )
         )
-
     return events
 
 
 def list_evaluations(*, trial_id: str | None = None) -> List[Evaluation]:
     items = list(EVALUATIONS.values())
-
     if trial_id:
         items = [evaluation for evaluation in items if evaluation.trial_id == trial_id]
 
@@ -163,7 +158,6 @@ def seed_initial_evaluations() -> None:
             patient_id,
             trial_id,
             evaluation_id=evaluation_id,
-            create_review_task=False,
         )
 
     if "review_001" in REVIEWS:
