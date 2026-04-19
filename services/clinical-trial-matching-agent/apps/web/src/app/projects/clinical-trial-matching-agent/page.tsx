@@ -41,6 +41,22 @@ function formatLabs(labs: Record<string, string | number>) {
     .join(", ");
 }
 
+function outcomeOrder(status: Patient["seeded_outcome"]) {
+  if (status === "Likely Match") return 0;
+  if (status === "Requires Review") return 1;
+  if (status === "Not Eligible") return 2;
+  return 3;
+}
+
+function sortPatientsForTrial(items: Patient[]) {
+  return [...items].sort((a, b) => {
+    const outcomeDelta =
+      outcomeOrder(a.seeded_outcome) - outcomeOrder(b.seeded_outcome);
+    if (outcomeDelta !== 0) return outcomeDelta;
+    return b.seeded_score - a.seeded_score;
+  });
+}
+
 export default function ClinicalTrialProjectPage() {
   const [trials, setTrials] = useState<Trial[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -60,6 +76,7 @@ export default function ClinicalTrialProjectPage() {
 
   async function loadDashboard(preferredEvaluationId?: string) {
     setError("");
+
     const [trialResponse, patientResponse, evaluationResponse, reviewResponse] =
       await Promise.all([
         getTrials(),
@@ -74,13 +91,18 @@ export default function ClinicalTrialProjectPage() {
     setEvaluations(evaluationResponse.items);
     setReviews(reviewResponse.items);
 
+    const activeTrialEvaluations = evaluationResponse.items.filter(
+      (item) => item.trial_id === trialResponse.active_trial_id,
+    );
+
     const nextSelected =
       preferredEvaluationId ||
-      evaluationResponse.items.find(
+      activeTrialEvaluations.find(
         (item) => item.recommendation === "Requires Review",
       )?.id ||
-      evaluationResponse.items[0]?.id ||
+      activeTrialEvaluations[0]?.id ||
       "";
+
     setSelectedEvaluationId(nextSelected);
   }
 
@@ -105,12 +127,18 @@ export default function ClinicalTrialProjectPage() {
     [trials, activeTrialId],
   );
 
+  const activeTrialEvaluations = useMemo(
+    () =>
+      evaluations.filter((evaluation) => evaluation.trial_id === activeTrialId),
+    [evaluations, activeTrialId],
+  );
+
   const selectedEvaluation = useMemo(
     () =>
-      evaluations.find(
+      activeTrialEvaluations.find(
         (evaluation) => evaluation.id === selectedEvaluationId,
-      ) || evaluations[0],
-    [evaluations, selectedEvaluationId],
+      ) || activeTrialEvaluations[0],
+    [activeTrialEvaluations, selectedEvaluationId],
   );
 
   const selectedPatient = useMemo(
@@ -120,8 +148,13 @@ export default function ClinicalTrialProjectPage() {
   );
 
   const reviewCards = useMemo(
-    () => reviews.filter((review) => review.review_status !== "Resolved"),
-    [reviews],
+    () =>
+      reviews.filter(
+        (review) =>
+          review.review_status !== "Resolved" &&
+          review.trial_id === activeTrialId,
+      ),
+    [reviews, activeTrialId],
   );
 
   async function handleOpenPatientModal() {
@@ -132,7 +165,7 @@ export default function ClinicalTrialProjectPage() {
 
     try {
       const response = await getPatientsForTrial(activeTrial.id);
-      setTrialPatients(response.items);
+      setTrialPatients(sortPatientsForTrial(response.items));
       setIsPatientModalOpen(true);
     } catch (err) {
       const message =
@@ -166,41 +199,6 @@ export default function ClinicalTrialProjectPage() {
       setIsStartingEvaluation(false);
     }
   }
-
-  const handleSimulatePatient = async () => {
-    if (!activeTrial || patients.length === 0) return;
-
-    const currentIndex = selectedPatient
-      ? patients.findIndex((patient) => patient.id === selectedPatient.id)
-      : -1;
-
-    const nextPatient = patients[(currentIndex + 1) % patients.length];
-
-    setError(null);
-    setIsStartingEvaluation(true);
-    setPatientActionLabel("Starting Evaluation…");
-
-    try {
-      const created = await startEvaluation(nextPatient.id, activeTrial.id);
-
-      await loadDashboard(created.id);
-      setSelectedEvaluationId(created.id);
-
-      setPatientActionLabel("Patient Updated");
-
-      window.setTimeout(() => {
-        setPatientActionLabel("Select Patient");
-      }, 1500);
-    } catch (error) {
-      console.error(error);
-      setError(
-        error instanceof Error ? error.message : "Failed to start evaluation",
-      );
-      setPatientActionLabel("Select Patient");
-    } finally {
-      setIsStartingEvaluation(false);
-    }
-  };
 
   async function handleChangeTrial() {
     if (trials.length <= 1 || isChangingTrial) return;
@@ -368,12 +366,6 @@ export default function ClinicalTrialProjectPage() {
                   entering the workflow.
                 </p>
               </div>
-              <button
-                className="primary-btn small"
-                onClick={handleSimulatePatient}
-              >
-                Select Patient
-              </button>
             </div>
           </div>
 
@@ -386,7 +378,7 @@ export default function ClinicalTrialProjectPage() {
           </div>
 
           <div className="queue-grid">
-            {evaluations.map((evaluation) => {
+            {activeTrialEvaluations.map((evaluation, index) => {
               const patient = patients.find(
                 (item) => item.id === evaluation.patient_id,
               );
@@ -405,8 +397,12 @@ export default function ClinicalTrialProjectPage() {
                 >
                   <div className="queue-top-row">
                     <div className="eyebrow">
+                      Rank #{index + 1} •{" "}
                       {patient?.display_name || evaluation.patient_id}
                     </div>
+                    {index === 0 && (
+                      <span className="badge match">Top Candidate</span>
+                    )}{" "}
                     <span className={statusClass(evaluation.recommendation)}>
                       {evaluation.recommendation}
                     </span>
