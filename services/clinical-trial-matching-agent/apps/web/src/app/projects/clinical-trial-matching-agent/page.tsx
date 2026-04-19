@@ -76,30 +76,28 @@ export default function ClinicalTrialProjectPage() {
   async function loadDashboard(preferredEvaluationId?: string) {
     setError("");
 
-    const [trialResponse, patientResponse, evaluationResponse, reviewResponse] =
+    const trialResponse = await getTrials();
+    const activeTrialId = trialResponse.active_trial_id;
+
+    const [patientResponse, evaluationResponse, reviewResponse] =
       await Promise.all([
-        getTrials(),
         getPatients(),
-        getEvaluations(),
+        getEvaluations(activeTrialId),
         getReviews(),
       ]);
 
     setTrials(trialResponse.items);
-    setActiveTrialId(trialResponse.active_trial_id);
+    setActiveTrialId(activeTrialId);
     setPatients(patientResponse.items);
     setEvaluations(evaluationResponse.items);
     setReviews(reviewResponse.items);
 
-    const activeTrialEvaluations = evaluationResponse.items.filter(
-      (item) => item.trial_id === trialResponse.active_trial_id,
-    );
-
     const nextSelected =
       preferredEvaluationId ||
-      activeTrialEvaluations.find(
+      evaluationResponse.items.find(
         (item) => item.recommendation === "Requires Review",
       )?.id ||
-      activeTrialEvaluations[0]?.id ||
+      evaluationResponse.items[0]?.id ||
       "";
 
     setSelectedEvaluationId(nextSelected);
