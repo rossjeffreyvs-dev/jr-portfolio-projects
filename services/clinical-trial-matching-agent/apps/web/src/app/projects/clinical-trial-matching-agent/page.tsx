@@ -754,7 +754,8 @@ export default function ClinicalTrialProjectPage() {
                     {activeTrial?.title || "Active Trial"}
                   </h3>
                   <p className="mt-1 text-sm text-slate-600">
-                    Showing only seeded patients mapped to the active trial.
+                    Showing trial-linked patients not yet evaluated for the
+                    active trial.
                   </p>
                 </div>
 
