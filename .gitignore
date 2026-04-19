@@ -53,6 +53,9 @@ docker-compose.override.yml
 *.seed
 *.pid.lock
 
+# Vercel
+.vercel/
+
 # Coverage / testing
 htmlcov/
 .tox/

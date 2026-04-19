@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
-
 from app.services import store
+from app.services.store import PATIENTS
 
 router = APIRouter(prefix="/trials", tags=["trials"])
 
@@ -19,6 +19,23 @@ def get_trial(trial_id: str):
     if not trial:
         raise HTTPException(status_code=404, detail="Trial not found")
     return trial.model_dump()
+
+
+@router.get("/{trial_id}/patients")
+def list_patients_for_trial(trial_id: str):
+    trial = store.TRIALS.get(trial_id)
+    if not trial:
+        raise HTTPException(status_code=404, detail="Trial not found")
+
+    items = [
+        patient.model_dump()
+        for patient in PATIENTS.values()
+        if trial_id in patient.eligible_trial_ids
+    ]
+    return {
+        "trial_id": trial_id,
+        "items": items,
+    }
 
 
 @router.post("/{trial_id}/activate")

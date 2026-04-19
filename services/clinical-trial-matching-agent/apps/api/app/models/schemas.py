@@ -48,11 +48,12 @@ class Patient(BaseModel):
     labs: Dict[str, str | float | int] = {}
     comorbidities: List[str] = []
     notes: List[str] = []
-    trial_tags: List[str] = []
+    eligible_trial_ids: List[str] = []   # <-- add this
     seeded_outcome: StatusType
     seeded_score: int
     seeded_reason: str
     
+        
 class CriterionResult(BaseModel):
     criterion_id: str
     criterion_text: str
