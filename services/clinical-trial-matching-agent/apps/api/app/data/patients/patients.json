@@ -29,7 +29,7 @@
     "comorbidities": ["COPD"],
     "notes": ["Borderline ECOG.", "History of immunotherapy."],
     "eligible_trial_ids": ["trial_nsclc_001"],
-    "seeded_outcome": "Review Required",
+    "seeded_outcome": "Requires Review",
     "seeded_score": 65,
     "seeded_reason": "ECOG and prior therapy may impact eligibility."
   },
@@ -98,7 +98,7 @@
     "comorbidities": ["Hypertension"],
     "notes": ["Borderline biomarker expression."],
     "eligible_trial_ids": ["trial_breast_001"],
-    "seeded_outcome": "Review Required",
+    "seeded_outcome": "Requires Review",
     "seeded_score": 68,
     "seeded_reason": "Biomarker uncertainty may require manual review."
   },
@@ -150,7 +150,7 @@
     "comorbidities": ["Cardiovascular disease"],
     "notes": ["Comorbidity risk."],
     "eligible_trial_ids": ["trial_heme_001"],
-    "seeded_outcome": "Review Required",
+    "seeded_outcome": "Requires Review",
     "seeded_score": 62,
     "seeded_reason": "Comorbidities and labs require review."
   },
