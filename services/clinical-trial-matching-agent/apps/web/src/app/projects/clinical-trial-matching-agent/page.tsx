@@ -16,9 +16,7 @@ import {
   type Trial,
   type WorkflowEvent,
 } from "@/lib/api";
-import PatientSelectorModal, {
-  type TrialPatient as ModalTrialPatient,
-} from "./PatientSelectorModal";
+import PatientSelectorModal from "@/components/PatientSelectorModal";
 
 function statusClass(status: string) {
   if (status === "Likely Match") return "badge match";
@@ -61,75 +59,6 @@ function sortPatientsForTrial(items: Patient[]) {
   });
 }
 
-function evaluationTimestampValue(value: string) {
-  const parsed = Date.parse(value);
-  return Number.isNaN(parsed) ? 0 : parsed;
-}
-
-function dedupeEvaluationsByPatient(items: Evaluation[]) {
-  const latestByPatient = new Map<string, Evaluation>();
-
-  for (const evaluation of items) {
-    const existing = latestByPatient.get(evaluation.patient_id);
-
-    if (!existing) {
-      latestByPatient.set(evaluation.patient_id, evaluation);
-      continue;
-    }
-
-    const existingTimestamp = evaluationTimestampValue(existing.submitted_at);
-    const nextTimestamp = evaluationTimestampValue(evaluation.submitted_at);
-
-    if (nextTimestamp > existingTimestamp) {
-      latestByPatient.set(evaluation.patient_id, evaluation);
-      continue;
-    }
-
-    if (
-      nextTimestamp === existingTimestamp &&
-      evaluation.match_score > existing.match_score
-    ) {
-      latestByPatient.set(evaluation.patient_id, evaluation);
-    }
-  }
-
-  return [...latestByPatient.values()].sort((a, b) => {
-    const rankA =
-      a.recommendation === "Likely Match"
-        ? 0
-        : a.recommendation === "Requires Review"
-          ? 1
-          : a.recommendation === "Not Eligible"
-            ? 2
-            : 3;
-    const rankB =
-      b.recommendation === "Likely Match"
-        ? 0
-        : b.recommendation === "Requires Review"
-          ? 1
-          : b.recommendation === "Not Eligible"
-            ? 2
-            : 3;
-
-    if (rankA !== rankB) return rankA - rankB;
-    if (b.match_score !== a.match_score) return b.match_score - a.match_score;
-
-    return (
-      evaluationTimestampValue(b.submitted_at) -
-      evaluationTimestampValue(a.submitted_at)
-    );
-  });
-}
-
-function mapPatientOutcomeToModal(
-  outcome: Patient["seeded_outcome"],
-): ModalTrialPatient["outcome"] {
-  if (outcome === "Likely Match") return "likely_match";
-  if (outcome === "Requires Review") return "review";
-  if (outcome === "Not Eligible") return "unlikely_match";
-  return null;
-}
-
 export default function ClinicalTrialProjectPage() {
   const [trials, setTrials] = useState<Trial[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -148,6 +77,12 @@ export default function ClinicalTrialProjectPage() {
   const [trialPatients, setTrialPatients] = useState<Patient[]>([]);
   const [isLoadingTrialPatients, setIsLoadingTrialPatients] = useState(false);
 
+  const handleStartEvaluationFromModal = (patient: { id: string }) => {
+    const fullPatient = trialPatients.find((p) => p.id === patient.id);
+    if (!fullPatient) return;
+    void handleSelectPatient(fullPatient);
+  };
+
   async function loadDashboard(preferredEvaluationId?: string) {
     setError(null);
 
@@ -161,22 +96,18 @@ export default function ClinicalTrialProjectPage() {
         getReviews(),
       ]);
 
-    const uniqueEvaluations = dedupeEvaluationsByPatient(
-      evaluationResponse.items,
-    );
-
     setTrials(trialResponse.items);
     setActiveTrialId(activeId);
     setPatients(patientResponse.items);
-    setEvaluations(uniqueEvaluations);
+    setEvaluations(evaluationResponse.items);
     setReviews(reviewResponse.items);
 
     const nextSelected =
       preferredEvaluationId ||
-      uniqueEvaluations.find(
+      evaluationResponse.items.find(
         (item) => item.recommendation === "Requires Review",
       )?.id ||
-      uniqueEvaluations[0]?.id ||
+      evaluationResponse.items[0]?.id ||
       "";
 
     setSelectedEvaluationId(nextSelected);
@@ -195,7 +126,7 @@ export default function ClinicalTrialProjectPage() {
       }
     }
 
-    void bootstrap();
+    bootstrap();
   }, []);
 
   const activeTrial = useMemo(
@@ -217,6 +148,16 @@ export default function ClinicalTrialProjectPage() {
     [patients, selectedEvaluation],
   );
 
+  const uniqueEvaluations = useMemo(() => {
+    const map = new Map<string, Evaluation>();
+
+    for (const evaluation of evaluations) {
+      map.set(evaluation.patient_id, evaluation);
+    }
+
+    return Array.from(map.values());
+  }, [evaluations]);
+
   const reviewCards = useMemo(
     () =>
       reviews.filter(
@@ -227,26 +168,18 @@ export default function ClinicalTrialProjectPage() {
     [reviews, activeTrialId],
   );
 
-  const queuedPatientIds = useMemo(
-    () => new Set(evaluations.map((evaluation) => evaluation.patient_id)),
-    [evaluations],
-  );
+  const modalPatients = useMemo(() => {
+    const queuedPatientIds = new Set(
+      uniqueEvaluations.map((evaluation) => evaluation.patient_id),
+    );
 
-  const availableTrialPatients = useMemo(
-    () =>
-      sortPatientsForTrial(
-        trialPatients.filter((patient) => !queuedPatientIds.has(patient.id)),
-      ),
-    [trialPatients, queuedPatientIds],
-  );
-
-  const modalPatients = useMemo<ModalTrialPatient[]>(
-    () =>
-      availableTrialPatients.map((patient) => ({
+    return trialPatients
+      .filter((patient) => !queuedPatientIds.has(patient.id))
+      .map((patient) => ({
         id: patient.id,
         name: patient.display_name,
-        age: patient.age,
-        sex: patient.sex,
+        age: patient.age ?? null,
+        sex: patient.sex ?? null,
         diagnosis: patient.diagnosis.length
           ? patient.diagnosis.join(", ")
           : "—",
@@ -254,16 +187,29 @@ export default function ClinicalTrialProjectPage() {
           typeof patient.seeded_score === "number"
             ? patient.seeded_score / 100
             : null,
-        outcome: mapPatientOutcomeToModal(patient.seeded_outcome),
-        summary:
-          patient.notes.length > 0
-            ? patient.notes.join(" ")
-            : patient.seeded_reason || "No summary available.",
-      })),
-    [availableTrialPatients],
-  );
+        outcome:
+          patient.seeded_outcome === "Likely Match"
+            ? "likely_match"
+            : patient.seeded_outcome === "Possible Match"
+              ? "possible_match"
+              : patient.seeded_outcome === "Requires Review"
+                ? "review"
+                : patient.seeded_outcome === "Not Eligible"
+                  ? "unlikely_match"
+                  : null,
+        summary: patient.notes.length
+          ? patient.notes.join(" ")
+          : patient.seeded_reason || "No summary available.",
+      }));
+  }, [trialPatients, uniqueEvaluations]);
 
   async function handleOpenPatientModal() {
+    console.log("open clicked", {
+      activeTrialId: activeTrial?.id,
+      isStartingEvaluation,
+      isLoadingTrialPatients,
+    });
+
     if (!activeTrial || isStartingEvaluation) return;
 
     setError(null);
@@ -272,10 +218,14 @@ export default function ClinicalTrialProjectPage() {
     setIsPatientModalOpen(true);
     setIsLoadingTrialPatients(true);
 
+    console.log("set modal open");
+
     try {
       const response = await getPatientsForTrial(activeTrial.id);
-      setTrialPatients(response.items);
+      console.log("patients response", response);
+      setTrialPatients(sortPatientsForTrial(response.items));
     } catch (err) {
+      console.error("patient modal load failed", err);
       const message =
         err instanceof Error
           ? err.message
@@ -287,7 +237,6 @@ export default function ClinicalTrialProjectPage() {
       setIsLoadingTrialPatients(false);
     }
   }
-
   async function handleSelectPatient(patient: Patient) {
     if (!activeTrial || isStartingEvaluation) return;
 
@@ -310,14 +259,6 @@ export default function ClinicalTrialProjectPage() {
     } finally {
       setIsStartingEvaluation(false);
     }
-  }
-
-  function handleStartEvaluationFromModal(patient: { id: string }) {
-    const fullPatient = availableTrialPatients.find(
-      (item) => item.id === patient.id,
-    );
-    if (!fullPatient) return;
-    void handleSelectPatient(fullPatient);
   }
 
   async function handleChangeTrial() {
@@ -400,7 +341,6 @@ export default function ClinicalTrialProjectPage() {
             <button className="tab-btn active">Demo</button>
           </div>
         </section>
-
         <section className="control-panel cardish">
           <div className="control-panel-header">
             <div>
@@ -420,7 +360,9 @@ export default function ClinicalTrialProjectPage() {
               onClick={handleOpenPatientModal}
               disabled={!activeTrial || isLoadingTrialPatients}
             >
-              {isLoadingTrialPatients ? "Loading Patients…" : "Select Patient"}
+              {isLoadingTrialPatients
+                ? "Loading Patients…"
+                : "Find Patients for Trial"}
             </button>
 
             <button
@@ -428,15 +370,7 @@ export default function ClinicalTrialProjectPage() {
               onClick={handleChangeTrial}
               disabled={isChangingTrial}
             >
-              {isChangingTrial ? "Changing Trial…" : "Select Trial"}
-            </button>
-
-            <button
-              className="secondary-btn"
-              onClick={handleReplayWorkflow}
-              disabled={!selectedEvaluation}
-            >
-              Replay Evaluation
+              {isChangingTrial ? "Changing Trial…" : "Change Trial"}
             </button>
           </div>
 
@@ -465,7 +399,6 @@ export default function ClinicalTrialProjectPage() {
 
           {error ? <p className="error-text">{error}</p> : null}
         </section>
-
         <section className="card">
           <span className="section-label">
             Eligibility Operations Dashboard
@@ -501,26 +434,26 @@ export default function ClinicalTrialProjectPage() {
           </div>
 
           <div className="section-header">
-            <h2>Patient Evaluation Queue</h2>
+            <h2>Trial Worklist</h2>
             <p>
-              Click a patient card to drive the main recommendation and workflow
-              panels below.
+              Click a patient card to show the evaluation process, workflow
+              activity, audit trail, and recommendation details below.
             </p>
           </div>
 
-          {evaluations.length === 0 ? (
+          {uniqueEvaluations.length === 0 ? (
             <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-center">
               <p className="text-base font-semibold text-slate-900">
                 No evaluations yet for this trial
               </p>
               <p className="mt-2 text-sm text-slate-600">
-                Use Select Patient to open the candidate list and start a new
-                evaluation.
+                Use Find Patients for Trial to open the candidate list and start
+                a new evaluation.
               </p>
             </div>
           ) : (
             <div className="queue-grid">
-              {evaluations.map((evaluation, index) => {
+              {uniqueEvaluations.map((evaluation, index) => {
                 const patient = patients.find(
                   (item) => item.id === evaluation.patient_id,
                 );
@@ -573,7 +506,11 @@ export default function ClinicalTrialProjectPage() {
                         <span className="badge info">Selected</span>
                       )}
 
-                      <button className="text-btn">View Details</button>
+                      <button className="text-btn">
+                        {evaluation.recommendation === "Requires Review"
+                          ? "Review Case"
+                          : "Show Evaluation Process"}
+                      </button>
                     </div>
                   </article>
                 );
@@ -581,7 +518,6 @@ export default function ClinicalTrialProjectPage() {
             </div>
           )}
         </section>
-
         <section className="dashboard-grid">
           <article className="card col-4">
             <span className="section-label">Active Trial</span>
@@ -876,6 +812,15 @@ export default function ClinicalTrialProjectPage() {
             </div>
           </article>
         </section>
+
+        {(() => {
+          console.log("render modal", {
+            isPatientModalOpen,
+            isLoadingTrialPatients,
+            trialPatients: trialPatients.length,
+          });
+          return null;
+        })()}
 
         <PatientSelectorModal
           isOpen={isPatientModalOpen}
