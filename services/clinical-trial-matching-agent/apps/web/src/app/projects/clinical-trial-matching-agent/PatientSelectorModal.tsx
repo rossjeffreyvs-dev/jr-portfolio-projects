@@ -47,18 +47,18 @@ function formatOutcomeLabel(outcome?: MatchOutcome) {
   }
 }
 
-function outcomeTextClass(outcome?: MatchOutcome) {
+function outcomeColor(outcome?: MatchOutcome) {
   switch (outcome) {
     case "likely_match":
-      return "text-emerald-700";
+      return "#15803d";
     case "possible_match":
-      return "text-sky-700";
+      return "#0369a1";
     case "review":
-      return "text-amber-700";
+      return "#b45309";
     case "unlikely_match":
-      return "text-rose-700";
+      return "#b91c1c";
     default:
-      return "text-slate-500";
+      return "#64748b";
   }
 }
 
@@ -80,19 +80,21 @@ export default function PatientSelectorModal({
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(
     null,
   );
+  const [hoveredPatientId, setHoveredPatientId] = useState<string | null>(null);
+  const [hoveredActionId, setHoveredActionId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
 
-    const originalBodyOverflow = document.body.style.overflow;
-    const originalHtmlOverflow = document.documentElement.style.overflow;
+    const bodyOverflow = document.body.style.overflow;
+    const htmlOverflow = document.documentElement.style.overflow;
 
     document.body.style.overflow = "hidden";
     document.documentElement.style.overflow = "hidden";
 
     return () => {
-      document.body.style.overflow = originalBodyOverflow;
-      document.documentElement.style.overflow = originalHtmlOverflow;
+      document.body.style.overflow = bodyOverflow;
+      document.documentElement.style.overflow = htmlOverflow;
     };
   }, [isOpen]);
 
@@ -111,173 +113,361 @@ export default function PatientSelectorModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] bg-slate-900/30 backdrop-blur-[2px]">
-      <div className="flex min-h-full items-start justify-center px-5 py-8 md:px-8 md:py-10">
-        <div className="relative w-full max-w-[1400px] rounded-[2.5rem] border border-[#cfd7e6] bg-[#f8fafc] shadow-[0_30px_80px_rgba(15,23,42,0.18)]">
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close modal"
-            className="absolute right-8 top-8 flex h-11 w-11 items-center justify-center rounded-full border border-[#d7deeb] bg-white text-xl text-slate-500 transition hover:text-slate-800"
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 99999,
+        background: "rgba(15, 23, 42, 0.30)",
+        backdropFilter: "blur(2px)",
+        display: "flex",
+        alignItems: "flex-start",
+        justifyContent: "center",
+        padding: "24px 18px",
+      }}
+    >
+      <div
+        style={{
+          position: "relative",
+          width: "100%",
+          maxWidth: "1500px",
+          maxHeight: "92vh",
+          overflow: "hidden",
+          borderRadius: "36px",
+          border: "1px solid #cfd7e6",
+          background: "#f8fafc",
+          boxShadow: "0 30px 80px rgba(15,23,42,0.18)",
+        }}
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close modal"
+          style={{
+            position: "absolute",
+            right: "28px",
+            top: "28px",
+            width: "44px",
+            height: "44px",
+            borderRadius: "999px",
+            border: "1px solid #d7deeb",
+            background: "#ffffff",
+            color: "#64748b",
+            fontSize: "24px",
+            cursor: "pointer",
+            zIndex: 2,
+          }}
+        >
+          ×
+        </button>
+
+        <div style={{ padding: "32px 32px 24px 32px" }}>
+          <div
+            style={{
+              display: "inline-flex",
+              borderRadius: "999px",
+              background: "#dfe7f7",
+              padding: "14px 28px",
+              fontSize: "14px",
+              fontWeight: 800,
+              textTransform: "uppercase",
+              letterSpacing: "0.14em",
+              color: "#3558c8",
+            }}
           >
-            ×
-          </button>
+            Select patient
+          </div>
 
-          <div className="px-10 pb-10 pt-10 md:px-12 md:pb-12 md:pt-12">
-            <div className="inline-flex rounded-full bg-[#dfe7f7] px-6 py-3 text-[0.9rem] font-bold uppercase tracking-[0.14em] text-[#3558c8]">
-              Select patient
-            </div>
+          <div style={{ marginTop: "18px", paddingRight: "64px" }}>
+            <h2
+              style={{
+                margin: 0,
+                fontSize: "44px",
+                lineHeight: 1.05,
+                fontWeight: 700,
+                letterSpacing: "-0.04em",
+                color: "#1b2957",
+              }}
+            >
+              Ranked patient candidates
+            </h2>
 
-            <div className="mt-6 pr-16">
-              <h2 className="text-[2.4rem] font-semibold tracking-[-0.03em] text-[#1b2957]">
-                Ranked patient candidates
-              </h2>
-              {trialTitle ? (
-                <p className="mt-3 text-[1.05rem] text-slate-600">
-                  Review candidate fit for {trialTitle}
-                </p>
-              ) : null}
-            </div>
+            {trialTitle ? (
+              <p
+                style={{
+                  marginTop: "10px",
+                  marginBottom: 0,
+                  fontSize: "16px",
+                  lineHeight: 1.5,
+                  color: "#64748b",
+                }}
+              >
+                Review candidate fit for {trialTitle}
+              </p>
+            ) : null}
+          </div>
 
-            <div className="mt-8 flex items-center justify-between gap-4">
-              <div className="text-sm text-slate-500">
-                {patients.length} candidate{patients.length === 1 ? "" : "s"}
-              </div>
-
-              {selectedPatient ? (
-                <button
-                  type="button"
-                  onClick={() => onStartEvaluation(selectedPatient)}
-                  disabled={isStartingEvaluation}
-                  className="inline-flex items-center justify-center rounded-full border border-[#cad4e4] bg-white px-4 py-2 text-sm font-semibold text-[#1f2a44] transition hover:bg-[#f6f9ff] disabled:cursor-not-allowed disabled:opacity-60"
+          <div
+            style={{
+              marginTop: "18px",
+              overflow: "hidden",
+              borderRadius: "32px",
+              border: "1px solid #d5ddea",
+              background: "#ffffff",
+            }}
+          >
+            <div
+              style={{
+                maxHeight: "380px",
+                overflowY: "auto",
+              }}
+            >
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "separate",
+                  borderSpacing: 0,
+                  background: "#ffffff",
+                }}
+              >
+                <thead
+                  style={{
+                    position: "sticky",
+                    top: 0,
+                    zIndex: 2,
+                    background: "#edf3ff",
+                    boxShadow: "0 1px 0 #dce3ef",
+                  }}
                 >
-                  {isStartingEvaluation
-                    ? patientActionLabel
-                    : "Start Evaluation"}
-                </button>
-              ) : null}
-            </div>
+                  <tr>
+                    {[
+                      "Patient",
+                      "Demographics",
+                      "Diagnosis",
+                      "Match",
+                      "Score",
+                      "Summary",
+                      "Action",
+                    ].map((label) => (
+                      <th
+                        key={label}
+                        style={{
+                          borderBottom: "1px solid #dce3ef",
+                          padding: "18px 20px",
+                          textAlign: "left",
+                          fontSize: "14px",
+                          fontWeight: 800,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.14em",
+                          color: "#5a6b93",
+                          background: "#edf3ff",
+                        }}
+                      >
+                        {label}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
 
-            <div className="mt-8 overflow-hidden rounded-[2rem] border border-[#d5ddea] bg-white">
-              <div className="max-h-[62vh] overflow-y-auto">
-                <table className="w-full border-separate border-spacing-0">
-                  <thead className="sticky top-0 z-10 bg-white">
+                <tbody style={{ background: "#ffffff" }}>
+                  {isLoading ? (
                     <tr>
-                      <th className="border-b border-[#dce3ef] px-6 py-7 text-left text-[1rem] font-extrabold uppercase tracking-[0.14em] text-[#5a6b93]">
-                        Patient
-                      </th>
-                      <th className="border-b border-[#dce3ef] px-6 py-7 text-left text-[1rem] font-extrabold uppercase tracking-[0.14em] text-[#5a6b93]">
-                        Demographics
-                      </th>
-                      <th className="border-b border-[#dce3ef] px-6 py-7 text-left text-[1rem] font-extrabold uppercase tracking-[0.14em] text-[#5a6b93]">
-                        Diagnosis
-                      </th>
-                      <th className="border-b border-[#dce3ef] px-6 py-7 text-left text-[1rem] font-extrabold uppercase tracking-[0.14em] text-[#5a6b93]">
-                        Match
-                      </th>
-                      <th className="border-b border-[#dce3ef] px-6 py-7 text-left text-[1rem] font-extrabold uppercase tracking-[0.14em] text-[#5a6b93]">
-                        Score
-                      </th>
-                      <th className="border-b border-[#dce3ef] px-6 py-7 text-left text-[1rem] font-extrabold uppercase tracking-[0.14em] text-[#5a6b93]">
-                        Summary
-                      </th>
-                      <th className="border-b border-[#dce3ef] px-6 py-7 text-left text-[1rem] font-extrabold uppercase tracking-[0.14em] text-[#5a6b93]">
-                        Action
-                      </th>
+                      <td
+                        colSpan={7}
+                        style={{
+                          padding: "36px 24px",
+                          textAlign: "center",
+                          fontSize: "16px",
+                          color: "#64748b",
+                          background: "#ffffff",
+                        }}
+                      >
+                        Loading patient candidates...
+                      </td>
                     </tr>
-                  </thead>
+                  ) : patients.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={7}
+                        style={{
+                          padding: "36px 24px",
+                          textAlign: "center",
+                          fontSize: "16px",
+                          color: "#64748b",
+                          background: "#ffffff",
+                        }}
+                      >
+                        No candidate patients found for this trial.
+                      </td>
+                    </tr>
+                  ) : (
+                    patients.map((patient) => {
+                      const isHovered = hoveredPatientId === patient.id;
+                      const isActionHovered = hoveredActionId === patient.id;
+                      const isSelected = selectedPatientId === patient.id;
 
-                  <tbody>
-                    {isLoading ? (
-                      <tr>
-                        <td
-                          colSpan={7}
-                          className="px-6 py-10 text-center text-lg text-slate-500"
+                      return (
+                        <tr
+                          key={patient.id}
+                          onClick={() => setSelectedPatientId(patient.id)}
+                          onMouseEnter={() => setHoveredPatientId(patient.id)}
+                          onMouseLeave={() => setHoveredPatientId(null)}
+                          style={{
+                            cursor: "pointer",
+                            background: isHovered ? "#f8fbff" : "#ffffff",
+                            transition: "background 160ms ease",
+                          }}
                         >
-                          Loading patient candidates...
-                        </td>
-                      </tr>
-                    ) : patients.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={7}
-                          className="px-6 py-10 text-center text-lg text-slate-500"
-                        >
-                          No candidate patients found for this trial.
-                        </td>
-                      </tr>
-                    ) : (
-                      patients.map((patient) => {
-                        const isSelected = selectedPatientId === patient.id;
-
-                        return (
-                          <tr
-                            key={patient.id}
-                            className={`cursor-pointer transition ${
-                              isSelected ? "bg-[#f6f9ff]" : "hover:bg-[#fafcff]"
-                            }`}
-                            onClick={() => setSelectedPatientId(patient.id)}
+                          <td
+                            style={{
+                              borderBottom: "1px solid #e3e9f3",
+                              padding: "18px 20px",
+                              verticalAlign: "top",
+                              color: "#475569",
+                              fontSize: "15px",
+                              lineHeight: 1.45,
+                              background: isHovered ? "#f8fbff" : "#ffffff",
+                            }}
                           >
-                            <td className="border-b border-[#e3e9f3] px-6 py-8 align-top text-[1rem] text-slate-700">
-                              <div className="font-semibold text-[#263868]">
-                                {patient.name}
-                              </div>
-                              <div className="mt-1 text-slate-500">
-                                {patient.id}
-                              </div>
-                            </td>
+                            <div
+                              style={{
+                                fontWeight: 700,
+                                color: "#263868",
+                              }}
+                            >
+                              {patient.name}
+                            </div>
+                            <div style={{ marginTop: "2px", color: "#64748b" }}>
+                              {patient.id}
+                            </div>
+                          </td>
 
-                            <td className="border-b border-[#e3e9f3] px-6 py-8 align-top text-[1rem] text-slate-700">
-                              {patient.age != null ? `${patient.age} yrs` : "—"}
-                              {patient.sex ? ` • ${patient.sex}` : ""}
-                            </td>
+                          <td
+                            style={{
+                              borderBottom: "1px solid #e3e9f3",
+                              padding: "18px 20px",
+                              verticalAlign: "top",
+                              color: "#64748b",
+                              fontSize: "15px",
+                              lineHeight: 1.45,
+                              background: isHovered ? "#f8fbff" : "#ffffff",
+                            }}
+                          >
+                            {patient.age != null ? `${patient.age} yrs` : "—"}
+                            {patient.sex ? ` • ${patient.sex}` : ""}
+                          </td>
 
-                            <td className="border-b border-[#e3e9f3] px-6 py-8 align-top text-[1rem] leading-8 text-slate-700">
-                              {patient.diagnosis || "—"}
-                            </td>
+                          <td
+                            style={{
+                              borderBottom: "1px solid #e3e9f3",
+                              padding: "18px 20px",
+                              verticalAlign: "top",
+                              color: "#64748b",
+                              fontSize: "15px",
+                              lineHeight: 1.45,
+                              background: isHovered ? "#f8fbff" : "#ffffff",
+                            }}
+                          >
+                            {patient.diagnosis || "—"}
+                          </td>
 
-                            <td className="border-b border-[#e3e9f3] px-6 py-8 align-top text-[1rem]">
-                              <span
-                                className={`font-medium ${outcomeTextClass(patient.outcome)}`}
-                              >
-                                {formatOutcomeLabel(patient.outcome)}
-                              </span>
-                            </td>
+                          <td
+                            style={{
+                              borderBottom: "1px solid #e3e9f3",
+                              padding: "18px 20px",
+                              verticalAlign: "top",
+                              fontSize: "15px",
+                              lineHeight: 1.45,
+                              color: outcomeColor(patient.outcome),
+                              fontWeight: 600,
+                              background: isHovered ? "#f8fbff" : "#ffffff",
+                            }}
+                          >
+                            {formatOutcomeLabel(patient.outcome)}
+                          </td>
 
-                            <td className="border-b border-[#e3e9f3] px-6 py-8 align-top text-[1rem] text-slate-700">
-                              {formatScore(patient.score)}
-                            </td>
+                          <td
+                            style={{
+                              borderBottom: "1px solid #e3e9f3",
+                              padding: "18px 20px",
+                              verticalAlign: "top",
+                              color: "#64748b",
+                              fontSize: "15px",
+                              lineHeight: 1.45,
+                              background: isHovered ? "#f8fbff" : "#ffffff",
+                            }}
+                          >
+                            {formatScore(patient.score)}
+                          </td>
 
-                            <td className="border-b border-[#e3e9f3] px-6 py-8 align-top text-[1rem] leading-8 text-slate-700">
-                              <div className="max-w-[520px]">
-                                {patient.summary || "—"}
-                              </div>
-                            </td>
+                          <td
+                            style={{
+                              borderBottom: "1px solid #e3e9f3",
+                              padding: "18px 20px",
+                              verticalAlign: "top",
+                              color: "#64748b",
+                              fontSize: "15px",
+                              lineHeight: 1.45,
+                              maxWidth: "420px",
+                              background: isHovered ? "#f8fbff" : "#ffffff",
+                            }}
+                          >
+                            {patient.summary || "—"}
+                          </td>
 
-                            <td className="border-b border-[#e3e9f3] px-6 py-8 align-top">
-                              <button
-                                type="button"
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  setSelectedPatientId(patient.id);
-                                  onStartEvaluation(patient);
-                                }}
-                                disabled={isStartingEvaluation}
-                                className="inline-flex items-center justify-center rounded-full border border-[#cad4e4] bg-white px-4 py-2 text-sm font-semibold text-[#1f2a44] transition hover:bg-[#f6f9ff] disabled:cursor-not-allowed disabled:opacity-60"
-                              >
-                                {isStartingEvaluation &&
-                                selectedPatientId === patient.id
-                                  ? patientActionLabel
-                                  : "Start Evaluation"}
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                          <td
+                            style={{
+                              borderBottom: "1px solid #e3e9f3",
+                              padding: "18px 20px",
+                              verticalAlign: "top",
+                              background: isHovered ? "#f8fbff" : "#ffffff",
+                            }}
+                          >
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                setSelectedPatientId(patient.id);
+                                onStartEvaluation(patient);
+                              }}
+                              onMouseEnter={() =>
+                                setHoveredActionId(patient.id)
+                              }
+                              onMouseLeave={() => setHoveredActionId(null)}
+                              disabled={isStartingEvaluation}
+                              style={{
+                                borderRadius: "999px",
+                                border: "1px solid #cad4e4",
+                                background: isActionHovered
+                                  ? "#f3f7ff"
+                                  : "#ffffff",
+                                padding: "8px 14px",
+                                fontSize: "13px",
+                                fontWeight: 600,
+                                color: "#1f2a44",
+                                cursor: isStartingEvaluation
+                                  ? "default"
+                                  : "pointer",
+                                opacity: isStartingEvaluation ? 0.6 : 1,
+                                whiteSpace: "nowrap",
+                                boxShadow: isActionHovered
+                                  ? "0 1px 2px rgba(15,23,42,0.06)"
+                                  : "none",
+                                transition:
+                                  "background 160ms ease, box-shadow 160ms ease, border-color 160ms ease",
+                              }}
+                            >
+                              {isStartingEvaluation && isSelected
+                                ? patientActionLabel
+                                : "Start Evaluation"}
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>

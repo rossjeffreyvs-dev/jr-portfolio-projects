@@ -80,7 +80,7 @@ export default function ClinicalTrialProjectPage() {
   const handleStartEvaluationFromModal = (patient: { id: string }) => {
     const fullPatient = trialPatients.find((p) => p.id === patient.id);
     if (!fullPatient) return;
-    handleSelectPatient(fullPatient);
+    void handleSelectPatient(fullPatient);
   };
 
   async function loadDashboard(preferredEvaluationId?: string) {
@@ -165,7 +165,7 @@ export default function ClinicalTrialProjectPage() {
         name: patient.display_name,
         age: patient.age ?? null,
         sex: patient.sex ?? null,
-        diagnosis: Array.isArray(patient.diagnosis)
+        diagnosis: patient.diagnosis.length
           ? patient.diagnosis.join(", ")
           : "—",
         score:
@@ -175,17 +175,16 @@ export default function ClinicalTrialProjectPage() {
         outcome:
           patient.seeded_outcome === "Likely Match"
             ? "likely_match"
-            : patient.seeded_outcome === "Requires Review"
-              ? "review"
-              : patient.seeded_outcome === "Possible Match"
-                ? "possible_match"
+            : patient.seeded_outcome === "Possible Match"
+              ? "possible_match"
+              : patient.seeded_outcome === "Requires Review"
+                ? "review"
                 : patient.seeded_outcome === "Not Eligible"
                   ? "unlikely_match"
                   : null,
-        summary:
-          Array.isArray(patient.notes) && patient.notes.length > 0
-            ? patient.notes.join(" ")
-            : patient.seeded_reason || "No summary available.",
+        summary: patient.notes.length
+          ? patient.notes.join(" ")
+          : patient.seeded_reason || "No summary available.",
       })),
     [trialPatients],
   );
