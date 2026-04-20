@@ -17,6 +17,7 @@ import {
 import PatientSelectorModal from "@/components/PatientSelectorModal";
 import AuditTrailCard from "@/components/clinical-trial-matching-agent/AuditTrailCard";
 import CriteriaMatchTable from "@/components/clinical-trial-matching-agent/CriteriaMatchTable";
+import DashboardControls from "@/components/clinical-trial-matching-agent/DashboardControls";
 import PatientSummaryCard from "@/components/clinical-trial-matching-agent/PatientSummaryCard";
 import RecommendationCard from "@/components/clinical-trial-matching-agent/RecommendationCard";
 import SelectedCaseSummaryCard from "@/components/clinical-trial-matching-agent/SelectedCaseSummaryCard";
@@ -312,49 +313,22 @@ export default function ClinicalTrialProjectPage() {
           </div>
         </section>
 
-        <section className="control-panel cardish">
-          <div className="control-panel-header">
-            <div>
-              <div className="eyebrow">Simulation Controls</div>
-              <h2>Kick off new evaluations or switch context</h2>
-              <p>
-                Use the controls below to open the candidate list, create a new
-                evaluation, switch the active trial, or replay the selected
-                case.
-              </p>
-            </div>
-          </div>
-
-          <div className="control-actions">
-            <button
-              className="primary-btn"
-              onClick={handleOpenPatientModal}
-              disabled={!activeTrial || isLoadingTrialPatients}
-            >
-              {isLoadingTrialPatients
-                ? "Loading Patients…"
-                : "Find Patients for Trial"}
-            </button>
-
-            <button
-              className="secondary-btn"
-              onClick={handleChangeTrial}
-              disabled={isChangingTrial}
-            >
-              {isChangingTrial ? "Changing Trial…" : "Change Trial"}
-            </button>
-
-            <button
-              className="secondary-btn"
-              onClick={handleReplayWorkflow}
-              disabled={!selectedEvaluation}
-            >
-              Replay Evaluation
-            </button>
-          </div>
-
-          {error ? <p className="error-text">{error}</p> : null}
-        </section>
+        <DashboardControls
+          activeTrialTitle={activeTrial?.title}
+          selectedPatientLabel={
+            selectedPatient?.display_name ||
+            selectedPatient?.id ||
+            "No patient selected"
+          }
+          latestRecommendation={selectedEvaluation?.recommendation}
+          isLoadingTrialPatients={isLoadingTrialPatients}
+          isChangingTrial={isChangingTrial}
+          hasSelectedEvaluation={Boolean(selectedEvaluation)}
+          error={error}
+          onOpenPatientModal={handleOpenPatientModal}
+          onChangeTrial={handleChangeTrial}
+          onReplayWorkflow={handleReplayWorkflow}
+        />
 
         <TrialContextStrip
           activeTrial={activeTrial}
