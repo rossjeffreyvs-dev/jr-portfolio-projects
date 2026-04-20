@@ -9,109 +9,25 @@ import {
   getReviews,
   getTrials,
   startEvaluation,
-  type CriterionResult,
   type Evaluation,
   type Patient,
   type ReviewTask,
   type Trial,
-  type WorkflowEvent,
 } from "@/lib/api";
 import PatientSelectorModal from "@/components/PatientSelectorModal";
-
-function statusClass(status: string) {
-  if (status === "Likely Match") return "badge match";
-  if (status === "Requires Review") return "badge review";
-  if (status === "Not Eligible") return "badge reject";
-  return "badge info";
-}
-
-function titleCaseStatus(status: CriterionResult["status"]) {
-  if (status === "missing_information") return "Missing Info";
-  if (status === "possibly_met") return "Possibly Met";
-  if (status === "not_met") return "Not Met";
-  return "Met";
-}
-
-function joinList(items: string[]) {
-  return items.length ? items.join(", ") : "None";
-}
-
-function formatLabs(labs: Record<string, string | number>) {
-  return Object.entries(labs)
-    .map(([key, value]) => `${key.replace(/_/g, " ")}: ${value}`)
-    .join(", ");
-}
-
-function outcomeOrder(status: Patient["seeded_outcome"]) {
-  if (status === "Likely Match") return 0;
-  if (status === "Requires Review") return 1;
-  if (status === "Not Eligible") return 2;
-  return 3;
-}
-
-function sortPatientsForTrial(items: Patient[]) {
-  return [...items].sort((a, b) => {
-    const outcomeDelta =
-      outcomeOrder(a.seeded_outcome) - outcomeOrder(b.seeded_outcome);
-
-    if (outcomeDelta !== 0) return outcomeDelta;
-    return b.seeded_score - a.seeded_score;
-  });
-}
-
-function evaluationTimestampValue(value: string) {
-  const parsed = Date.parse(value);
-  return Number.isNaN(parsed) ? 0 : parsed;
-}
-
-function recommendationRank(recommendation?: string) {
-  if (recommendation === "Likely Match") return 0;
-  if (recommendation === "Requires Review") return 1;
-  if (recommendation === "Not Eligible") return 2;
-  return 3;
-}
-
-function dedupeEvaluationsByPatient(items: Evaluation[]) {
-  const latestByPatient = new Map<string, Evaluation>();
-
-  for (const evaluation of items) {
-    const existing = latestByPatient.get(evaluation.patient_id);
-
-    if (!existing) {
-      latestByPatient.set(evaluation.patient_id, evaluation);
-      continue;
-    }
-
-    const existingTimestamp = evaluationTimestampValue(existing.submitted_at);
-    const nextTimestamp = evaluationTimestampValue(evaluation.submitted_at);
-
-    if (nextTimestamp > existingTimestamp) {
-      latestByPatient.set(evaluation.patient_id, evaluation);
-      continue;
-    }
-
-    if (
-      nextTimestamp === existingTimestamp &&
-      evaluation.match_score > existing.match_score
-    ) {
-      latestByPatient.set(evaluation.patient_id, evaluation);
-    }
-  }
-
-  return [...latestByPatient.values()].sort((a, b) => {
-    const rankDelta =
-      recommendationRank(a.recommendation) -
-      recommendationRank(b.recommendation);
-
-    if (rankDelta !== 0) return rankDelta;
-    if (b.match_score !== a.match_score) return b.match_score - a.match_score;
-
-    return (
-      evaluationTimestampValue(b.submitted_at) -
-      evaluationTimestampValue(a.submitted_at)
-    );
-  });
-}
+import AuditTrailCard from "@/components/clinical-trial-matching-agent/AuditTrailCard";
+import CriteriaMatchTable from "@/components/clinical-trial-matching-agent/CriteriaMatchTable";
+import PatientSummaryCard from "@/components/clinical-trial-matching-agent/PatientSummaryCard";
+import RecommendationCard from "@/components/clinical-trial-matching-agent/RecommendationCard";
+import SelectedCaseSummaryCard from "@/components/clinical-trial-matching-agent/SelectedCaseSummaryCard";
+import TrialContextStrip from "@/components/clinical-trial-matching-agent/TrialContextStrip";
+import TrialSummaryCard from "@/components/clinical-trial-matching-agent/TrialSummaryCard";
+import TrialWorklist from "@/components/clinical-trial-matching-agent/TrialWorklist";
+import WorkflowActivityCard from "@/components/clinical-trial-matching-agent/WorkflowActivityCard";
+import {
+  dedupeEvaluationsByPatient,
+  sortPatientsForTrial,
+} from "@/components/clinical-trial-matching-agent/dashboardUtils";
 
 export default function ClinicalTrialProjectPage() {
   const [trials, setTrials] = useState<Trial[]>([]);
@@ -307,7 +223,9 @@ export default function ClinicalTrialProjectPage() {
     const fullPatient = availableTrialPatients.find(
       (item) => item.id === patient.id,
     );
+
     if (!fullPatient) return;
+
     void handleSelectPatient(fullPatient);
   }
 
@@ -367,6 +285,7 @@ export default function ClinicalTrialProjectPage() {
           <div className="brand-mark">JR</div>
           <div>Projects</div>
         </div>
+
         <nav className="top-nav">
           <a href="#">Home</a>
           <a href="#" className="active">
@@ -386,6 +305,7 @@ export default function ClinicalTrialProjectPage() {
             simulated agent workflow spanning patient context building,
             matching, explanation, and human review.
           </p>
+
           <div className="tab-row">
             <button className="tab-btn">Project Description</button>
             <button className="tab-btn active">Demo</button>
@@ -436,440 +356,41 @@ export default function ClinicalTrialProjectPage() {
           {error ? <p className="error-text">{error}</p> : null}
         </section>
 
-        <section className="card">
-          <span className="section-label">A. Trial Context Strip</span>
-          <div className="control-status-row">
-            <div className="control-status-card">
-              <span className="eyebrow">Active Trial</span>
-              <strong>{activeTrial?.title || "No trial selected"}</strong>
-              <p className="panel-copy">
-                {activeTrial?.phase
-                  ? `${activeTrial.phase} • ${activeTrial.disease_area}`
-                  : activeTrial?.disease_area || "No disease area available"}
-              </p>
-            </div>
+        <TrialContextStrip
+          activeTrial={activeTrial}
+          selectedPatient={selectedPatient}
+          selectedEvaluation={selectedEvaluation}
+        />
 
-            <div className="control-status-card">
-              <span className="eyebrow">Selected Patient</span>
-              <strong>
-                {selectedPatient?.display_name ||
-                  selectedPatient?.id ||
-                  "No patient selected"}
-              </strong>
-              <p className="panel-copy">
-                {selectedPatient?.diagnosis?.[0] || "No diagnosis available"}
-              </p>
-            </div>
-
-            <div className="control-status-card">
-              <span className="eyebrow">Latest Recommendation</span>
-              <strong>
-                {selectedEvaluation?.recommendation || "No evaluation loaded"}
-              </strong>
-              <p className="panel-copy">
-                {selectedEvaluation
-                  ? `Match score ${selectedEvaluation.match_score}%`
-                  : "No score available"}
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section className="card">
-          <div className="section-header">
-            <div>
-              <span className="section-label">B. Trial Worklist</span>
-              <h2>Queued evaluations for the active trial</h2>
-              <p>
-                Select a card to update the case summary, recommendation,
-                workflow activity, audit trail, and supporting context below.
-              </p>
-            </div>
-          </div>
-
-          {evaluations.length === 0 ? (
-            <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-center">
-              <p className="text-base font-semibold text-slate-900">
-                No evaluations yet for this trial
-              </p>
-              <p className="mt-2 text-sm text-slate-600">
-                Use Find Patients for Trial to open the candidate list and start
-                a new evaluation.
-              </p>
-            </div>
-          ) : (
-            <div className="queue-grid">
-              {evaluations.map((evaluation, index) => {
-                const patient = patients.find(
-                  (item) => item.id === evaluation.patient_id,
-                );
-                const isSelected = evaluation.id === selectedEvaluation?.id;
-                const hasReviewTask = reviewCards.some(
-                  (review) => review.patient_id === evaluation.patient_id,
-                );
-
-                return (
-                  <article
-                    key={evaluation.id}
-                    className={`queue-card queue-card-button ${
-                      isSelected ? "selected" : ""
-                    }`}
-                    onClick={() => setSelectedEvaluationId(evaluation.id)}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        setSelectedEvaluationId(evaluation.id);
-                      }
-                    }}
-                  >
-                    <div className="queue-top-row">
-                      <div className="eyebrow">
-                        Rank #{index + 1} •{" "}
-                        {patient?.display_name || evaluation.patient_id}
-                      </div>
-
-                      <span className={statusClass(evaluation.recommendation)}>
-                        {evaluation.recommendation}
-                      </span>
-                    </div>
-
-                    <h3>
-                      {patient?.diagnosis?.[0] || "Diagnosis unavailable"}
-                    </h3>
-
-                    <p className="queue-note">{evaluation.explanation}</p>
-
-                    <div className="queue-footer">
-                      <div>
-                        <div className="eyebrow">Match Score</div>
-                        <strong className="queue-score">
-                          {evaluation.match_score}%
-                        </strong>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        {isSelected ? (
-                          <span className="badge info">Selected</span>
-                        ) : null}
-                        {evaluation.review_required || hasReviewTask ? (
-                          <span className="badge review">Review Needed</span>
-                        ) : (
-                          <span className="badge match">Ready</span>
-                        )}
-                      </div>
-
-                      <button className="text-btn" type="button">
-                        {evaluation.review_required || hasReviewTask
-                          ? "Review Case"
-                          : "Show Evaluation Process"}
-                      </button>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          )}
-        </section>
+        <TrialWorklist
+          evaluations={evaluations}
+          patients={patients}
+          reviewCards={reviewCards}
+          selectedEvaluationId={selectedEvaluation?.id}
+          onSelectEvaluation={setSelectedEvaluationId}
+        />
 
         <section className="dashboard-grid">
-          <article className="card col-8">
-            <span className="section-label">C. Selected Evaluation</span>
-            <h2>Selected Case Summary</h2>
+          <SelectedCaseSummaryCard
+            selectedEvaluation={selectedEvaluation}
+            selectedPatient={selectedPatient}
+            activeTrial={activeTrial}
+          />
 
-            <div className="meta-list">
-              <div className="meta-item">
-                <strong>Patient</strong>
-                {selectedPatient?.display_name ||
-                  selectedEvaluation?.patient_id ||
-                  "—"}
-              </div>
-              <div className="meta-item">
-                <strong>Diagnosis</strong>
-                {selectedPatient?.diagnosis?.[0] || "—"}
-              </div>
-              <div className="meta-item">
-                <strong>Trial</strong>
-                {activeTrial?.title || "—"}
-              </div>
-              <div className="meta-item">
-                <strong>Submitted</strong>
-                {selectedEvaluation?.submitted_at
-                  ? new Date(selectedEvaluation.submitted_at).toLocaleString()
-                  : "—"}
-              </div>
-              <div className="meta-item">
-                <strong>Missing Information</strong>
-                {selectedEvaluation?.missing_information?.length
-                  ? joinList(selectedEvaluation.missing_information)
-                  : "None"}
-              </div>
-              <div className="meta-item">
-                <strong>Blockers</strong>
-                {selectedEvaluation?.blockers?.length
-                  ? joinList(selectedEvaluation.blockers)
-                  : "None"}
-              </div>
-            </div>
+          <RecommendationCard selectedEvaluation={selectedEvaluation} />
 
-            <p className="panel-copy">
-              {selectedEvaluation?.explanation ||
-                "No evaluation explanation available."}
-            </p>
-          </article>
+          <WorkflowActivityCard selectedEvaluation={selectedEvaluation} />
 
-          <article className="card col-4">
-            <span className="section-label">C. Recommendation</span>
-            <h2>
-              {selectedEvaluation?.recommendation || "No recommendation loaded"}
-            </h2>
+          <AuditTrailCard selectedEvaluation={selectedEvaluation} />
 
-            <div className="stat-row">
-              <div className="stat-box">
-                <div className="eyebrow">Match Score</div>
-                <strong className="stat-emphasis">
-                  {selectedEvaluation?.match_score ?? "—"}%
-                </strong>
-              </div>
+          <PatientSummaryCard
+            selectedPatient={selectedPatient}
+            selectedEvaluation={selectedEvaluation}
+          />
 
-              <div className="stat-box">
-                <div className="eyebrow">Confidence</div>
-                <strong className="stat-emphasis">
-                  {selectedEvaluation?.confidence || "—"}
-                </strong>
-              </div>
+          <TrialSummaryCard activeTrial={activeTrial} />
 
-              <div className="stat-box">
-                <div className="eyebrow">Review Required</div>
-                <span
-                  className={
-                    selectedEvaluation?.review_required
-                      ? "badge review"
-                      : "badge match"
-                  }
-                >
-                  {selectedEvaluation?.review_required ? "Yes" : "No"}
-                </span>
-              </div>
-
-              <div className="stat-box">
-                <div className="eyebrow">Hard Blockers</div>
-                <strong className="stat-copy">
-                  {selectedEvaluation?.blockers.length
-                    ? selectedEvaluation.blockers.length
-                    : 0}
-                </strong>
-              </div>
-            </div>
-          </article>
-
-          <article className="card col-6">
-            <span className="section-label">D. Evaluation Process</span>
-            <h2>Workflow Activity</h2>
-
-            <div className="workflow-list">
-              {(selectedEvaluation?.workflow_events || []).map(
-                (item: WorkflowEvent, index: number) => (
-                  <div
-                    className="workflow-item"
-                    key={`${selectedEvaluation?.id}-${item.stage}-${index}`}
-                  >
-                    <div className="workflow-dot" />
-                    <div>
-                      <strong className="workflow-title">{item.label}</strong>
-                      <span className="workflow-detail">{item.detail}</span>
-                    </div>
-                  </div>
-                ),
-              )}
-
-              {!selectedEvaluation?.workflow_events?.length ? (
-                <p className="panel-copy">No workflow activity available.</p>
-              ) : null}
-            </div>
-          </article>
-
-          <article className="card col-6">
-            <span className="section-label">D. Evaluation Process</span>
-            <h2>Audit Trail</h2>
-
-            <div className="table-wrap">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Time</th>
-                    <th>Stage</th>
-                    <th>Event</th>
-                    <th>Outcome</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(selectedEvaluation?.workflow_events || []).map(
-                    (event: WorkflowEvent, index: number) => (
-                      <tr
-                        key={`${selectedEvaluation?.id}-${event.stage}-audit-${index}`}
-                      >
-                        <td>
-                          {event.timestamp
-                            ? new Date(event.timestamp).toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                second: "2-digit",
-                              })
-                            : "—"}
-                        </td>
-                        <td>{event.label}</td>
-                        <td>{event.detail}</td>
-                        <td>{selectedEvaluation?.recommendation || "—"}</td>
-                      </tr>
-                    ),
-                  )}
-
-                  {!selectedEvaluation?.workflow_events?.length ? (
-                    <tr>
-                      <td colSpan={4}>No audit events available.</td>
-                    </tr>
-                  ) : null}
-                </tbody>
-              </table>
-            </div>
-          </article>
-
-          <article className="card col-6">
-            <span className="section-label">E. Supporting Context</span>
-            <h2>Patient Summary</h2>
-
-            <div className="meta-list">
-              <div className="meta-item">
-                <strong>Age / Sex</strong>
-                {selectedPatient
-                  ? `${selectedPatient.age} / ${selectedPatient.sex}`
-                  : "—"}
-              </div>
-              <div className="meta-item">
-                <strong>Diagnosis</strong>
-                {selectedPatient ? joinList(selectedPatient.diagnosis) : "—"}
-              </div>
-              <div className="meta-item">
-                <strong>Biomarkers</strong>
-                {selectedPatient ? joinList(selectedPatient.biomarkers) : "—"}
-              </div>
-              <div className="meta-item">
-                <strong>ECOG</strong>
-                {selectedPatient?.ecog || "—"}
-              </div>
-              <div className="meta-item">
-                <strong>Prior Therapies</strong>
-                {selectedPatient
-                  ? joinList(selectedPatient.prior_therapies)
-                  : "—"}
-              </div>
-              <div className="meta-item">
-                <strong>Labs</strong>
-                {selectedPatient ? formatLabs(selectedPatient.labs) : "—"}
-              </div>
-              <div className="meta-item">
-                <strong>Comorbidities</strong>
-                {selectedPatient
-                  ? joinList(selectedPatient.comorbidities)
-                  : "—"}
-              </div>
-              <div className="meta-item">
-                <strong>Notes</strong>
-                {selectedPatient?.notes?.length
-                  ? selectedPatient.notes.join(" ")
-                  : "None"}
-              </div>
-            </div>
-          </article>
-
-          <article className="card col-6">
-            <span className="section-label">E. Supporting Context</span>
-            <h2>Trial Summary</h2>
-
-            <div className="meta-list">
-              <div className="meta-item">
-                <strong>Title</strong>
-                {activeTrial?.title || "—"}
-              </div>
-              <div className="meta-item">
-                <strong>Disease Area</strong>
-                {activeTrial?.disease_area || "—"}
-              </div>
-              <div className="meta-item">
-                <strong>Phase</strong>
-                {activeTrial?.phase || "—"}
-              </div>
-              <div className="meta-item">
-                <strong>Status</strong>
-                <span className="badge info">
-                  {activeTrial?.protocol_status || "unknown"}
-                </span>
-              </div>
-              <div className="meta-item">
-                <strong>Key Inclusion</strong>
-                {activeTrial?.inclusion_criteria?.[0]?.text || "—"}
-              </div>
-              <div className="meta-item">
-                <strong>Performance</strong>
-                {activeTrial?.inclusion_criteria?.[1]?.text || "—"}
-              </div>
-              <div className="meta-item">
-                <strong>Imaging / Disease Context</strong>
-                {activeTrial?.inclusion_criteria?.[2]?.text || "—"}
-              </div>
-              <div className="meta-item">
-                <strong>Exclusions</strong>
-                {activeTrial?.exclusion_criteria?.length
-                  ? activeTrial.exclusion_criteria
-                      .map((item) => item.text)
-                      .join(", ")
-                  : "None"}
-              </div>
-            </div>
-          </article>
-
-          <article className="card col-12">
-            <span className="section-label">F. Criteria Match Table</span>
-            <h2>Criterion-by-criterion evaluation</h2>
-
-            <div className="table-wrap">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Criterion</th>
-                    <th>Type</th>
-                    <th>Status</th>
-                    <th>Evidence</th>
-                    <th>Confidence</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(selectedEvaluation?.criterion_results || []).map(
-                    (row: CriterionResult, index: number) => (
-                      <tr
-                        key={`${selectedEvaluation?.id ?? "evaluation"}-${row.criterion_id}-${index}`}
-                      >
-                        <td>{row.criterion_text}</td>
-                        <td>{row.criterion_type}</td>
-                        <td>{titleCaseStatus(row.status)}</td>
-                        <td>{row.evidence}</td>
-                        <td>{row.confidence}</td>
-                        <td>{row.action_needed || "None"}</td>
-                      </tr>
-                    ),
-                  )}
-
-                  {!selectedEvaluation?.criterion_results?.length ? (
-                    <tr>
-                      <td colSpan={6}>No criterion results available.</td>
-                    </tr>
-                  ) : null}
-                </tbody>
-              </table>
-            </div>
-          </article>
+          <CriteriaMatchTable selectedEvaluation={selectedEvaluation} />
         </section>
 
         <PatientSelectorModal
@@ -882,6 +403,10 @@ export default function ClinicalTrialProjectPage() {
           onClose={handleClosePatientModal}
           onStartEvaluation={handleStartEvaluationFromModal}
         />
+
+        {patientModalError ? (
+          <div className="mt-4 text-sm text-red-600">{patientModalError}</div>
+        ) : null}
       </main>
     </div>
   );
