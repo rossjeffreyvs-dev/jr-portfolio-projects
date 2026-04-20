@@ -7,6 +7,7 @@ type TrialWorklistProps = {
   reviewCards: ReviewTask[];
   selectedEvaluationId?: string;
   onSelectEvaluation: (evaluationId: string) => void;
+  onReviewCase: (evaluationId: string) => void;
 };
 
 export default function TrialWorklist({
@@ -15,6 +16,7 @@ export default function TrialWorklist({
   reviewCards,
   selectedEvaluationId,
   onSelectEvaluation,
+  onReviewCase,
 }: TrialWorklistProps) {
   return (
     <section className="card">
@@ -49,6 +51,7 @@ export default function TrialWorklist({
             const hasReviewTask = reviewCards.some(
               (review) => review.patient_id === evaluation.patient_id,
             );
+            const requiresReview = evaluation.review_required || hasReviewTask;
 
             return (
               <article
@@ -93,17 +96,28 @@ export default function TrialWorklist({
                       <span className="badge info">Selected</span>
                     ) : null}
 
-                    {evaluation.review_required || hasReviewTask ? (
+                    {requiresReview ? (
                       <span className="badge review">Review Needed</span>
                     ) : (
                       <span className="badge match">Ready</span>
                     )}
                   </div>
 
-                  <button className="text-btn" type="button">
-                    {evaluation.review_required || hasReviewTask
-                      ? "Review Case"
-                      : "Show Evaluation Process"}
+                  <button
+                    className="text-btn"
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+
+                      if (requiresReview) {
+                        onReviewCase(evaluation.id);
+                        return;
+                      }
+
+                      onSelectEvaluation(evaluation.id);
+                    }}
+                  >
+                    {requiresReview ? "Review Case" : "Show Evaluation Process"}
                   </button>
                 </div>
               </article>

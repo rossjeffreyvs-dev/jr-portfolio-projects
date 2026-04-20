@@ -2,6 +2,7 @@
 
 import PatientSelectorModal from "@/components/PatientSelectorModal";
 import ClinicalTrialDashboard from "@/components/clinical-trial-matching-agent/ClinicalTrialDashboard";
+import ReviewCasePanel from "@/components/clinical-trial-matching-agent/ReviewCasePanel";
 import { useClinicalTrialDashboard } from "@/hooks/useClinicalTrialDashboard";
 
 export default function ClinicalTrialProjectPage() {
@@ -20,12 +21,20 @@ export default function ClinicalTrialProjectPage() {
     isChangingTrial,
     isPatientModalOpen,
     modalPatients,
+    activeReviewEvaluation,
+    activeReviewPatient,
+    reviewNote,
+    setReviewNote,
     setSelectedEvaluationId,
     handleOpenPatientModal,
     handleChangeTrial,
     handleReplayWorkflow,
     handleClosePatientModal,
     handleStartEvaluationFromModal,
+    handleOpenReview,
+    handleCloseReview,
+    handleApproveReview,
+    handleRejectReview,
   } = useClinicalTrialDashboard();
 
   if (isLoading) {
@@ -89,6 +98,7 @@ export default function ClinicalTrialProjectPage() {
           onChangeTrial={handleChangeTrial}
           onReplayWorkflow={handleReplayWorkflow}
           onSelectEvaluation={setSelectedEvaluationId}
+          onReviewCase={handleOpenReview}
         />
 
         <PatientSelectorModal
@@ -100,6 +110,17 @@ export default function ClinicalTrialProjectPage() {
           patientActionLabel="Starting Evaluation..."
           onClose={handleClosePatientModal}
           onStartEvaluation={handleStartEvaluationFromModal}
+        />
+
+        <ReviewCasePanel
+          isOpen={Boolean(activeReviewEvaluation)}
+          evaluation={activeReviewEvaluation || undefined}
+          patient={activeReviewPatient || undefined}
+          reviewNote={reviewNote}
+          onReviewNoteChange={setReviewNote}
+          onApprove={handleApproveReview}
+          onReject={handleRejectReview}
+          onClose={handleCloseReview}
         />
 
         {patientModalError ? (

@@ -70,6 +70,10 @@ export function useClinicalTrialDashboard() {
   const [reviews, setReviews] = useState<ReviewTask[]>([]);
   const [activeTrialId, setActiveTrialId] = useState<string>("");
   const [selectedEvaluationId, setSelectedEvaluationId] = useState<string>("");
+  const [activeReviewEvaluationId, setActiveReviewEvaluationId] = useState<
+    string | null
+  >(null);
+  const [reviewNote, setReviewNote] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isStartingEvaluation, setIsStartingEvaluation] = useState(false);
   const [isChangingTrial, setIsChangingTrial] = useState(false);
@@ -178,6 +182,24 @@ export function useClinicalTrialDashboard() {
     [availableTrialPatients],
   );
 
+  const activeReviewEvaluation = useMemo(
+    () =>
+      evaluations.find(
+        (evaluation) => evaluation.id === activeReviewEvaluationId,
+      ) || null,
+    [evaluations, activeReviewEvaluationId],
+  );
+
+  const activeReviewPatient = useMemo(() => {
+    if (!activeReviewEvaluation) return null;
+
+    return (
+      patients.find(
+        (patient) => patient.id === activeReviewEvaluation.patient_id,
+      ) || null
+    );
+  }, [patients, activeReviewEvaluation]);
+
   const handleOpenPatientModal = useCallback(async () => {
     if (!activeTrial || isStartingEvaluation) return;
 
@@ -256,6 +278,8 @@ export function useClinicalTrialDashboard() {
       const nextTrial = trials[(currentIndex + 1) % trials.length] || trials[0];
 
       await activateTrial(nextTrial.id);
+      setActiveReviewEvaluationId(null);
+      setReviewNote("");
       await loadDashboard();
     } catch (err) {
       const message =
@@ -279,6 +303,41 @@ export function useClinicalTrialDashboard() {
     setTrialPatients([]);
   }, []);
 
+  const handleOpenReview = useCallback((evaluationId: string) => {
+    setActiveReviewEvaluationId(evaluationId);
+    setReviewNote("");
+    setSelectedEvaluationId(evaluationId);
+  }, []);
+
+  const handleCloseReview = useCallback(() => {
+    setActiveReviewEvaluationId(null);
+    setReviewNote("");
+  }, []);
+
+  const handleApproveReview = useCallback(() => {
+    if (!activeReviewEvaluation) return;
+
+    console.log("approve review", {
+      evaluationId: activeReviewEvaluation.id,
+      note: reviewNote,
+    });
+
+    setActiveReviewEvaluationId(null);
+    setReviewNote("");
+  }, [activeReviewEvaluation, reviewNote]);
+
+  const handleRejectReview = useCallback(() => {
+    if (!activeReviewEvaluation) return;
+
+    console.log("reject review", {
+      evaluationId: activeReviewEvaluation.id,
+      note: reviewNote,
+    });
+
+    setActiveReviewEvaluationId(null);
+    setReviewNote("");
+  }, [activeReviewEvaluation, reviewNote]);
+
   return {
     isLoading,
     activeTrial,
@@ -294,11 +353,19 @@ export function useClinicalTrialDashboard() {
     isChangingTrial,
     isPatientModalOpen,
     modalPatients,
+    activeReviewEvaluation,
+    activeReviewPatient,
+    reviewNote,
+    setReviewNote,
     setSelectedEvaluationId,
     handleOpenPatientModal,
     handleChangeTrial,
     handleReplayWorkflow,
     handleClosePatientModal,
     handleStartEvaluationFromModal,
+    handleOpenReview,
+    handleCloseReview,
+    handleApproveReview,
+    handleRejectReview,
   };
 }
