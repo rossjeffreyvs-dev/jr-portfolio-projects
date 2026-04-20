@@ -70,10 +70,12 @@ export function useClinicalTrialDashboard() {
   const [reviews, setReviews] = useState<ReviewTask[]>([]);
   const [activeTrialId, setActiveTrialId] = useState<string>("");
   const [selectedEvaluationId, setSelectedEvaluationId] = useState<string>("");
+
   const [activeReviewEvaluationId, setActiveReviewEvaluationId] = useState<
     string | null
   >(null);
   const [reviewNote, setReviewNote] = useState("");
+
   const [isLoading, setIsLoading] = useState(true);
   const [isStartingEvaluation, setIsStartingEvaluation] = useState(false);
   const [isChangingTrial, setIsChangingTrial] = useState(false);
@@ -190,6 +192,13 @@ export function useClinicalTrialDashboard() {
     [evaluations, activeReviewEvaluationId],
   );
 
+  console.log("review state", {
+    activeReviewEvaluationId,
+    activeReviewEvaluationFound: Boolean(activeReviewEvaluation),
+    selectedEvaluationId,
+    evaluationIds: evaluations.map((evaluation) => evaluation.id),
+  });
+
   const activeReviewPatient = useMemo(() => {
     if (!activeReviewEvaluation) return null;
 
@@ -303,11 +312,23 @@ export function useClinicalTrialDashboard() {
     setTrialPatients([]);
   }, []);
 
-  const handleOpenReview = useCallback((evaluationId: string) => {
-    setActiveReviewEvaluationId(evaluationId);
-    setReviewNote("");
-    setSelectedEvaluationId(evaluationId);
-  }, []);
+  const handleOpenReview = useCallback(
+    (evaluationId: string) => {
+      const matchedEvaluation =
+        evaluations.find((evaluation) => evaluation.id === evaluationId) ||
+        null;
+
+      console.log("open review fired", evaluationId, {
+        foundEvaluation: Boolean(matchedEvaluation),
+        selectedBefore: selectedEvaluationId,
+      });
+
+      setActiveReviewEvaluationId(evaluationId);
+      setReviewNote("");
+      setSelectedEvaluationId(evaluationId);
+    },
+    [evaluations, selectedEvaluationId],
+  );
 
   const handleCloseReview = useCallback(() => {
     setActiveReviewEvaluationId(null);
@@ -353,16 +374,19 @@ export function useClinicalTrialDashboard() {
     isChangingTrial,
     isPatientModalOpen,
     modalPatients,
+
     activeReviewEvaluation,
     activeReviewPatient,
     reviewNote,
     setReviewNote,
+
     setSelectedEvaluationId,
     handleOpenPatientModal,
     handleChangeTrial,
     handleReplayWorkflow,
     handleClosePatientModal,
     handleStartEvaluationFromModal,
+
     handleOpenReview,
     handleCloseReview,
     handleApproveReview,

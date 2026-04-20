@@ -47,10 +47,13 @@ export default function TrialWorklist({
             const patient = patients.find(
               (item) => item.id === evaluation.patient_id,
             );
+
             const isSelected = evaluation.id === selectedEvaluationId;
+
             const hasReviewTask = reviewCards.some(
               (review) => review.patient_id === evaluation.patient_id,
             );
+
             const requiresReview = evaluation.review_required || hasReviewTask;
 
             return (
@@ -92,9 +95,7 @@ export default function TrialWorklist({
                   </div>
 
                   <div className="flex items-center gap-2">
-                    {isSelected ? (
-                      <span className="badge info">Selected</span>
-                    ) : null}
+                    {isSelected && <span className="badge info">Selected</span>}
 
                     {requiresReview ? (
                       <span className="badge review">Review Needed</span>
@@ -107,14 +108,13 @@ export default function TrialWorklist({
                     className="text-btn"
                     type="button"
                     onClick={(event) => {
-                      event.stopPropagation();
+                      event.stopPropagation(); // 🔥 critical
 
                       if (requiresReview) {
                         onReviewCase(evaluation.id);
-                        return;
+                      } else {
+                        onSelectEvaluation(evaluation.id);
                       }
-
-                      onSelectEvaluation(evaluation.id);
                     }}
                   >
                     {requiresReview ? "Review Case" : "Show Evaluation Process"}

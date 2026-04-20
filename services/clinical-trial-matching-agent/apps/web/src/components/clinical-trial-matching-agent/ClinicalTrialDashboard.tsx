@@ -24,7 +24,7 @@ type ClinicalTrialDashboardProps = {
   onChangeTrial: () => void;
   onReplayWorkflow: () => void;
   onSelectEvaluation: (evaluationId: string) => void;
-  onReviewCase: (evaluationId: string) => void;
+  onReviewCase: (evaluationId: string) => void; // 👈 NEW
 };
 
 export default function ClinicalTrialDashboard({
@@ -41,7 +41,7 @@ export default function ClinicalTrialDashboard({
   onChangeTrial,
   onReplayWorkflow,
   onSelectEvaluation,
-  onReviewCase,
+  onReviewCase, // 👈 NEW
 }: ClinicalTrialDashboardProps) {
   return (
     <>
@@ -67,7 +67,7 @@ export default function ClinicalTrialDashboard({
         reviewCards={reviewCards}
         selectedEvaluationId={selectedEvaluation?.id}
         onSelectEvaluation={onSelectEvaluation}
-        onReviewCase={onReviewCase}
+        onReviewCase={onReviewCase} // 👈 WIRE THROUGH
       />
 
       <section className="dashboard-grid">

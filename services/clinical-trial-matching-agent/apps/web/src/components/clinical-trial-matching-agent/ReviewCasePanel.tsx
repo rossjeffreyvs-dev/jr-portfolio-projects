@@ -1,3 +1,7 @@
+"use client";
+
+import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import type { Evaluation, Patient } from "@/lib/api";
 import { titleCaseStatus } from "./dashboardUtils";
 
@@ -22,21 +26,89 @@ export default function ReviewCasePanel({
   onReject,
   onClose,
 }: ReviewCasePanelProps) {
-  if (!isOpen || !evaluation) return null;
+  useEffect(() => {
+    if (!isOpen) return;
 
-  return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/45 p-4">
-      <div className="w-full max-w-5xl rounded-[28px] border border-slate-200 bg-white shadow-2xl">
-        {/* Header */}
-        <div className="flex items-start justify-between border-b border-slate-200 px-6 py-5">
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isOpen]);
+
+  if (!isOpen || !evaluation) return null;
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 9999,
+        background: "rgba(15, 23, 42, 0.45)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 16,
+      }}
+    >
+      <div
+        onClick={(event) => event.stopPropagation()}
+        style={{
+          width: "100%",
+          maxWidth: 1120,
+          maxHeight: "90vh",
+          overflow: "auto",
+          background: "#ffffff",
+          border: "1px solid #dbe3f0",
+          borderRadius: 28,
+          boxShadow: "0 24px 64px rgba(15, 23, 42, 0.24)",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            gap: 16,
+            padding: "24px 24px 20px 24px",
+            borderBottom: "1px solid #e2e8f0",
+          }}
+        >
           <div>
-            <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: "0.18em",
+                textTransform: "uppercase",
+                color: "#64748b",
+              }}
+            >
               Human Review
             </div>
-            <h2 className="mt-1 text-2xl font-semibold text-slate-950">
+            <h2
+              style={{
+                margin: "6px 0 0 0",
+                fontSize: 22,
+                lineHeight: 1.2,
+                fontWeight: 700,
+                color: "#0f172a",
+              }}
+            >
               Review Case
             </h2>
-            <p className="mt-2 max-w-3xl text-sm text-slate-600">
+            <p
+              style={{
+                margin: "10px 0 0 0",
+                fontSize: 14,
+                lineHeight: 1.6,
+                color: "#475569",
+                maxWidth: 760,
+              }}
+            >
               Review the model recommendation, supporting evidence, and
               criterion-level results before approving or rejecting this case.
             </p>
@@ -45,144 +117,379 @@ export default function ReviewCasePanel({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+            style={{
+              border: "1px solid #cbd5e1",
+              background: "#ffffff",
+              color: "#334155",
+              borderRadius: 999,
+              padding: "10px 16px",
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+            }}
           >
             Close
           </button>
         </div>
 
-        {/* Body */}
-        <div className="grid gap-6 px-6 py-6 lg:grid-cols-[1.15fr_0.85fr]">
-          {/* LEFT SIDE */}
-          <section className="space-y-6">
-            {/* Summary */}
-            <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-              <div className="grid gap-4 sm:grid-cols-2">
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1.15fr 0.85fr",
+            gap: 24,
+            padding: 24,
+          }}
+        >
+          <div style={{ display: "grid", gap: 24 }}>
+            <div
+              style={{
+                border: "1px solid #e2e8f0",
+                borderRadius: 24,
+                background: "#f8fafc",
+                padding: 24,
+              }}
+            >
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: 20,
+                }}
+              >
                 <div>
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  <div
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      letterSpacing: "0.14em",
+                      textTransform: "uppercase",
+                      color: "#64748b",
+                    }}
+                  >
                     Patient
                   </div>
-                  <div className="mt-1 text-base font-semibold text-slate-900">
+                  <div
+                    style={{
+                      marginTop: 6,
+                      fontSize: 18,
+                      fontWeight: 700,
+                      color: "#0f172a",
+                    }}
+                  >
                     {patient?.display_name || evaluation.patient_id}
                   </div>
-                  <div className="mt-1 text-sm text-slate-600">
+                  <div
+                    style={{
+                      marginTop: 6,
+                      fontSize: 14,
+                      color: "#475569",
+                    }}
+                  >
                     {patient?.diagnosis?.[0] || "Diagnosis unavailable"}
                   </div>
                 </div>
 
                 <div>
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  <div
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      letterSpacing: "0.14em",
+                      textTransform: "uppercase",
+                      color: "#64748b",
+                    }}
+                  >
                     Recommendation
                   </div>
-                  <div className="mt-1 text-base font-semibold text-slate-900">
+                  <div
+                    style={{
+                      marginTop: 6,
+                      fontSize: 18,
+                      fontWeight: 700,
+                      color: "#0f172a",
+                    }}
+                  >
                     {evaluation.recommendation}
                   </div>
-                  <div className="mt-1 text-sm text-slate-600">
+                  <div
+                    style={{
+                      marginTop: 6,
+                      fontSize: 14,
+                      color: "#475569",
+                    }}
+                  >
                     Match score {evaluation.match_score}% · Confidence{" "}
                     {evaluation.confidence}
                   </div>
                 </div>
               </div>
 
-              <div className="mt-5">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+              <div style={{ marginTop: 24 }}>
+                <div
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    letterSpacing: "0.14em",
+                    textTransform: "uppercase",
+                    color: "#64748b",
+                  }}
+                >
                   Evaluation Summary
                 </div>
-                <p className="mt-2 text-sm leading-6 text-slate-700">
+                <p
+                  style={{
+                    marginTop: 8,
+                    fontSize: 14,
+                    lineHeight: 1.7,
+                    color: "#334155",
+                  }}
+                >
                   {evaluation.explanation}
                 </p>
               </div>
             </div>
 
-            {/* Criteria */}
-            <div className="rounded-3xl border border-slate-200 bg-white p-5">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <div
+              style={{
+                border: "1px solid #e2e8f0",
+                borderRadius: 24,
+                background: "#ffffff",
+                padding: 24,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  letterSpacing: "0.14em",
+                  textTransform: "uppercase",
+                  color: "#64748b",
+                }}
+              >
                 Criteria Highlights
               </div>
 
-              <div className="mt-4 space-y-3">
-                {(evaluation.criterion_results || []).slice(0, 5).map((row) => (
-                  <div
-                    key={`${evaluation.id}-${row.criterion_id}`}
-                    className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="text-sm font-semibold text-slate-900">
-                        {row.criterion_text}
+              <div style={{ marginTop: 16, display: "grid", gap: 16 }}>
+                {(evaluation.criterion_results || [])
+                  .slice(0, 5)
+                  .map((row, index) => (
+                    <div
+                      key={`${evaluation.id}-${row.criterion_id}-${index}`}
+                      style={{
+                        border: "1px solid #e2e8f0",
+                        borderRadius: 18,
+                        background: "#f8fafc",
+                        padding: 16,
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "flex-start",
+                          gap: 12,
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontSize: 14,
+                            fontWeight: 700,
+                            color: "#0f172a",
+                            lineHeight: 1.5,
+                          }}
+                        >
+                          {row.criterion_text}
+                        </div>
+
+                        <div
+                          style={{
+                            border: "1px solid #cbd5e1",
+                            borderRadius: 999,
+                            background: "#ffffff",
+                            padding: "6px 10px",
+                            fontSize: 11,
+                            fontWeight: 700,
+                            color: "#475569",
+                            whiteSpace: "nowrap",
+                            textTransform: "uppercase",
+                            letterSpacing: "0.08em",
+                          }}
+                        >
+                          {titleCaseStatus(row.status)}
+                        </div>
                       </div>
-                      <span className="rounded-full border border-slate-300 bg-white px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-600">
-                        {titleCaseStatus(row.status)}
-                      </span>
-                    </div>
 
-                    <div className="mt-2 text-xs uppercase tracking-[0.12em] text-slate-500">
-                      Evidence
-                    </div>
-                    <p className="mt-1 text-sm text-slate-700">
-                      {row.evidence || "No evidence provided."}
-                    </p>
+                      <div
+                        style={{
+                          marginTop: 12,
+                          fontSize: 11,
+                          fontWeight: 700,
+                          letterSpacing: "0.12em",
+                          textTransform: "uppercase",
+                          color: "#64748b",
+                        }}
+                      >
+                        Evidence
+                      </div>
 
-                    <div className="mt-2 text-xs text-slate-500">
-                      Confidence: {row.confidence}
-                    </div>
-                  </div>
-                ))}
+                      <div
+                        style={{
+                          marginTop: 6,
+                          fontSize: 14,
+                          lineHeight: 1.7,
+                          color: "#334155",
+                        }}
+                      >
+                        {row.evidence || "No evidence provided."}
+                      </div>
 
-                {!evaluation.criterion_results?.length && (
-                  <p className="text-sm text-slate-500">
+                      <div
+                        style={{
+                          marginTop: 12,
+                          fontSize: 12,
+                          color: "#64748b",
+                        }}
+                      >
+                        Confidence: {row.confidence}
+                        {row.action_needed
+                          ? ` · Action: ${row.action_needed}`
+                          : ""}
+                      </div>
+                    </div>
+                  ))}
+
+                {!evaluation.criterion_results?.length ? (
+                  <div style={{ fontSize: 14, color: "#64748b" }}>
                     No criterion results available.
-                  </p>
-                )}
+                  </div>
+                ) : null}
               </div>
             </div>
-          </section>
+          </div>
 
-          {/* RIGHT SIDE */}
-          <aside className="space-y-6">
-            <div className="rounded-3xl border border-slate-200 bg-white p-5">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+          <div style={{ display: "grid", gap: 24 }}>
+            <div
+              style={{
+                border: "1px solid #e2e8f0",
+                borderRadius: 24,
+                background: "#ffffff",
+                padding: 24,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  letterSpacing: "0.14em",
+                  textTransform: "uppercase",
+                  color: "#64748b",
+                }}
+              >
                 Reviewer Note
               </div>
 
               <textarea
                 value={reviewNote}
-                onChange={(e) => onReviewNoteChange(e.target.value)}
+                onChange={(event) => onReviewNoteChange(event.target.value)}
                 placeholder="Add reviewer rationale..."
-                className="mt-3 min-h-[200px] w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none focus:border-slate-400 focus:bg-white"
+                style={{
+                  width: "100%",
+                  minHeight: 220,
+                  marginTop: 12,
+                  border: "1px solid #dbe3f0",
+                  borderRadius: 18,
+                  background: "#f8fafc",
+                  padding: 16,
+                  fontSize: 14,
+                  lineHeight: 1.6,
+                  color: "#0f172a",
+                  resize: "vertical",
+                  outline: "none",
+                }}
               />
             </div>
 
-            <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <div
+              style={{
+                border: "1px solid #e2e8f0",
+                borderRadius: 24,
+                background: "#f8fafc",
+                padding: 24,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  letterSpacing: "0.14em",
+                  textTransform: "uppercase",
+                  color: "#64748b",
+                }}
+              >
                 Actions
               </div>
 
-              <div className="mt-4 space-y-3">
+              <div style={{ marginTop: 16, display: "grid", gap: 12 }}>
                 <button
+                  type="button"
                   onClick={onApprove}
-                  className="w-full rounded-full bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:opacity-90"
+                  style={{
+                    width: "100%",
+                    border: "none",
+                    borderRadius: 999,
+                    background: "#0f172a",
+                    color: "#ffffff",
+                    padding: "14px 16px",
+                    fontSize: 14,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
                 >
                   Approve Case
                 </button>
 
                 <button
+                  type="button"
                   onClick={onReject}
-                  className="w-full rounded-full border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+                  style={{
+                    width: "100%",
+                    border: "1px solid #cbd5e1",
+                    borderRadius: 999,
+                    background: "#ffffff",
+                    color: "#0f172a",
+                    padding: "14px 16px",
+                    fontSize: 14,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
                 >
                   Reject Case
                 </button>
 
                 <button
+                  type="button"
                   onClick={onClose}
-                  className="w-full rounded-full border border-slate-200 px-4 py-3 text-sm text-slate-600 hover:bg-slate-50"
+                  style={{
+                    width: "100%",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: 999,
+                    background: "#ffffff",
+                    color: "#475569",
+                    padding: "14px 16px",
+                    fontSize: 14,
+                    fontWeight: 500,
+                    cursor: "pointer",
+                  }}
                 >
                   Cancel
                 </button>
               </div>
             </div>
-          </aside>
+          </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
