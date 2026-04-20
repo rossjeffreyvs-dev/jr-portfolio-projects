@@ -59,6 +59,60 @@ function sortPatientsForTrial(items: Patient[]) {
   });
 }
 
+function evaluationTimestampValue(value: string) {
+  const parsed = Date.parse(value);
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+function recommendationRank(recommendation?: string) {
+  if (recommendation === "Likely Match") return 0;
+  if (recommendation === "Requires Review") return 1;
+  if (recommendation === "Not Eligible") return 2;
+  return 3;
+}
+
+function dedupeEvaluationsByPatient(items: Evaluation[]) {
+  const latestByPatient = new Map<string, Evaluation>();
+
+  for (const evaluation of items) {
+    const existing = latestByPatient.get(evaluation.patient_id);
+
+    if (!existing) {
+      latestByPatient.set(evaluation.patient_id, evaluation);
+      continue;
+    }
+
+    const existingTimestamp = evaluationTimestampValue(existing.submitted_at);
+    const nextTimestamp = evaluationTimestampValue(evaluation.submitted_at);
+
+    if (nextTimestamp > existingTimestamp) {
+      latestByPatient.set(evaluation.patient_id, evaluation);
+      continue;
+    }
+
+    if (
+      nextTimestamp === existingTimestamp &&
+      evaluation.match_score > existing.match_score
+    ) {
+      latestByPatient.set(evaluation.patient_id, evaluation);
+    }
+  }
+
+  return [...latestByPatient.values()].sort((a, b) => {
+    const rankDelta =
+      recommendationRank(a.recommendation) -
+      recommendationRank(b.recommendation);
+
+    if (rankDelta !== 0) return rankDelta;
+    if (b.match_score !== a.match_score) return b.match_score - a.match_score;
+
+    return (
+      evaluationTimestampValue(b.submitted_at) -
+      evaluationTimestampValue(a.submitted_at)
+    );
+  });
+}
+
 export default function ClinicalTrialProjectPage() {
   const [trials, setTrials] = useState<Trial[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -77,12 +131,6 @@ export default function ClinicalTrialProjectPage() {
   const [trialPatients, setTrialPatients] = useState<Patient[]>([]);
   const [isLoadingTrialPatients, setIsLoadingTrialPatients] = useState(false);
 
-  const handleStartEvaluationFromModal = (patient: { id: string }) => {
-    const fullPatient = trialPatients.find((p) => p.id === patient.id);
-    if (!fullPatient) return;
-    void handleSelectPatient(fullPatient);
-  };
-
   async function loadDashboard(preferredEvaluationId?: string) {
     setError(null);
 
@@ -96,18 +144,22 @@ export default function ClinicalTrialProjectPage() {
         getReviews(),
       ]);
 
+    const uniqueEvaluations = dedupeEvaluationsByPatient(
+      evaluationResponse.items,
+    );
+
     setTrials(trialResponse.items);
     setActiveTrialId(activeId);
     setPatients(patientResponse.items);
-    setEvaluations(evaluationResponse.items);
+    setEvaluations(uniqueEvaluations);
     setReviews(reviewResponse.items);
 
     const nextSelected =
       preferredEvaluationId ||
-      evaluationResponse.items.find(
+      uniqueEvaluations.find(
         (item) => item.recommendation === "Requires Review",
       )?.id ||
-      evaluationResponse.items[0]?.id ||
+      uniqueEvaluations[0]?.id ||
       "";
 
     setSelectedEvaluationId(nextSelected);
@@ -126,7 +178,7 @@ export default function ClinicalTrialProjectPage() {
       }
     }
 
-    bootstrap();
+    void bootstrap();
   }, []);
 
   const activeTrial = useMemo(
@@ -148,16 +200,6 @@ export default function ClinicalTrialProjectPage() {
     [patients, selectedEvaluation],
   );
 
-  const uniqueEvaluations = useMemo(() => {
-    const map = new Map<string, Evaluation>();
-
-    for (const evaluation of evaluations) {
-      map.set(evaluation.patient_id, evaluation);
-    }
-
-    return Array.from(map.values());
-  }, [evaluations]);
-
   const reviewCards = useMemo(
     () =>
       reviews.filter(
@@ -168,14 +210,22 @@ export default function ClinicalTrialProjectPage() {
     [reviews, activeTrialId],
   );
 
-  const modalPatients = useMemo(() => {
-    const queuedPatientIds = new Set(
-      uniqueEvaluations.map((evaluation) => evaluation.patient_id),
-    );
+  const queuedPatientIds = useMemo(
+    () => new Set(evaluations.map((evaluation) => evaluation.patient_id)),
+    [evaluations],
+  );
 
-    return trialPatients
-      .filter((patient) => !queuedPatientIds.has(patient.id))
-      .map((patient) => ({
+  const availableTrialPatients = useMemo(
+    () =>
+      sortPatientsForTrial(
+        trialPatients.filter((patient) => !queuedPatientIds.has(patient.id)),
+      ),
+    [trialPatients, queuedPatientIds],
+  );
+
+  const modalPatients = useMemo(
+    () =>
+      availableTrialPatients.map((patient) => ({
         id: patient.id,
         name: patient.display_name,
         age: patient.age ?? null,
@@ -200,16 +250,11 @@ export default function ClinicalTrialProjectPage() {
         summary: patient.notes.length
           ? patient.notes.join(" ")
           : patient.seeded_reason || "No summary available.",
-      }));
-  }, [trialPatients, uniqueEvaluations]);
+      })),
+    [availableTrialPatients],
+  );
 
   async function handleOpenPatientModal() {
-    console.log("open clicked", {
-      activeTrialId: activeTrial?.id,
-      isStartingEvaluation,
-      isLoadingTrialPatients,
-    });
-
     if (!activeTrial || isStartingEvaluation) return;
 
     setError(null);
@@ -218,14 +263,10 @@ export default function ClinicalTrialProjectPage() {
     setIsPatientModalOpen(true);
     setIsLoadingTrialPatients(true);
 
-    console.log("set modal open");
-
     try {
       const response = await getPatientsForTrial(activeTrial.id);
-      console.log("patients response", response);
-      setTrialPatients(sortPatientsForTrial(response.items));
+      setTrialPatients(response.items);
     } catch (err) {
-      console.error("patient modal load failed", err);
       const message =
         err instanceof Error
           ? err.message
@@ -237,6 +278,7 @@ export default function ClinicalTrialProjectPage() {
       setIsLoadingTrialPatients(false);
     }
   }
+
   async function handleSelectPatient(patient: Patient) {
     if (!activeTrial || isStartingEvaluation) return;
 
@@ -259,6 +301,14 @@ export default function ClinicalTrialProjectPage() {
     } finally {
       setIsStartingEvaluation(false);
     }
+  }
+
+  function handleStartEvaluationFromModal(patient: { id: string }) {
+    const fullPatient = availableTrialPatients.find(
+      (item) => item.id === patient.id,
+    );
+    if (!fullPatient) return;
+    void handleSelectPatient(fullPatient);
   }
 
   async function handleChangeTrial() {
@@ -341,15 +391,16 @@ export default function ClinicalTrialProjectPage() {
             <button className="tab-btn active">Demo</button>
           </div>
         </section>
+
         <section className="control-panel cardish">
           <div className="control-panel-header">
             <div>
               <div className="eyebrow">Simulation Controls</div>
               <h2>Kick off new evaluations or switch context</h2>
               <p>
-                The dashboard is now reading from the FastAPI stub. Use the
-                controls below to simulate a new workflow run or cycle to
-                another trial protocol.
+                Use the controls below to open the candidate list, create a new
+                evaluation, switch the active trial, or replay the selected
+                case.
               </p>
             </div>
           </div>
@@ -372,21 +423,42 @@ export default function ClinicalTrialProjectPage() {
             >
               {isChangingTrial ? "Changing Trial…" : "Change Trial"}
             </button>
+
+            <button
+              className="secondary-btn"
+              onClick={handleReplayWorkflow}
+              disabled={!selectedEvaluation}
+            >
+              Replay Evaluation
+            </button>
           </div>
 
+          {error ? <p className="error-text">{error}</p> : null}
+        </section>
+
+        <section className="card">
+          <span className="section-label">A. Trial Context Strip</span>
           <div className="control-status-row">
             <div className="control-status-card">
-              <span className="eyebrow">Current Trial</span>
+              <span className="eyebrow">Active Trial</span>
               <strong>{activeTrial?.title || "No trial selected"}</strong>
+              <p className="panel-copy">
+                {activeTrial?.phase
+                  ? `${activeTrial.phase} • ${activeTrial.disease_area}`
+                  : activeTrial?.disease_area || "No disease area available"}
+              </p>
             </div>
 
             <div className="control-status-card">
-              <span className="eyebrow">Current Patient</span>
+              <span className="eyebrow">Selected Patient</span>
               <strong>
                 {selectedPatient?.display_name ||
                   selectedPatient?.id ||
                   "No patient selected"}
               </strong>
+              <p className="panel-copy">
+                {selectedPatient?.diagnosis?.[0] || "No diagnosis available"}
+              </p>
             </div>
 
             <div className="control-status-card">
@@ -394,54 +466,28 @@ export default function ClinicalTrialProjectPage() {
               <strong>
                 {selectedEvaluation?.recommendation || "No evaluation loaded"}
               </strong>
+              <p className="panel-copy">
+                {selectedEvaluation
+                  ? `Match score ${selectedEvaluation.match_score}%`
+                  : "No score available"}
+              </p>
             </div>
           </div>
-
-          {error ? <p className="error-text">{error}</p> : null}
         </section>
+
         <section className="card">
-          <span className="section-label">
-            Eligibility Operations Dashboard
-          </span>
-
-          <div className="callout-grid">
-            <div className="callout">
-              <div>
-                <div className="eyebrow">Active trial loaded</div>
-                <p>
-                  {activeTrial
-                    ? `${activeTrial.title} is active and ready for evaluation.`
-                    : "No active trial is currently loaded."}
-                </p>
-              </div>
-              <button
-                className="secondary-btn small"
-                onClick={handleChangeTrial}
-              >
-                Change Trial
-              </button>
-            </div>
-
-            <div className="callout">
-              <div>
-                <div className="eyebrow">Patients ready for evaluation</div>
-                <p>
-                  Review the API-backed queue below or simulate a new patient
-                  entering the workflow.
-                </p>
-              </div>
-            </div>
-          </div>
-
           <div className="section-header">
-            <h2>Trial Worklist</h2>
-            <p>
-              Click a patient card to show the evaluation process, workflow
-              activity, audit trail, and recommendation details below.
-            </p>
+            <div>
+              <span className="section-label">B. Trial Worklist</span>
+              <h2>Queued evaluations for the active trial</h2>
+              <p>
+                Select a card to update the case summary, recommendation,
+                workflow activity, audit trail, and supporting context below.
+              </p>
+            </div>
           </div>
 
-          {uniqueEvaluations.length === 0 ? (
+          {evaluations.length === 0 ? (
             <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-center">
               <p className="text-base font-semibold text-slate-900">
                 No evaluations yet for this trial
@@ -453,16 +499,20 @@ export default function ClinicalTrialProjectPage() {
             </div>
           ) : (
             <div className="queue-grid">
-              {uniqueEvaluations.map((evaluation, index) => {
+              {evaluations.map((evaluation, index) => {
                 const patient = patients.find(
                   (item) => item.id === evaluation.patient_id,
+                );
+                const isSelected = evaluation.id === selectedEvaluation?.id;
+                const hasReviewTask = reviewCards.some(
+                  (review) => review.patient_id === evaluation.patient_id,
                 );
 
                 return (
                   <article
                     key={evaluation.id}
                     className={`queue-card queue-card-button ${
-                      evaluation.id === selectedEvaluation?.id ? "selected" : ""
+                      isSelected ? "selected" : ""
                     }`}
                     onClick={() => setSelectedEvaluationId(evaluation.id)}
                     role="button"
@@ -479,13 +529,9 @@ export default function ClinicalTrialProjectPage() {
                         {patient?.display_name || evaluation.patient_id}
                       </div>
 
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={statusClass(evaluation.recommendation)}
-                        >
-                          {evaluation.recommendation}
-                        </span>
-                      </div>
+                      <span className={statusClass(evaluation.recommendation)}>
+                        {evaluation.recommendation}
+                      </span>
                     </div>
 
                     <h3>
@@ -502,12 +548,19 @@ export default function ClinicalTrialProjectPage() {
                         </strong>
                       </div>
 
-                      {patient && selectedPatient?.id === patient.id && (
-                        <span className="badge info">Selected</span>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {isSelected ? (
+                          <span className="badge info">Selected</span>
+                        ) : null}
+                        {evaluation.review_required || hasReviewTask ? (
+                          <span className="badge review">Review Needed</span>
+                        ) : (
+                          <span className="badge match">Ready</span>
+                        )}
+                      </div>
 
-                      <button className="text-btn">
-                        {evaluation.recommendation === "Requires Review"
+                      <button className="text-btn" type="button">
+                        {evaluation.review_required || hasReviewTask
                           ? "Review Case"
                           : "Show Evaluation Process"}
                       </button>
@@ -518,60 +571,59 @@ export default function ClinicalTrialProjectPage() {
             </div>
           )}
         </section>
+
         <section className="dashboard-grid">
-          <article className="card col-4">
-            <span className="section-label">Active Trial</span>
-            <h2>{activeTrial?.title || "No active trial"}</h2>
+          <article className="card col-8">
+            <span className="section-label">C. Selected Evaluation</span>
+            <h2>Selected Case Summary</h2>
+
             <div className="meta-list">
               <div className="meta-item">
-                <strong>Disease Area</strong>
-                {activeTrial?.disease_area || "—"}
+                <strong>Patient</strong>
+                {selectedPatient?.display_name ||
+                  selectedEvaluation?.patient_id ||
+                  "—"}
               </div>
               <div className="meta-item">
-                <strong>Phase</strong>
-                {activeTrial?.phase || "—"}
+                <strong>Diagnosis</strong>
+                {selectedPatient?.diagnosis?.[0] || "—"}
               </div>
               <div className="meta-item">
-                <strong>Status</strong>
-                <span className="badge info">
-                  {activeTrial?.protocol_status || "unknown"}
-                </span>
+                <strong>Trial</strong>
+                {activeTrial?.title || "—"}
               </div>
               <div className="meta-item">
-                <strong>Criteria</strong>
-                {activeTrial
-                  ? `${activeTrial.inclusion_criteria.length} inclusion / ${activeTrial.exclusion_criteria.length} exclusion`
+                <strong>Submitted</strong>
+                {selectedEvaluation?.submitted_at
+                  ? new Date(selectedEvaluation.submitted_at).toLocaleString()
                   : "—"}
               </div>
+              <div className="meta-item">
+                <strong>Missing Information</strong>
+                {selectedEvaluation?.missing_information?.length
+                  ? joinList(selectedEvaluation.missing_information)
+                  : "None"}
+              </div>
+              <div className="meta-item">
+                <strong>Blockers</strong>
+                {selectedEvaluation?.blockers?.length
+                  ? joinList(selectedEvaluation.blockers)
+                  : "None"}
+              </div>
             </div>
+
+            <p className="panel-copy">
+              {selectedEvaluation?.explanation ||
+                "No evaluation explanation available."}
+            </p>
           </article>
 
           <article className="card col-4">
-            <span className="section-label">Agent Workflow</span>
-            <h2>Live workflow status</h2>
-            <div className="workflow-list">
-              {(selectedEvaluation?.workflow_events || []).map(
-                (item: WorkflowEvent) => (
-                  <div
-                    className="workflow-item"
-                    key={`${selectedEvaluation?.id}-${item.stage}`}
-                  >
-                    <div className="workflow-dot" />
-                    <div>
-                      <strong className="workflow-title">{item.label}</strong>
-                      <span className="workflow-detail">{item.detail}</span>
-                    </div>
-                  </div>
-                ),
-              )}
-            </div>
-          </article>
-
-          <article className="card col-4">
-            <span className="section-label">Recommendation</span>
+            <span className="section-label">C. Recommendation</span>
             <h2>
               {selectedEvaluation?.recommendation || "No recommendation loaded"}
             </h2>
+
             <div className="stat-row">
               <div className="stat-box">
                 <div className="eyebrow">Match Score</div>
@@ -579,12 +631,14 @@ export default function ClinicalTrialProjectPage() {
                   {selectedEvaluation?.match_score ?? "—"}%
                 </strong>
               </div>
+
               <div className="stat-box">
                 <div className="eyebrow">Confidence</div>
                 <strong className="stat-emphasis">
                   {selectedEvaluation?.confidence || "—"}
                 </strong>
               </div>
+
               <div className="stat-box">
                 <div className="eyebrow">Review Required</div>
                 <span
@@ -597,26 +651,94 @@ export default function ClinicalTrialProjectPage() {
                   {selectedEvaluation?.review_required ? "Yes" : "No"}
                 </span>
               </div>
+
               <div className="stat-box">
-                <div className="eyebrow">Blockers</div>
+                <div className="eyebrow">Hard Blockers</div>
                 <strong className="stat-copy">
                   {selectedEvaluation?.blockers.length
                     ? selectedEvaluation.blockers.length
-                    : 0}{" "}
-                  hard blockers
+                    : 0}
                 </strong>
               </div>
             </div>
-            <p className="panel-copy">
-              {selectedEvaluation?.explanation || "No explanation available."}
-            </p>
           </article>
 
           <article className="card col-6">
-            <span className="section-label">Patient Summary</span>
-            <h2>
-              {selectedPatient?.display_name || "Unknown patient"} overview
-            </h2>
+            <span className="section-label">D. Evaluation Process</span>
+            <h2>Workflow Activity</h2>
+
+            <div className="workflow-list">
+              {(selectedEvaluation?.workflow_events || []).map(
+                (item: WorkflowEvent, index: number) => (
+                  <div
+                    className="workflow-item"
+                    key={`${selectedEvaluation?.id}-${item.stage}-${index}`}
+                  >
+                    <div className="workflow-dot" />
+                    <div>
+                      <strong className="workflow-title">{item.label}</strong>
+                      <span className="workflow-detail">{item.detail}</span>
+                    </div>
+                  </div>
+                ),
+              )}
+
+              {!selectedEvaluation?.workflow_events?.length ? (
+                <p className="panel-copy">No workflow activity available.</p>
+              ) : null}
+            </div>
+          </article>
+
+          <article className="card col-6">
+            <span className="section-label">D. Evaluation Process</span>
+            <h2>Audit Trail</h2>
+
+            <div className="table-wrap">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Stage</th>
+                    <th>Event</th>
+                    <th>Outcome</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(selectedEvaluation?.workflow_events || []).map(
+                    (event: WorkflowEvent, index: number) => (
+                      <tr
+                        key={`${selectedEvaluation?.id}-${event.stage}-audit-${index}`}
+                      >
+                        <td>
+                          {event.timestamp
+                            ? new Date(event.timestamp).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                second: "2-digit",
+                              })
+                            : "—"}
+                        </td>
+                        <td>{event.label}</td>
+                        <td>{event.detail}</td>
+                        <td>{selectedEvaluation?.recommendation || "—"}</td>
+                      </tr>
+                    ),
+                  )}
+
+                  {!selectedEvaluation?.workflow_events?.length ? (
+                    <tr>
+                      <td colSpan={4}>No audit events available.</td>
+                    </tr>
+                  ) : null}
+                </tbody>
+              </table>
+            </div>
+          </article>
+
+          <article className="card col-6">
+            <span className="section-label">E. Supporting Context</span>
+            <h2>Patient Summary</h2>
+
             <div className="meta-list">
               <div className="meta-item">
                 <strong>Age / Sex</strong>
@@ -653,52 +775,64 @@ export default function ClinicalTrialProjectPage() {
                   : "—"}
               </div>
               <div className="meta-item">
-                <strong>Missing Data</strong>
-                {selectedEvaluation?.missing_information.length
-                  ? joinList(selectedEvaluation.missing_information)
+                <strong>Notes</strong>
+                {selectedPatient?.notes?.length
+                  ? selectedPatient.notes.join(" ")
                   : "None"}
               </div>
             </div>
           </article>
 
           <article className="card col-6">
-            <span className="section-label">Trial Criteria</span>
-            <h2>Parsed eligibility summary</h2>
-            <div className="stat-row">
-              <div className="stat-box">
-                <div className="eyebrow">Key Inclusion</div>
-                <strong className="stat-copy">
-                  {activeTrial?.inclusion_criteria[0]?.text || "—"}
-                </strong>
+            <span className="section-label">E. Supporting Context</span>
+            <h2>Trial Summary</h2>
+
+            <div className="meta-list">
+              <div className="meta-item">
+                <strong>Title</strong>
+                {activeTrial?.title || "—"}
               </div>
-              <div className="stat-box">
-                <div className="eyebrow">Performance</div>
-                <strong className="stat-copy">
-                  {activeTrial?.inclusion_criteria[1]?.text || "—"}
-                </strong>
+              <div className="meta-item">
+                <strong>Disease Area</strong>
+                {activeTrial?.disease_area || "—"}
               </div>
-              <div className="stat-box">
-                <div className="eyebrow">Imaging</div>
-                <strong className="stat-copy">
-                  {activeTrial?.inclusion_criteria[2]?.text || "—"}
-                </strong>
+              <div className="meta-item">
+                <strong>Phase</strong>
+                {activeTrial?.phase || "—"}
               </div>
-              <div className="stat-box">
-                <div className="eyebrow">Exclusions</div>
-                <strong className="stat-copy">
-                  {activeTrial
-                    ? activeTrial.exclusion_criteria
-                        .map((item) => item.text)
-                        .join(", ")
-                    : "—"}
-                </strong>
+              <div className="meta-item">
+                <strong>Status</strong>
+                <span className="badge info">
+                  {activeTrial?.protocol_status || "unknown"}
+                </span>
+              </div>
+              <div className="meta-item">
+                <strong>Key Inclusion</strong>
+                {activeTrial?.inclusion_criteria?.[0]?.text || "—"}
+              </div>
+              <div className="meta-item">
+                <strong>Performance</strong>
+                {activeTrial?.inclusion_criteria?.[1]?.text || "—"}
+              </div>
+              <div className="meta-item">
+                <strong>Imaging / Disease Context</strong>
+                {activeTrial?.inclusion_criteria?.[2]?.text || "—"}
+              </div>
+              <div className="meta-item">
+                <strong>Exclusions</strong>
+                {activeTrial?.exclusion_criteria?.length
+                  ? activeTrial.exclusion_criteria
+                      .map((item) => item.text)
+                      .join(", ")
+                  : "None"}
               </div>
             </div>
           </article>
 
-          <article className="card col-8">
-            <span className="section-label">Criteria Match Table</span>
+          <article className="card col-12">
+            <span className="section-label">F. Criteria Match Table</span>
             <h2>Criterion-by-criterion evaluation</h2>
+
             <div className="table-wrap">
               <table className="table">
                 <thead>
@@ -726,101 +860,17 @@ export default function ClinicalTrialProjectPage() {
                       </tr>
                     ),
                   )}
-                </tbody>
-              </table>
-            </div>
-          </article>
 
-          <article className="card col-4">
-            <span className="section-label">Human Review Queue</span>
-            <h2>Flagged cases</h2>
-
-            {reviewCards.length === 0 ? (
-              <div className="queue-card review-card">
-                <p>No open review tasks for the active trial.</p>
-              </div>
-            ) : (
-              reviewCards.map((item) => {
-                const patient = patients.find(
-                  (candidate) => candidate.id === item.patient_id,
-                );
-
-                return (
-                  <div key={item.id} className="queue-card review-card">
-                    <div className="review-card-top">
-                      <strong>
-                        {patient?.display_name || item.patient_id}
-                      </strong>
-                      <span
-                        className={
-                          item.priority === "High"
-                            ? "badge review"
-                            : "badge info"
-                        }
-                      >
-                        {item.priority}
-                      </span>
-                    </div>
-
-                    <p>{item.reason.join(", ")}</p>
-
-                    <div className="review-card-footer">
-                      <span className="badge info">{item.review_status}</span>
-                      <button className="secondary-btn small">
-                        Review Case
-                      </button>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </article>
-
-          <article className="card col-12">
-            <span className="section-label">Audit Feed</span>
-            <h2>Recent workflow and reviewer actions</h2>
-            <div className="table-wrap">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Time</th>
-                    <th>Patient</th>
-                    <th>Event</th>
-                    <th>Outcome</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(selectedEvaluation?.workflow_events || []).map((event) => (
-                    <tr key={`${selectedEvaluation?.id}-${event.stage}-audit`}>
-                      <td>
-                        {new Date(event.timestamp).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          second: "2-digit",
-                        })}
-                      </td>
-                      <td>
-                        {selectedPatient?.display_name ||
-                          selectedEvaluation?.patient_id}
-                      </td>
-                      <td>{event.detail}</td>
-                      <td>{selectedEvaluation?.recommendation || "—"}</td>
+                  {!selectedEvaluation?.criterion_results?.length ? (
+                    <tr>
+                      <td colSpan={6}>No criterion results available.</td>
                     </tr>
-                  ))}
+                  ) : null}
                 </tbody>
               </table>
             </div>
           </article>
         </section>
-
-        {(() => {
-          console.log("render modal", {
-            isPatientModalOpen,
-            isLoadingTrialPatients,
-            trialPatients: trialPatients.length,
-          });
-          return null;
-        })()}
 
         <PatientSelectorModal
           isOpen={isPatientModalOpen}
