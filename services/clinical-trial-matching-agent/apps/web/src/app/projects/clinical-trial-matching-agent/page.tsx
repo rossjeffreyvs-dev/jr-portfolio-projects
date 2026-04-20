@@ -16,6 +16,7 @@ import {
   type Trial,
   type WorkflowEvent,
 } from "@/lib/api";
+import PatientSelectorModal from "./PatientSelectorModal";
 
 function statusClass(status: string) {
   if (status === "Likely Match") return "badge match";
@@ -58,10 +59,6 @@ function sortPatientsForTrial(items: Patient[]) {
   });
 }
 
-function patientModalSummary(patient: Patient) {
-  return patient.seeded_reason;
-}
-
 export default function ClinicalTrialProjectPage() {
   const [trials, setTrials] = useState<Trial[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -79,6 +76,12 @@ export default function ClinicalTrialProjectPage() {
   const [isPatientModalOpen, setIsPatientModalOpen] = useState(false);
   const [trialPatients, setTrialPatients] = useState<Patient[]>([]);
   const [isLoadingTrialPatients, setIsLoadingTrialPatients] = useState(false);
+
+  const handleStartEvaluationFromModal = (patient: { id: string }) => {
+    const fullPatient = trialPatients.find((p) => p.id === patient.id);
+    if (!fullPatient) return;
+    handleSelectPatient(fullPatient);
+  };
 
   async function loadDashboard(preferredEvaluationId?: string) {
     setError(null);
@@ -155,7 +158,45 @@ export default function ClinicalTrialProjectPage() {
     [reviews, activeTrialId],
   );
 
+  const modalPatients = useMemo(
+    () =>
+      trialPatients.map((patient) => ({
+        id: patient.id,
+        name: patient.display_name,
+        age: patient.age ?? null,
+        sex: patient.sex ?? null,
+        diagnosis: Array.isArray(patient.diagnosis)
+          ? patient.diagnosis.join(", ")
+          : "—",
+        score:
+          typeof patient.seeded_score === "number"
+            ? patient.seeded_score / 100
+            : null,
+        outcome:
+          patient.seeded_outcome === "Likely Match"
+            ? "likely_match"
+            : patient.seeded_outcome === "Requires Review"
+              ? "review"
+              : patient.seeded_outcome === "Possible Match"
+                ? "possible_match"
+                : patient.seeded_outcome === "Not Eligible"
+                  ? "unlikely_match"
+                  : null,
+        summary:
+          Array.isArray(patient.notes) && patient.notes.length > 0
+            ? patient.notes.join(" ")
+            : patient.seeded_reason || "No summary available.",
+      })),
+    [trialPatients],
+  );
+
   async function handleOpenPatientModal() {
+    console.log("open clicked", {
+      activeTrialId: activeTrial?.id,
+      isStartingEvaluation,
+      isLoadingTrialPatients,
+    });
+
     if (!activeTrial || isStartingEvaluation) return;
 
     setError(null);
@@ -164,10 +205,14 @@ export default function ClinicalTrialProjectPage() {
     setIsPatientModalOpen(true);
     setIsLoadingTrialPatients(true);
 
+    console.log("set modal open");
+
     try {
       const response = await getPatientsForTrial(activeTrial.id);
+      console.log("patients response", response);
       setTrialPatients(sortPatientsForTrial(response.items));
     } catch (err) {
+      console.error("patient modal load failed", err);
       const message =
         err instanceof Error
           ? err.message
@@ -179,7 +224,6 @@ export default function ClinicalTrialProjectPage() {
       setIsLoadingTrialPatients(false);
     }
   }
-
   async function handleSelectPatient(patient: Patient) {
     if (!activeTrial || isStartingEvaluation) return;
 
@@ -429,9 +473,6 @@ export default function ClinicalTrialProjectPage() {
                       </div>
 
                       <div className="flex items-center gap-2">
-                        {/* {index === 0 && (
-                          <span className="badge match">Top Candidate</span>
-                        )} */}
                         <span
                           className={statusClass(evaluation.recommendation)}
                         >
@@ -661,8 +702,10 @@ export default function ClinicalTrialProjectPage() {
                 </thead>
                 <tbody>
                   {(selectedEvaluation?.criterion_results || []).map(
-                    (row: CriterionResult) => (
-                      <tr key={row.criterion_id}>
+                    (row: CriterionResult, index: number) => (
+                      <tr
+                        key={`${selectedEvaluation?.id ?? "evaluation"}-${row.criterion_id}-${index}`}
+                      >
                         <td>{row.criterion_text}</td>
                         <td>{row.criterion_type}</td>
                         <td>{titleCaseStatus(row.status)}</td>
@@ -758,202 +801,26 @@ export default function ClinicalTrialProjectPage() {
             </div>
           </article>
         </section>
-        {isPatientModalOpen ? (
-          <div
-            onClick={handleClosePatientModal}
-            style={{
-              position: "fixed",
-              inset: 0,
-              zIndex: 9999,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              background: "rgba(15, 23, 42, 0.48)",
-              padding: "24px",
-            }}
-          >
-            <div
-              onClick={(event) => event.stopPropagation()}
-              style={{
-                position: "relative",
-                width: "100%",
-                maxWidth: "1240px",
-                maxHeight: "90vh",
-                overflowY: "auto",
-                borderRadius: "32px",
-                border: "1px solid #d8e1f0",
-                background: "#ffffff",
-                padding: "40px 40px 32px 40px",
-                boxShadow: "0 25px 60px -12px rgba(15, 23, 42, 0.28)",
-              }}
-            >
-              <button
-                type="button"
-                onClick={handleClosePatientModal}
-                aria-label="Close patient selector"
-                className="absolute right-6 top-6 flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-white text-2xl leading-none text-slate-500 transition hover:bg-slate-50 hover:text-slate-700"
-              >
-                ×
-              </button>
 
-              <div className="mb-8 pr-16">
-                <div className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
-                  Select Patient
-                </div>
-                <h3 className="mt-4 text-[2rem] font-semibold tracking-tight text-slate-900">
-                  {activeTrial?.title || "Active Trial"}
-                </h3>
-                <p className="mt-3 text-base text-slate-600">
-                  Showing trial-linked patients not yet evaluated for the active
-                  trial.
-                </p>
-              </div>
+        {(() => {
+          console.log("render modal", {
+            isPatientModalOpen,
+            isLoadingTrialPatients,
+            trialPatients: trialPatients.length,
+          });
+          return null;
+        })()}
 
-              {patientModalError ? (
-                <div className="mb-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                  {patientModalError}
-                </div>
-              ) : null}
-
-              {isLoadingTrialPatients ? (
-                <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
-                  <p className="text-base font-medium text-slate-900">
-                    Loading available patients…
-                  </p>
-                  <p className="mt-2 text-sm text-slate-600">
-                    Retrieving trial-linked patients who have not yet been
-                    evaluated for this trial.
-                  </p>
-                </div>
-              ) : trialPatients.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
-                  <p className="text-base font-medium text-slate-900">
-                    No patients available to add
-                  </p>
-                  <p className="mt-2 text-sm text-slate-600">
-                    All trial-linked patients have already been evaluated for
-                    this trial, or no patients are currently mapped to this
-                    protocol.
-                  </p>
-                </div>
-              ) : (
-                <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-white">
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse table-fixed">
-                      <thead className="bg-slate-50">
-                        <tr className="border-b border-slate-200">
-                          <th className="w-[13%] px-5 py-4 text-left align-top text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                            Patient
-                          </th>
-                          <th className="w-[20%] px-5 py-4 text-left align-top text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                            Diagnosis
-                          </th>
-                          <th className="w-[14%] px-5 py-4 text-left align-top text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                            Biomarkers
-                          </th>
-                          <th className="w-[8%] px-5 py-4 text-left align-top text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                            ECOG
-                          </th>
-                          <th className="w-[10%] px-5 py-4 text-left align-top text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                            Score
-                          </th>
-                          <th className="w-[15%] px-5 py-4 text-left align-top text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                            Outcome
-                          </th>
-                          <th className="w-[20%] px-5 py-4 text-left align-top text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                            Summary
-                          </th>
-                          <th className="w-[14%] px-5 py-4 text-left align-top text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                            Action
-                          </th>
-                        </tr>
-                      </thead>
-
-                      <tbody>
-                        {trialPatients.map((patient, index) => (
-                          <tr
-                            key={patient.id}
-                            className="border-b border-slate-200 align-top transition hover:bg-slate-50"
-                          >
-                            <td className="px-5 py-4 text-left align-top">
-                              <div className="flex flex-col gap-2">
-                                <div className="text-sm font-semibold text-slate-900">
-                                  {patient.display_name}
-                                </div>
-                                {index === 0 ? (
-                                  <div>
-                                    <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">
-                                      Top Candidate
-                                    </span>
-                                  </div>
-                                ) : null}
-                              </div>
-                            </td>
-
-                            <td className="px-5 py-4 text-left align-top text-sm leading-6 text-slate-700">
-                              {joinList(patient.diagnosis)}
-                            </td>
-
-                            <td className="px-5 py-4 text-left align-top text-sm leading-6 text-slate-700">
-                              {joinList(patient.biomarkers)}
-                            </td>
-
-                            <td className="px-5 py-4 text-left align-top text-sm text-slate-700">
-                              {patient.ecog || "—"}
-                            </td>
-
-                            <td className="px-5 py-4 text-left align-top">
-                              <div className="min-w-[96px]">
-                                <div className="mb-2 text-sm font-medium text-slate-700">
-                                  {patient.seeded_score}%
-                                </div>
-                                <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-                                  <div
-                                    className="h-full rounded-full bg-slate-900 transition-all"
-                                    style={{
-                                      width: `${patient.seeded_score}%`,
-                                    }}
-                                  />
-                                </div>
-                              </div>
-                            </td>
-
-                            <td className="px-5 py-4 text-left align-top">
-                              <span
-                                className={statusClass(patient.seeded_outcome)}
-                              >
-                                {patient.seeded_outcome}
-                              </span>
-                            </td>
-
-                            <td className="px-5 py-4 text-left align-top text-sm leading-6 text-slate-700">
-                              <div className="max-w-[320px]">
-                                {patientModalSummary(patient)}
-                              </div>
-                            </td>
-
-                            <td className="px-5 py-4 text-left align-top">
-                              <button
-                                type="button"
-                                onClick={() => handleSelectPatient(patient)}
-                                disabled={isStartingEvaluation}
-                                className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-                              >
-                                {isStartingEvaluation
-                                  ? "Starting..."
-                                  : "Start Evaluation"}
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        ) : null}{" "}
+        <PatientSelectorModal
+          isOpen={isPatientModalOpen}
+          patients={modalPatients}
+          trialTitle={activeTrial?.title}
+          isLoading={isLoadingTrialPatients}
+          isStartingEvaluation={isStartingEvaluation}
+          patientActionLabel="Starting Evaluation..."
+          onClose={handleClosePatientModal}
+          onStartEvaluation={handleStartEvaluationFromModal}
+        />
       </main>
     </div>
   );
