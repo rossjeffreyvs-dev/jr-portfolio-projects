@@ -27,6 +27,7 @@ export default function ReviewCasePanel({
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/45 p-4">
       <div className="w-full max-w-5xl rounded-[28px] border border-slate-200 bg-white shadow-2xl">
+        {/* Header */}
         <div className="flex items-start justify-between border-b border-slate-200 px-6 py-5">
           <div>
             <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
@@ -50,8 +51,11 @@ export default function ReviewCasePanel({
           </button>
         </div>
 
+        {/* Body */}
         <div className="grid gap-6 px-6 py-6 lg:grid-cols-[1.15fr_0.85fr]">
+          {/* LEFT SIDE */}
           <section className="space-y-6">
+            {/* Summary */}
             <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
@@ -90,6 +94,7 @@ export default function ReviewCasePanel({
               </div>
             </div>
 
+            {/* Criteria */}
             <div className="rounded-3xl border border-slate-200 bg-white p-5">
               <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                 Criteria Highlights
@@ -101,7 +106,7 @@ export default function ReviewCasePanel({
                     key={`${evaluation.id}-${row.criterion_id}`}
                     className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
                   >
-                    <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center justify-between gap-2">
                       <div className="text-sm font-semibold text-slate-900">
                         {row.criterion_text}
                       </div>
@@ -110,7 +115,7 @@ export default function ReviewCasePanel({
                       </span>
                     </div>
 
-                    <div className="mt-2 text-xs font-medium uppercase tracking-[0.12em] text-slate-500">
+                    <div className="mt-2 text-xs uppercase tracking-[0.12em] text-slate-500">
                       Evidence
                     </div>
                     <p className="mt-1 text-sm text-slate-700">
@@ -119,70 +124,61 @@ export default function ReviewCasePanel({
 
                     <div className="mt-2 text-xs text-slate-500">
                       Confidence: {row.confidence}
-                      {row.action_needed
-                        ? ` · Action: ${row.action_needed}`
-                        : ""}
                     </div>
                   </div>
                 ))}
 
-                {!(evaluation.criterion_results || []).length ? (
+                {!evaluation.criterion_results?.length && (
                   <p className="text-sm text-slate-500">
-                    No criterion results available for review.
+                    No criterion results available.
                   </p>
-                ) : null}
+                )}
               </div>
             </div>
           </section>
 
+          {/* RIGHT SIDE */}
           <aside className="space-y-6">
             <div className="rounded-3xl border border-slate-200 bg-white p-5">
               <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                 Reviewer Note
               </div>
+
               <textarea
                 value={reviewNote}
-                onChange={(event) => onReviewNoteChange(event.target.value)}
-                placeholder="Add reviewer rationale, blockers, or approval context..."
-                className="mt-3 min-h-[220px] w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:bg-white"
+                onChange={(e) => onReviewNoteChange(e.target.value)}
+                placeholder="Add reviewer rationale..."
+                className="mt-3 min-h-[200px] w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none focus:border-slate-400 focus:bg-white"
               />
             </div>
 
             <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
               <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                Review Actions
+                Actions
               </div>
 
-              <div className="mt-4 grid gap-3">
+              <div className="mt-4 space-y-3">
                 <button
-                  type="button"
                   onClick={onApprove}
-                  className="rounded-full bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90"
+                  className="w-full rounded-full bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:opacity-90"
                 >
                   Approve Case
                 </button>
 
                 <button
-                  type="button"
                   onClick={onReject}
-                  className="rounded-full border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-50"
+                  className="w-full rounded-full border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-50"
                 >
                   Reject Case
                 </button>
 
                 <button
-                  type="button"
                   onClick={onClose}
-                  className="rounded-full border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+                  className="w-full rounded-full border border-slate-200 px-4 py-3 text-sm text-slate-600 hover:bg-slate-50"
                 >
                   Cancel
                 </button>
               </div>
-
-              <p className="mt-4 text-xs leading-5 text-slate-500">
-                This first step is UI-only and local-state driven. We can wire
-                backend persistence and audit updates next.
-              </p>
             </div>
           </aside>
         </div>
