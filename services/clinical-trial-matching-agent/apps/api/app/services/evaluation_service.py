@@ -2,7 +2,12 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from app.models.schemas import CriterionResult, Evaluation, ReviewTask, StartEvaluationRequest
+from app.models.schemas import (
+    CriterionResult,
+    Evaluation,
+    ReviewTask,
+    StartEvaluationRequest,
+)
 from app.services.store import EVALUATIONS, PATIENTS, REVIEWS, TRIALS, build_workflow_events, utc_now
 
 
@@ -14,10 +19,21 @@ def _safe_id(items, index: int, fallback: str) -> str:
     return items[index].id if len(items) > index else fallback
 
 
+def _existing_evaluation_for_patient_trial(patient_id: str, trial_id: str) -> Evaluation | None:
+    matches = [
+        evaluation
+        for evaluation in EVALUATIONS.values()
+        if evaluation.patient_id == patient_id and evaluation.trial_id == trial_id
+    ]
+    if not matches:
+        return None
+
+    return max(matches, key=lambda evaluation: (evaluation.submitted_at, evaluation.match_score))
+
+
 def _build_criterion_results(patient_id: str, trial_id: str) -> List[CriterionResult]:
     patient = PATIENTS[patient_id]
     trial = TRIALS[trial_id]
-
     inclusion = trial.inclusion_criteria
     exclusion = trial.exclusion_criteria
 
@@ -29,7 +45,9 @@ def _build_criterion_results(patient_id: str, trial_id: str) -> List[CriterionRe
                 CriterionResult(
                     criterion_id=_safe_id(inclusion, 0, "INC_FALLBACK_001"),
                     criterion_text=_safe_text(
-                        inclusion, 0, "Primary eligibility criterion satisfied."
+                        inclusion,
+                        0,
+                        "Primary eligibility criterion satisfied.",
                     ),
                     criterion_type="inclusion",
                     status="met",
@@ -43,7 +61,9 @@ def _build_criterion_results(patient_id: str, trial_id: str) -> List[CriterionRe
                 CriterionResult(
                     criterion_id=_safe_id(inclusion, 1, "INC_FALLBACK_002"),
                     criterion_text=_safe_text(
-                        inclusion, 1, "Performance or demographic criterion satisfied."
+                        inclusion,
+                        1,
+                        "Performance or demographic criterion satisfied.",
                     ),
                     criterion_type="inclusion",
                     status="met",
@@ -57,7 +77,9 @@ def _build_criterion_results(patient_id: str, trial_id: str) -> List[CriterionRe
                 CriterionResult(
                     criterion_id=_safe_id(exclusion, 0, "EXC_FALLBACK_001"),
                     criterion_text=_safe_text(
-                        exclusion, 0, "No seeded exclusion criterion conflict found."
+                        exclusion,
+                        0,
+                        "No seeded exclusion criterion conflict found.",
                     ),
                     criterion_type="exclusion",
                     status="met",
@@ -69,14 +91,16 @@ def _build_criterion_results(patient_id: str, trial_id: str) -> List[CriterionRe
         return results
 
     if patient.seeded_outcome == "Not Eligible":
-        results: List[CriterionResult] = []
+        results = []
 
         if len(exclusion) > 0:
             results.append(
                 CriterionResult(
                     criterion_id=_safe_id(exclusion, 0, "EXC_FALLBACK_001"),
                     criterion_text=_safe_text(
-                        exclusion, 0, "Seeded exclusion criterion triggered."
+                        exclusion,
+                        0,
+                        "Seeded exclusion criterion triggered.",
                     ),
                     criterion_type="exclusion",
                     status="not_met",
@@ -89,7 +113,11 @@ def _build_criterion_results(patient_id: str, trial_id: str) -> List[CriterionRe
         if len(inclusion) > 0:
             results.append(
                 CriterionResult(
-                    criterion_id=_safe_id(inclusion, min(1, len(inclusion) - 1), "INC_FALLBACK_001"),
+                    criterion_id=_safe_id(
+                        inclusion,
+                        min(1, len(inclusion) - 1),
+                        "INC_FALLBACK_001",
+                    ),
                     criterion_text=_safe_text(
                         inclusion,
                         min(1, len(inclusion) - 1),
@@ -105,14 +133,16 @@ def _build_criterion_results(patient_id: str, trial_id: str) -> List[CriterionRe
 
         return results
 
-    results: List[CriterionResult] = []
+    results = []
 
     if len(inclusion) > 0:
         results.append(
             CriterionResult(
                 criterion_id=_safe_id(inclusion, 0, "INC_FALLBACK_001"),
                 criterion_text=_safe_text(
-                    inclusion, 0, "Primary eligibility criterion appears met."
+                    inclusion,
+                    0,
+                    "Primary eligibility criterion appears met.",
                 ),
                 criterion_type="inclusion",
                 status="met",
@@ -126,7 +156,9 @@ def _build_criterion_results(patient_id: str, trial_id: str) -> List[CriterionRe
             CriterionResult(
                 criterion_id=_safe_id(inclusion, 1, "INC_FALLBACK_002"),
                 criterion_text=_safe_text(
-                    inclusion, 1, "Additional inclusion criterion requires confirmation."
+                    inclusion,
+                    1,
+                    "Additional inclusion criterion requires confirmation.",
                 ),
                 criterion_type="inclusion",
                 status="missing_information",
@@ -153,7 +185,9 @@ def _build_criterion_results(patient_id: str, trial_id: str) -> List[CriterionRe
             CriterionResult(
                 criterion_id=_safe_id(exclusion, 1, "EXC_FALLBACK_002"),
                 criterion_text=_safe_text(
-                    exclusion, 1, "Potential exclusion criterion needs review."
+                    exclusion,
+                    1,
+                    "Potential exclusion criterion needs review.",
                 ),
                 criterion_type="exclusion",
                 status="possibly_met",
@@ -192,8 +226,15 @@ def create_evaluation_for_patient(
     *,
     evaluation_id: Optional[str] = None,
     create_review_task: bool = True,
+    allow_existing: bool = False,
 ) -> Evaluation:
     patient = PATIENTS[patient_id]
+
+    if allow_existing:
+        existing_evaluation = _existing_evaluation_for_patient_trial(patient_id, trial_id)
+        if existing_evaluation is not None:
+            return existing_evaluation
+
     review_required = patient.seeded_outcome == "Requires Review"
 
     if evaluation_id is None:
@@ -206,10 +247,16 @@ def create_evaluation_for_patient(
         match_score=patient.seeded_score,
         recommendation=patient.seeded_outcome,
         confidence=_evaluation_confidence(patient.seeded_outcome),
-        blockers=[] if patient.seeded_outcome != "Not Eligible" else ["Prior PD-1 inhibitor exposure"],
-        missing_information=[] if patient.seeded_outcome != "Requires Review" else ["Brain metastases status", "Washout period confirmation"],
+        blockers=[]
+        if patient.seeded_outcome != "Not Eligible"
+        else ["Prior PD-1 inhibitor exposure"],
+        missing_information=[]
+        if patient.seeded_outcome != "Requires Review"
+        else ["Brain metastases status", "Washout period confirmation"],
         review_required=review_required,
-        review_reason=[] if not review_required else ["Ambiguous autoimmune history", "Missing recent imaging evidence"],
+        review_reason=[]
+        if not review_required
+        else ["Ambiguous autoimmune history", "Missing recent imaging evidence"],
         workflow_status="Awaiting Human Review" if review_required else "Completed",
         explanation=patient.seeded_reason,
         criterion_results=_build_criterion_results(patient.id, trial_id),
@@ -221,11 +268,11 @@ def create_evaluation_for_patient(
     EVALUATIONS[evaluation.id] = evaluation
 
     if review_required and create_review_task:
-        existing = next(
+        existing_review = next(
             (review for review in REVIEWS.values() if review.evaluation_id == evaluation.id),
             None,
         )
-        if not existing:
+        if not existing_review:
             review_id = f"review_{len(REVIEWS) + 1:03d}"
             REVIEWS[review_id] = ReviewTask(
                 id=review_id,
@@ -241,4 +288,8 @@ def create_evaluation_for_patient(
 
 
 def start_evaluation(payload: StartEvaluationRequest) -> Evaluation:
-    return create_evaluation_for_patient(payload.patient_id, payload.trial_id)
+    return create_evaluation_for_patient(
+        payload.patient_id,
+        payload.trial_id,
+        allow_existing=True,
+    )

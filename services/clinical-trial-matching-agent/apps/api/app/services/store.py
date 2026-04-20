@@ -24,32 +24,16 @@ TRIALS: Dict[str, Trial] = {
     item["id"]: Trial.model_validate(item)
     for item in _load_json("trials/trials.json")
 }
-
 PATIENTS: Dict[str, Patient] = {
     item["id"]: Patient.model_validate(item)
     for item in _load_json("patients/patients.json")
 }
-
-# Review tasks are now fully derived from evaluations.
-REVIEWS: Dict[str, ReviewTask] = {}
-
+REVIEWS: Dict[str, ReviewTask] = {
+    item["id"]: ReviewTask.model_validate(item)
+    for item in _load_json("reviews/reviews.json")
+}
 EVALUATIONS: Dict[str, Evaluation] = {}
-
 ACTIVE_TRIAL_ID: str = "trial_nsclc_001"
-
-# Demo seed map: all trial/patient pairs we want visible in the demo.
-SEEDED_EVALUATION_PAIRS = [
-    ("patient_001", "trial_nsclc_001", "seed_eval_001"),
-    ("patient_002", "trial_nsclc_001", "seed_eval_002"),
-    ("patient_003", "trial_nsclc_001", "seed_eval_003"),
-    ("patient_004", "trial_nsclc_001", "seed_eval_004"),
-    ("patient_101", "trial_breast_001", "seed_eval_101"),
-    ("patient_102", "trial_breast_001", "seed_eval_102"),
-    ("patient_103", "trial_breast_001", "seed_eval_103"),
-    ("patient_201", "trial_heme_001", "seed_eval_201"),
-    ("patient_202", "trial_heme_001", "seed_eval_202"),
-    ("patient_203", "trial_heme_001", "seed_eval_203"),
-]
 
 
 def set_active_trial(trial_id: str) -> Trial:
@@ -129,11 +113,42 @@ def build_workflow_events() -> List[WorkflowEvent]:
     return events
 
 
+def _timestamp_value(value: str) -> float:
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00")).timestamp()
+    except ValueError:
+        return 0.0
+
+
+def _dedupe_evaluations(items: List[Evaluation]) -> List[Evaluation]:
+    latest_by_patient: Dict[str, Evaluation] = {}
+
+    for evaluation in items:
+        existing = latest_by_patient.get(evaluation.patient_id)
+        if existing is None:
+            latest_by_patient[evaluation.patient_id] = evaluation
+            continue
+
+        existing_ts = _timestamp_value(existing.submitted_at)
+        next_ts = _timestamp_value(evaluation.submitted_at)
+
+        if next_ts > existing_ts:
+            latest_by_patient[evaluation.patient_id] = evaluation
+            continue
+
+        if next_ts == existing_ts and evaluation.match_score > existing.match_score:
+            latest_by_patient[evaluation.patient_id] = evaluation
+
+    return list(latest_by_patient.values())
+
+
 def list_evaluations(*, trial_id: str | None = None) -> List[Evaluation]:
     items = list(EVALUATIONS.values())
 
     if trial_id:
         items = [evaluation for evaluation in items if evaluation.trial_id == trial_id]
+
+    items = _dedupe_evaluations(items)
 
     status_rank = {
         "Likely Match": 0,
@@ -147,7 +162,7 @@ def list_evaluations(*, trial_id: str | None = None) -> List[Evaluation]:
         key=lambda evaluation: (
             status_rank.get(evaluation.recommendation, 99),
             -evaluation.match_score,
-            evaluation.submitted_at,
+            -_timestamp_value(evaluation.submitted_at),
         ),
     )
 
@@ -158,12 +173,32 @@ def seed_initial_evaluations() -> None:
     if EVALUATIONS:
         return
 
-    # Start from a clean derived-state baseline.
-    REVIEWS.clear()
+    seeded_pairs = [
+        ("patient_001", "trial_nsclc_001", "seed_eval_001"),
+        ("patient_002", "trial_nsclc_001", "seed_eval_002"),
+        ("patient_003", "trial_nsclc_001", "seed_eval_003"),
+        ("patient_004", "trial_nsclc_001", "seed_eval_004"),
+        ("patient_101", "trial_breast_001", "seed_eval_101"),
+        ("patient_102", "trial_breast_001", "seed_eval_102"),
+        ("patient_103", "trial_breast_001", "seed_eval_103"),
+        ("patient_201", "trial_heme_001", "seed_eval_201"),
+        ("patient_202", "trial_heme_001", "seed_eval_202"),
+        ("patient_203", "trial_heme_001", "seed_eval_203"),
+    ]
 
-    for patient_id, trial_id, evaluation_id in SEEDED_EVALUATION_PAIRS:
+    for patient_id, trial_id, evaluation_id in seeded_pairs:
         create_evaluation_for_patient(
             patient_id,
             trial_id,
             evaluation_id=evaluation_id,
+        )
+
+    if "review_001" in REVIEWS:
+        review = REVIEWS["review_001"]
+        REVIEWS["review_001"] = review.model_copy(
+            update={
+                "evaluation_id": "seed_eval_003",
+                "patient_id": "patient_003",
+                "trial_id": "trial_nsclc_001",
+            }
         )

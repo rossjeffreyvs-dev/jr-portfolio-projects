@@ -16,7 +16,9 @@ import {
   type Trial,
   type WorkflowEvent,
 } from "@/lib/api";
-import PatientSelectorModal from "./PatientSelectorModal";
+import PatientSelectorModal, {
+  type TrialPatient as ModalTrialPatient,
+} from "./PatientSelectorModal";
 
 function statusClass(status: string) {
   if (status === "Likely Match") return "badge match";
@@ -59,6 +61,75 @@ function sortPatientsForTrial(items: Patient[]) {
   });
 }
 
+function evaluationTimestampValue(value: string) {
+  const parsed = Date.parse(value);
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+function dedupeEvaluationsByPatient(items: Evaluation[]) {
+  const latestByPatient = new Map<string, Evaluation>();
+
+  for (const evaluation of items) {
+    const existing = latestByPatient.get(evaluation.patient_id);
+
+    if (!existing) {
+      latestByPatient.set(evaluation.patient_id, evaluation);
+      continue;
+    }
+
+    const existingTimestamp = evaluationTimestampValue(existing.submitted_at);
+    const nextTimestamp = evaluationTimestampValue(evaluation.submitted_at);
+
+    if (nextTimestamp > existingTimestamp) {
+      latestByPatient.set(evaluation.patient_id, evaluation);
+      continue;
+    }
+
+    if (
+      nextTimestamp === existingTimestamp &&
+      evaluation.match_score > existing.match_score
+    ) {
+      latestByPatient.set(evaluation.patient_id, evaluation);
+    }
+  }
+
+  return [...latestByPatient.values()].sort((a, b) => {
+    const rankA =
+      a.recommendation === "Likely Match"
+        ? 0
+        : a.recommendation === "Requires Review"
+          ? 1
+          : a.recommendation === "Not Eligible"
+            ? 2
+            : 3;
+    const rankB =
+      b.recommendation === "Likely Match"
+        ? 0
+        : b.recommendation === "Requires Review"
+          ? 1
+          : b.recommendation === "Not Eligible"
+            ? 2
+            : 3;
+
+    if (rankA !== rankB) return rankA - rankB;
+    if (b.match_score !== a.match_score) return b.match_score - a.match_score;
+
+    return (
+      evaluationTimestampValue(b.submitted_at) -
+      evaluationTimestampValue(a.submitted_at)
+    );
+  });
+}
+
+function mapPatientOutcomeToModal(
+  outcome: Patient["seeded_outcome"],
+): ModalTrialPatient["outcome"] {
+  if (outcome === "Likely Match") return "likely_match";
+  if (outcome === "Requires Review") return "review";
+  if (outcome === "Not Eligible") return "unlikely_match";
+  return null;
+}
+
 export default function ClinicalTrialProjectPage() {
   const [trials, setTrials] = useState<Trial[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -77,12 +148,6 @@ export default function ClinicalTrialProjectPage() {
   const [trialPatients, setTrialPatients] = useState<Patient[]>([]);
   const [isLoadingTrialPatients, setIsLoadingTrialPatients] = useState(false);
 
-  const handleStartEvaluationFromModal = (patient: { id: string }) => {
-    const fullPatient = trialPatients.find((p) => p.id === patient.id);
-    if (!fullPatient) return;
-    void handleSelectPatient(fullPatient);
-  };
-
   async function loadDashboard(preferredEvaluationId?: string) {
     setError(null);
 
@@ -96,18 +161,22 @@ export default function ClinicalTrialProjectPage() {
         getReviews(),
       ]);
 
+    const uniqueEvaluations = dedupeEvaluationsByPatient(
+      evaluationResponse.items,
+    );
+
     setTrials(trialResponse.items);
     setActiveTrialId(activeId);
     setPatients(patientResponse.items);
-    setEvaluations(evaluationResponse.items);
+    setEvaluations(uniqueEvaluations);
     setReviews(reviewResponse.items);
 
     const nextSelected =
       preferredEvaluationId ||
-      evaluationResponse.items.find(
+      uniqueEvaluations.find(
         (item) => item.recommendation === "Requires Review",
       )?.id ||
-      evaluationResponse.items[0]?.id ||
+      uniqueEvaluations[0]?.id ||
       "";
 
     setSelectedEvaluationId(nextSelected);
@@ -126,7 +195,7 @@ export default function ClinicalTrialProjectPage() {
       }
     }
 
-    bootstrap();
+    void bootstrap();
   }, []);
 
   const activeTrial = useMemo(
@@ -158,13 +227,26 @@ export default function ClinicalTrialProjectPage() {
     [reviews, activeTrialId],
   );
 
-  const modalPatients = useMemo(
+  const queuedPatientIds = useMemo(
+    () => new Set(evaluations.map((evaluation) => evaluation.patient_id)),
+    [evaluations],
+  );
+
+  const availableTrialPatients = useMemo(
     () =>
-      trialPatients.map((patient) => ({
+      sortPatientsForTrial(
+        trialPatients.filter((patient) => !queuedPatientIds.has(patient.id)),
+      ),
+    [trialPatients, queuedPatientIds],
+  );
+
+  const modalPatients = useMemo<ModalTrialPatient[]>(
+    () =>
+      availableTrialPatients.map((patient) => ({
         id: patient.id,
         name: patient.display_name,
-        age: patient.age ?? null,
-        sex: patient.sex ?? null,
+        age: patient.age,
+        sex: patient.sex,
         diagnosis: patient.diagnosis.length
           ? patient.diagnosis.join(", ")
           : "—",
@@ -172,30 +254,16 @@ export default function ClinicalTrialProjectPage() {
           typeof patient.seeded_score === "number"
             ? patient.seeded_score / 100
             : null,
-        outcome:
-          patient.seeded_outcome === "Likely Match"
-            ? "likely_match"
-            : patient.seeded_outcome === "Possible Match"
-              ? "possible_match"
-              : patient.seeded_outcome === "Requires Review"
-                ? "review"
-                : patient.seeded_outcome === "Not Eligible"
-                  ? "unlikely_match"
-                  : null,
-        summary: patient.notes.length
-          ? patient.notes.join(" ")
-          : patient.seeded_reason || "No summary available.",
+        outcome: mapPatientOutcomeToModal(patient.seeded_outcome),
+        summary:
+          patient.notes.length > 0
+            ? patient.notes.join(" ")
+            : patient.seeded_reason || "No summary available.",
       })),
-    [trialPatients],
+    [availableTrialPatients],
   );
 
   async function handleOpenPatientModal() {
-    console.log("open clicked", {
-      activeTrialId: activeTrial?.id,
-      isStartingEvaluation,
-      isLoadingTrialPatients,
-    });
-
     if (!activeTrial || isStartingEvaluation) return;
 
     setError(null);
@@ -204,14 +272,10 @@ export default function ClinicalTrialProjectPage() {
     setIsPatientModalOpen(true);
     setIsLoadingTrialPatients(true);
 
-    console.log("set modal open");
-
     try {
       const response = await getPatientsForTrial(activeTrial.id);
-      console.log("patients response", response);
-      setTrialPatients(sortPatientsForTrial(response.items));
+      setTrialPatients(response.items);
     } catch (err) {
-      console.error("patient modal load failed", err);
       const message =
         err instanceof Error
           ? err.message
@@ -223,6 +287,7 @@ export default function ClinicalTrialProjectPage() {
       setIsLoadingTrialPatients(false);
     }
   }
+
   async function handleSelectPatient(patient: Patient) {
     if (!activeTrial || isStartingEvaluation) return;
 
@@ -245,6 +310,14 @@ export default function ClinicalTrialProjectPage() {
     } finally {
       setIsStartingEvaluation(false);
     }
+  }
+
+  function handleStartEvaluationFromModal(patient: { id: string }) {
+    const fullPatient = availableTrialPatients.find(
+      (item) => item.id === patient.id,
+    );
+    if (!fullPatient) return;
+    void handleSelectPatient(fullPatient);
   }
 
   async function handleChangeTrial() {
@@ -327,6 +400,7 @@ export default function ClinicalTrialProjectPage() {
             <button className="tab-btn active">Demo</button>
           </div>
         </section>
+
         <section className="control-panel cardish">
           <div className="control-panel-header">
             <div>
@@ -391,6 +465,7 @@ export default function ClinicalTrialProjectPage() {
 
           {error ? <p className="error-text">{error}</p> : null}
         </section>
+
         <section className="card">
           <span className="section-label">
             Eligibility Operations Dashboard
@@ -506,6 +581,7 @@ export default function ClinicalTrialProjectPage() {
             </div>
           )}
         </section>
+
         <section className="dashboard-grid">
           <article className="card col-4">
             <span className="section-label">Active Trial</span>
@@ -800,15 +876,6 @@ export default function ClinicalTrialProjectPage() {
             </div>
           </article>
         </section>
-
-        {(() => {
-          console.log("render modal", {
-            isPatientModalOpen,
-            isLoadingTrialPatients,
-            trialPatients: trialPatients.length,
-          });
-          return null;
-        })()}
 
         <PatientSelectorModal
           isOpen={isPatientModalOpen}

@@ -100,9 +100,18 @@ export default function PatientSelectorModal({
 
   useEffect(() => {
     if (!isOpen) return;
-    if (patients.length > 0) {
-      setSelectedPatientId((current) => current ?? patients[0].id);
+
+    if (patients.length === 0) {
+      setSelectedPatientId(null);
+      return;
     }
+
+    setSelectedPatientId((current) => {
+      if (current && patients.some((patient) => patient.id === current)) {
+        return current;
+      }
+      return patients[0].id;
+    });
   }, [isOpen, patients]);
 
   const selectedPatient = useMemo(
@@ -305,6 +314,11 @@ export default function PatientSelectorModal({
                       const isHovered = hoveredPatientId === patient.id;
                       const isActionHovered = hoveredActionId === patient.id;
                       const isSelected = selectedPatientId === patient.id;
+                      const rowBackground = isSelected
+                        ? "#f7faff"
+                        : isHovered
+                          ? "#f8fbff"
+                          : "#ffffff";
 
                       return (
                         <tr
@@ -314,8 +328,12 @@ export default function PatientSelectorModal({
                           onMouseLeave={() => setHoveredPatientId(null)}
                           style={{
                             cursor: "pointer",
-                            background: isHovered ? "#f8fbff" : "#ffffff",
-                            transition: "background 160ms ease",
+                            background: rowBackground,
+                            boxShadow: isSelected
+                              ? "inset 4px 0 0 #3558c8"
+                              : "none",
+                            transition:
+                              "background 160ms ease, box-shadow 160ms ease",
                           }}
                         >
                           <td
@@ -326,13 +344,13 @@ export default function PatientSelectorModal({
                               color: "#475569",
                               fontSize: "15px",
                               lineHeight: 1.45,
-                              background: isHovered ? "#f8fbff" : "#ffffff",
+                              background: rowBackground,
                             }}
                           >
                             <div
                               style={{
-                                fontWeight: 700,
-                                color: "#263868",
+                                fontWeight: isSelected ? 800 : 700,
+                                color: isSelected ? "#1d3570" : "#263868",
                               }}
                             >
                               {patient.name}
@@ -350,7 +368,7 @@ export default function PatientSelectorModal({
                               color: "#64748b",
                               fontSize: "15px",
                               lineHeight: 1.45,
-                              background: isHovered ? "#f8fbff" : "#ffffff",
+                              background: rowBackground,
                             }}
                           >
                             {patient.age != null ? `${patient.age} yrs` : "—"}
@@ -365,7 +383,7 @@ export default function PatientSelectorModal({
                               color: "#64748b",
                               fontSize: "15px",
                               lineHeight: 1.45,
-                              background: isHovered ? "#f8fbff" : "#ffffff",
+                              background: rowBackground,
                             }}
                           >
                             {patient.diagnosis || "—"}
@@ -380,7 +398,7 @@ export default function PatientSelectorModal({
                               lineHeight: 1.45,
                               color: outcomeColor(patient.outcome),
                               fontWeight: 600,
-                              background: isHovered ? "#f8fbff" : "#ffffff",
+                              background: rowBackground,
                             }}
                           >
                             {formatOutcomeLabel(patient.outcome)}
@@ -394,7 +412,7 @@ export default function PatientSelectorModal({
                               color: "#64748b",
                               fontSize: "15px",
                               lineHeight: 1.45,
-                              background: isHovered ? "#f8fbff" : "#ffffff",
+                              background: rowBackground,
                             }}
                           >
                             {formatScore(patient.score)}
@@ -409,7 +427,7 @@ export default function PatientSelectorModal({
                               fontSize: "15px",
                               lineHeight: 1.45,
                               maxWidth: "420px",
-                              background: isHovered ? "#f8fbff" : "#ffffff",
+                              background: rowBackground,
                             }}
                           >
                             {patient.summary || "—"}
@@ -420,7 +438,7 @@ export default function PatientSelectorModal({
                               borderBottom: "1px solid #e3e9f3",
                               padding: "18px 20px",
                               verticalAlign: "top",
-                              background: isHovered ? "#f8fbff" : "#ffffff",
+                              background: rowBackground,
                             }}
                           >
                             <button
