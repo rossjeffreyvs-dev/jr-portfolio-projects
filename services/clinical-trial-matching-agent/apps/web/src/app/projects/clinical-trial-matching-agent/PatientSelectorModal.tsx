@@ -98,10 +98,10 @@ export default function PatientSelectorModal({
 
   useEffect(() => {
     if (!isOpen) return;
-    if (patients.length > 0 && !selectedPatientId) {
-      setSelectedPatientId(patients[0].id);
+    if (patients.length > 0) {
+      setSelectedPatientId((current) => current ?? patients[0].id);
     }
-  }, [isOpen, patients, selectedPatientId]);
+  }, [isOpen, patients]);
 
   const selectedPatient = useMemo(
     () => patients.find((patient) => patient.id === selectedPatientId) ?? null,
@@ -113,7 +113,7 @@ export default function PatientSelectorModal({
   return (
     <div className="fixed inset-0 z-[100] bg-slate-900/30 backdrop-blur-[2px]">
       <div className="flex min-h-full items-start justify-center px-5 py-8 md:px-8 md:py-10">
-        <div className="relative w-full max-w-[1700px] rounded-[2.75rem] border border-[#cfd7e6] bg-[#f8fafc] shadow-[0_30px_80px_rgba(15,23,42,0.18)]">
+        <div className="relative w-full max-w-[1400px] rounded-[2.5rem] border border-[#cfd7e6] bg-[#f8fafc] shadow-[0_30px_80px_rgba(15,23,42,0.18)]">
           <button
             type="button"
             onClick={onClose}
@@ -124,16 +124,16 @@ export default function PatientSelectorModal({
           </button>
 
           <div className="px-10 pb-10 pt-10 md:px-12 md:pb-12 md:pt-12">
-            <div className="inline-flex rounded-full bg-[#dfe7f7] px-7 py-4 text-[1.05rem] font-extrabold uppercase tracking-[0.12em] text-[#3558c8]">
+            <div className="inline-flex rounded-full bg-[#dfe7f7] px-6 py-3 text-[0.9rem] font-bold uppercase tracking-[0.14em] text-[#3558c8]">
               Select patient
             </div>
 
-            <div className="mt-7 pr-16">
-              <h2 className="text-[2.65rem] font-semibold tracking-[-0.04em] text-[#1b2957] md:text-[3.2rem]">
+            <div className="mt-6 pr-16">
+              <h2 className="text-[2.4rem] font-semibold tracking-[-0.03em] text-[#1b2957]">
                 Ranked patient candidates
               </h2>
               {trialTitle ? (
-                <p className="mt-3 text-[1.05rem] text-slate-600 md:text-[1.15rem]">
+                <p className="mt-3 text-[1.05rem] text-slate-600">
                   Review candidate fit for {trialTitle}
                 </p>
               ) : null}
@@ -149,7 +149,7 @@ export default function PatientSelectorModal({
                   type="button"
                   onClick={() => onStartEvaluation(selectedPatient)}
                   disabled={isStartingEvaluation}
-                  className="inline-flex items-center justify-center rounded-full border border-[#cad4e4] bg-white px-4 py-2 text-sm font-semibold text-slate-800 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center justify-center rounded-full border border-[#cad4e4] bg-white px-4 py-2 text-sm font-semibold text-[#1f2a44] transition hover:bg-[#f6f9ff] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isStartingEvaluation
                     ? patientActionLabel
@@ -158,30 +158,30 @@ export default function PatientSelectorModal({
               ) : null}
             </div>
 
-            <div className="mt-8 overflow-hidden rounded-[2.1rem] border border-[#d5ddea] bg-white">
+            <div className="mt-8 overflow-hidden rounded-[2rem] border border-[#d5ddea] bg-white">
               <div className="max-h-[62vh] overflow-y-auto">
                 <table className="w-full border-separate border-spacing-0">
                   <thead className="sticky top-0 z-10 bg-white">
                     <tr>
-                      <th className="border-b border-[#dce3ef] px-6 py-6 text-left text-[1rem] font-extrabold uppercase tracking-[0.14em] text-[#5a6b93]">
+                      <th className="border-b border-[#dce3ef] px-6 py-7 text-left text-[1rem] font-extrabold uppercase tracking-[0.14em] text-[#5a6b93]">
                         Patient
                       </th>
-                      <th className="border-b border-[#dce3ef] px-6 py-6 text-left text-[1rem] font-extrabold uppercase tracking-[0.14em] text-[#5a6b93]">
+                      <th className="border-b border-[#dce3ef] px-6 py-7 text-left text-[1rem] font-extrabold uppercase tracking-[0.14em] text-[#5a6b93]">
                         Demographics
                       </th>
-                      <th className="border-b border-[#dce3ef] px-6 py-6 text-left text-[1rem] font-extrabold uppercase tracking-[0.14em] text-[#5a6b93]">
+                      <th className="border-b border-[#dce3ef] px-6 py-7 text-left text-[1rem] font-extrabold uppercase tracking-[0.14em] text-[#5a6b93]">
                         Diagnosis
                       </th>
-                      <th className="border-b border-[#dce3ef] px-6 py-6 text-left text-[1rem] font-extrabold uppercase tracking-[0.14em] text-[#5a6b93]">
+                      <th className="border-b border-[#dce3ef] px-6 py-7 text-left text-[1rem] font-extrabold uppercase tracking-[0.14em] text-[#5a6b93]">
                         Match
                       </th>
-                      <th className="border-b border-[#dce3ef] px-6 py-6 text-left text-[1rem] font-extrabold uppercase tracking-[0.14em] text-[#5a6b93]">
+                      <th className="border-b border-[#dce3ef] px-6 py-7 text-left text-[1rem] font-extrabold uppercase tracking-[0.14em] text-[#5a6b93]">
                         Score
                       </th>
-                      <th className="border-b border-[#dce3ef] px-6 py-6 text-left text-[1rem] font-extrabold uppercase tracking-[0.14em] text-[#5a6b93]">
+                      <th className="border-b border-[#dce3ef] px-6 py-7 text-left text-[1rem] font-extrabold uppercase tracking-[0.14em] text-[#5a6b93]">
                         Summary
                       </th>
-                      <th className="border-b border-[#dce3ef] px-6 py-6 text-left text-[1rem] font-extrabold uppercase tracking-[0.14em] text-[#5a6b93]">
+                      <th className="border-b border-[#dce3ef] px-6 py-7 text-left text-[1rem] font-extrabold uppercase tracking-[0.14em] text-[#5a6b93]">
                         Action
                       </th>
                     </tr>
@@ -218,7 +218,7 @@ export default function PatientSelectorModal({
                             }`}
                             onClick={() => setSelectedPatientId(patient.id)}
                           >
-                            <td className="border-b border-[#e3e9f3] px-6 py-7 align-top text-[1rem] text-slate-700">
+                            <td className="border-b border-[#e3e9f3] px-6 py-8 align-top text-[1rem] text-slate-700">
                               <div className="font-semibold text-[#263868]">
                                 {patient.name}
                               </div>
@@ -227,16 +227,16 @@ export default function PatientSelectorModal({
                               </div>
                             </td>
 
-                            <td className="border-b border-[#e3e9f3] px-6 py-7 align-top text-[1rem] text-slate-700">
+                            <td className="border-b border-[#e3e9f3] px-6 py-8 align-top text-[1rem] text-slate-700">
                               {patient.age != null ? `${patient.age} yrs` : "—"}
                               {patient.sex ? ` • ${patient.sex}` : ""}
                             </td>
 
-                            <td className="border-b border-[#e3e9f3] px-6 py-7 align-top text-[1rem] leading-8 text-slate-700">
+                            <td className="border-b border-[#e3e9f3] px-6 py-8 align-top text-[1rem] leading-8 text-slate-700">
                               {patient.diagnosis || "—"}
                             </td>
 
-                            <td className="border-b border-[#e3e9f3] px-6 py-7 align-top text-[1rem]">
+                            <td className="border-b border-[#e3e9f3] px-6 py-8 align-top text-[1rem]">
                               <span
                                 className={`font-medium ${outcomeTextClass(patient.outcome)}`}
                               >
@@ -244,25 +244,26 @@ export default function PatientSelectorModal({
                               </span>
                             </td>
 
-                            <td className="border-b border-[#e3e9f3] px-6 py-7 align-top text-[1rem] text-slate-700">
+                            <td className="border-b border-[#e3e9f3] px-6 py-8 align-top text-[1rem] text-slate-700">
                               {formatScore(patient.score)}
                             </td>
 
-                            <td className="border-b border-[#e3e9f3] px-6 py-7 align-top text-[1rem] leading-8 text-slate-700">
+                            <td className="border-b border-[#e3e9f3] px-6 py-8 align-top text-[1rem] leading-8 text-slate-700">
                               <div className="max-w-[520px]">
                                 {patient.summary || "—"}
                               </div>
                             </td>
 
-                            <td className="border-b border-[#e3e9f3] px-6 py-7 align-top">
+                            <td className="border-b border-[#e3e9f3] px-6 py-8 align-top">
                               <button
                                 type="button"
                                 onClick={(event) => {
                                   event.stopPropagation();
+                                  setSelectedPatientId(patient.id);
                                   onStartEvaluation(patient);
                                 }}
                                 disabled={isStartingEvaluation}
-                                className="inline-flex items-center justify-center rounded-full border border-[#cad4e4] bg-white px-4 py-2 text-sm font-semibold text-slate-800 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                                className="inline-flex items-center justify-center rounded-full border border-[#cad4e4] bg-white px-4 py-2 text-sm font-semibold text-[#1f2a44] transition hover:bg-[#f6f9ff] disabled:cursor-not-allowed disabled:opacity-60"
                               >
                                 {isStartingEvaluation &&
                                 selectedPatientId === patient.id
