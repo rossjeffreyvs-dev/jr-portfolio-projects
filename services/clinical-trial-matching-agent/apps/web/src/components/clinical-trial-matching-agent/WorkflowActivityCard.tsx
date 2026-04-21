@@ -8,8 +8,8 @@ type WorkflowActivityCardProps = {
   startedEvaluationId?: string | null;
 };
 
-const INITIAL_DELAY_MS = 250;
-const STEP_DELAY_MS = 550;
+const INITIAL_DELAY_MS = 500;
+const STEP_DELAY_MS = 850;
 
 function formatTimestamp(timestamp?: string) {
   if (!timestamp) return null;

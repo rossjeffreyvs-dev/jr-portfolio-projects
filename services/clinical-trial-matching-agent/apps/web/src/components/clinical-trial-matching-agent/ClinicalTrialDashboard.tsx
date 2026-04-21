@@ -31,6 +31,10 @@ type ClinicalTrialDashboardProps = {
   onRemoveEvaluation: (evaluationId: string) => void;
 };
 
+const FIRST_SCROLL_DELAY_MS = 180;
+const PANEL_PAUSE_MS = 700;
+const SECOND_SCROLL_DELAY_MS = 120;
+
 export default function ClinicalTrialDashboard({
   activeTrial,
   selectedPatient,
@@ -52,6 +56,7 @@ export default function ClinicalTrialDashboard({
   const [workspaceTab, setWorkspaceTab] =
     useState<WorkspaceTab>("active-trial");
 
+  const evaluationSectionRef = useRef<HTMLElement | null>(null);
   const workflowSectionRef = useRef<HTMLElement | null>(null);
   const lastStartedEvaluationRef = useRef<string | null>(null);
 
@@ -81,15 +86,29 @@ export default function ClinicalTrialDashboard({
     lastStartedEvaluationRef.current = startedEvaluationId;
     setWorkspaceTab("patient-evaluation");
 
-    const scrollTimer = window.setTimeout(() => {
-      workflowSectionRef.current?.scrollIntoView({
+    let pauseTimer: number | undefined;
+    let secondScrollTimer: number | undefined;
+
+    const firstScrollTimer = window.setTimeout(() => {
+      evaluationSectionRef.current?.scrollIntoView({
         behavior: "smooth",
         block: "start",
       });
-    }, 220);
+
+      pauseTimer = window.setTimeout(() => {
+        secondScrollTimer = window.setTimeout(() => {
+          workflowSectionRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }, SECOND_SCROLL_DELAY_MS);
+      }, PANEL_PAUSE_MS);
+    }, FIRST_SCROLL_DELAY_MS);
 
     return () => {
-      window.clearTimeout(scrollTimer);
+      window.clearTimeout(firstScrollTimer);
+      if (pauseTimer) window.clearTimeout(pauseTimer);
+      if (secondScrollTimer) window.clearTimeout(secondScrollTimer);
     };
   }, [startedEvaluationId]);
 
@@ -181,7 +200,11 @@ export default function ClinicalTrialDashboard({
         </>
       ) : (
         <>
-          <section className="card" style={{ marginTop: 28 }}>
+          <section
+            ref={evaluationSectionRef}
+            className="card"
+            style={{ marginTop: 28 }}
+          >
             <PatientEvaluationRecommendationCard
               activeTrial={activeTrial}
               selectedPatient={selectedPatient || selectedWorklistPatient}
