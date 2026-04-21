@@ -355,9 +355,9 @@ export default function PatientSelectorModal({
                             >
                               {patient.name}
                             </div>
-                            <div style={{ marginTop: "2px", color: "#64748b" }}>
+                            {/* <div style={{ marginTop: "2px", color: "#64748b" }}>
                               {patient.id}
-                            </div>
+                            </div> */}
                           </td>
 
                           <td

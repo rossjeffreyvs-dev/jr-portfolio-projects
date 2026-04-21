@@ -37,6 +37,8 @@ const POST_TYPING_PAUSE_MS = 500;
 const WORKFLOW_SCROLL_DELAY_MS = 180;
 const WORKFLOW_INITIAL_STEP_DELAY_MS = 850;
 const WORKFLOW_STEP_DELAY_MS = 1250;
+const CRITERIA_INITIAL_STEP_DELAY_MS = 500;
+const CRITERIA_STEP_DELAY_MS = 260;
 const POST_WORKFLOW_PAUSE_MS = 900;
 const RETURN_TO_RECOMMENDATION_DELAY_MS = 180;
 const RECOMMENDATION_REVEAL_DELAY_MS = 900;
@@ -66,6 +68,12 @@ export default function ClinicalTrialDashboard({
   const [isPlaybackActive, setIsPlaybackActive] = useState(false);
   const [showFinalRecommendation, setShowFinalRecommendation] = useState(true);
   const [visibleWorkflowCount, setVisibleWorkflowCount] = useState<
+    number | undefined
+  >(undefined);
+  const [visibleCriteriaCount, setVisibleCriteriaCount] = useState<
+    number | undefined
+  >(undefined);
+  const [visibleAuditCount, setVisibleAuditCount] = useState<
     number | undefined
   >(undefined);
 
@@ -103,6 +111,8 @@ export default function ClinicalTrialDashboard({
     setIsPlaybackActive(false);
     setShowFinalRecommendation(true);
     setVisibleWorkflowCount(undefined);
+    setVisibleCriteriaCount(undefined);
+    setVisibleAuditCount(undefined);
   }
 
   useEffect(() => {
@@ -118,6 +128,8 @@ export default function ClinicalTrialDashboard({
       setIsPlaybackActive(false);
       setShowFinalRecommendation(true);
       setVisibleWorkflowCount(undefined);
+      setVisibleCriteriaCount(undefined);
+      setVisibleAuditCount(undefined);
       clearTimers();
       return;
     }
@@ -134,6 +146,8 @@ export default function ClinicalTrialDashboard({
     clearTimers();
 
     const workflowEvents = selectedEvaluation.workflow_events || [];
+    const criteriaRows = selectedEvaluation.criterion_results || [];
+
     const patientLabel =
       resolvedSelectedPatient?.display_name ||
       resolvedSelectedPatient?.id ||
@@ -147,6 +161,8 @@ export default function ClinicalTrialDashboard({
     setIsPlaybackActive(true);
     setShowFinalRecommendation(false);
     setVisibleWorkflowCount(0);
+    setVisibleCriteriaCount(0);
+    setVisibleAuditCount(0);
 
     schedule(() => {
       tabAnchorRef.current?.scrollIntoView({
@@ -178,17 +194,32 @@ export default function ClinicalTrialDashboard({
       elapsedMs += WORKFLOW_INITIAL_STEP_DELAY_MS;
 
       workflowEvents.forEach((_, index) => {
-        schedule(
-          () => {
-            setVisibleWorkflowCount(index + 1);
-          },
-          elapsedMs + index * WORKFLOW_STEP_DELAY_MS,
-        );
+        const eventDelay = elapsedMs + index * WORKFLOW_STEP_DELAY_MS;
+
+        schedule(() => {
+          setVisibleWorkflowCount(index + 1);
+          setVisibleAuditCount(index + 1);
+        }, eventDelay);
       });
 
       elapsedMs += workflowEvents.length * WORKFLOW_STEP_DELAY_MS;
     } else {
       elapsedMs += WORKFLOW_INITIAL_STEP_DELAY_MS;
+    }
+
+    if (criteriaRows.length > 0) {
+      elapsedMs += CRITERIA_INITIAL_STEP_DELAY_MS;
+
+      criteriaRows.forEach((_, index) => {
+        schedule(
+          () => {
+            setVisibleCriteriaCount(index + 1);
+          },
+          elapsedMs + index * CRITERIA_STEP_DELAY_MS,
+        );
+      });
+
+      elapsedMs += criteriaRows.length * CRITERIA_STEP_DELAY_MS;
     }
 
     elapsedMs += POST_WORKFLOW_PAUSE_MS;
@@ -206,6 +237,8 @@ export default function ClinicalTrialDashboard({
       setShowFinalRecommendation(true);
       setIsPlaybackActive(false);
       setVisibleWorkflowCount(undefined);
+      setVisibleCriteriaCount(undefined);
+      setVisibleAuditCount(undefined);
     }, elapsedMs);
 
     elapsedMs += BANNER_CLEAR_DELAY_MS;
@@ -271,6 +304,7 @@ export default function ClinicalTrialDashboard({
 
             <h2 style={{ marginTop: 16, marginBottom: 12 }}>
               Queued evaluations for the active trial
+              {activeTrial?.title ? ` — '${activeTrial.title}'` : ""}
             </h2>
 
             <p style={{ marginTop: 0 }}>
@@ -383,13 +417,21 @@ export default function ClinicalTrialDashboard({
               Criterion-by-criterion evaluation
             </h2>
 
-            <CriteriaMatchTable selectedEvaluation={selectedEvaluation} />
+            <CriteriaMatchTable
+              selectedEvaluation={selectedEvaluation}
+              visibleRowCount={visibleCriteriaCount}
+              isEvaluationInProgress={isPlaybackActive}
+            />
           </section>
 
           <section className="card" style={{ marginTop: 28 }}>
             <span className="section-label">Audit Trail</span>
             <div style={{ marginTop: 20 }}>
-              <AuditTrailCard selectedEvaluation={selectedEvaluation} />
+              <AuditTrailCard
+                selectedEvaluation={selectedEvaluation}
+                visibleEventCount={visibleAuditCount}
+                isEvaluationInProgress={isPlaybackActive}
+              />
             </div>
           </section>
         </>
