@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Evaluation, Patient, ReviewTask, Trial } from "@/lib/api";
 import DashboardControls from "@/components/clinical-trial-matching-agent/DashboardControls";
 import TrialWorklist from "@/components/clinical-trial-matching-agent/TrialWorklist";
@@ -52,6 +52,9 @@ export default function ClinicalTrialDashboard({
   const [workspaceTab, setWorkspaceTab] =
     useState<WorkspaceTab>("active-trial");
 
+  const workflowSectionRef = useRef<HTMLElement | null>(null);
+  const lastStartedEvaluationRef = useRef<string | null>(null);
+
   const selectedWorklistPatient = useMemo(() => {
     if (!selectedEvaluation) return undefined;
 
@@ -64,6 +67,31 @@ export default function ClinicalTrialDashboard({
     onSelectEvaluation(evaluationId);
     setWorkspaceTab("patient-evaluation");
   }
+
+  useEffect(() => {
+    if (!startedEvaluationId) {
+      lastStartedEvaluationRef.current = null;
+      return;
+    }
+
+    if (lastStartedEvaluationRef.current === startedEvaluationId) {
+      return;
+    }
+
+    lastStartedEvaluationRef.current = startedEvaluationId;
+    setWorkspaceTab("patient-evaluation");
+
+    const scrollTimer = window.setTimeout(() => {
+      workflowSectionRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 220);
+
+    return () => {
+      window.clearTimeout(scrollTimer);
+    };
+  }, [startedEvaluationId]);
 
   return (
     <>
@@ -162,10 +190,17 @@ export default function ClinicalTrialDashboard({
             />
           </section>
 
-          <section className="card" style={{ marginTop: 28 }}>
+          <section
+            ref={workflowSectionRef}
+            className="card"
+            style={{ marginTop: 28 }}
+          >
             <span className="section-label">Workflow Activity</span>
             <div style={{ marginTop: 20 }}>
-              <WorkflowActivityCard selectedEvaluation={selectedEvaluation} />
+              <WorkflowActivityCard
+                selectedEvaluation={selectedEvaluation}
+                startedEvaluationId={startedEvaluationId}
+              />
             </div>
           </section>
 
