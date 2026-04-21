@@ -219,6 +219,27 @@ export function useClinicalTrialDashboard() {
     [evaluations, activeReviewEvaluationId],
   );
 
+  const handleRemoveEvaluation = useCallback(
+    async (evaluationId: string) => {
+      try {
+        setError(null);
+        await removeEvaluation(evaluationId);
+
+        const removingSelected = selectedEvaluationId === evaluationId;
+        await loadDashboard(
+          removingSelected ? undefined : selectedEvaluationId,
+        );
+      } catch (err) {
+        const message =
+          err instanceof Error
+            ? err.message
+            : "Unable to remove evaluation from worklist.";
+        setError(message);
+      }
+    },
+    [loadDashboard, selectedEvaluationId],
+  );
+
   const activeReviewPatient = useMemo(() => {
     if (!activeReviewEvaluation) return null;
 

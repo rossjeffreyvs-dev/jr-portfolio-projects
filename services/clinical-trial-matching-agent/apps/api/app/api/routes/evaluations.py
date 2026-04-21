@@ -1,8 +1,8 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, status
 
 from app.models.schemas import StartEvaluationRequest
 from app.services.evaluation_service import start_evaluation
-from app.services.store import EVALUATIONS, list_evaluations
+from app.services.store import EVALUATIONS, REVIEWS, list_evaluations
 
 router = APIRouter(prefix="/evaluations", tags=["evaluations"])
 
@@ -19,17 +19,40 @@ def create_evaluation(payload: StartEvaluationRequest):
     return evaluation.model_dump()
 
 
+@router.delete("/{evaluation_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_evaluation(evaluation_id: str):
+    evaluation = EVALUATIONS.get(evaluation_id)
+
+    if not evaluation:
+        raise HTTPException(status_code=404, detail="Evaluation not found")
+
+    review_ids_to_delete = [
+        review_id
+        for review_id, review in REVIEWS.items()
+        if review.evaluation_id == evaluation_id
+    ]
+
+    for review_id in review_ids_to_delete:
+        del REVIEWS[review_id]
+
+    del EVALUATIONS[evaluation_id]
+    return None
+
+
 @router.get("/{evaluation_id}")
 def get_evaluation(evaluation_id: str):
     evaluation = EVALUATIONS.get(evaluation_id)
+
     if not evaluation:
         raise HTTPException(status_code=404, detail="Evaluation not found")
+
     return evaluation.model_dump()
 
 
 @router.get("/{evaluation_id}/results")
 def get_evaluation_results(evaluation_id: str):
     evaluation = EVALUATIONS.get(evaluation_id)
+
     if not evaluation:
         raise HTTPException(status_code=404, detail="Evaluation not found")
 
