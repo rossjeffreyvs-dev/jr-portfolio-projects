@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { Evaluation, Patient, ReviewTask, Trial } from "@/lib/api";
 import DashboardControls from "@/components/clinical-trial-matching-agent/DashboardControls";
 import TrialWorklist from "@/components/clinical-trial-matching-agent/TrialWorklist";
@@ -98,6 +98,7 @@ export default function ClinicalTrialDashboard({
           Patient Evaluation
         </button>
       </div>
+
       {workspaceTab === "active-trial" ? (
         <>
           <section className="card" style={{ marginTop: 28 }}>
@@ -125,8 +126,20 @@ export default function ClinicalTrialDashboard({
           </section>
 
           <section className="card" style={{ marginTop: 28 }}>
-            <h2 style={{ marginTop: 0, marginBottom: 20 }}>Trial Summary</h2>
-            <TrialSummaryCard activeTrial={activeTrial} />
+            <span className="section-label">Trial Summary</span>
+
+            <h2 style={{ marginTop: 16, marginBottom: 12 }}>
+              Active trial details
+            </h2>
+
+            <p style={{ marginTop: 0 }}>
+              Review the core study context, eligibility framing, and trial
+              attributes associated with the current worklist.
+            </p>
+
+            <div style={{ marginTop: 28 }}>
+              <TrialSummaryCard activeTrial={activeTrial} />
+            </div>
           </section>
         </>
       ) : (
@@ -148,6 +161,7 @@ export default function ClinicalTrialDashboard({
 
           <section className="card" style={{ marginTop: 28 }}>
             <span className="section-label">Criteria Match Table</span>
+
             <h2 style={{ marginTop: 16, marginBottom: 20 }}>
               Criterion-by-criterion evaluation
             </h2>
