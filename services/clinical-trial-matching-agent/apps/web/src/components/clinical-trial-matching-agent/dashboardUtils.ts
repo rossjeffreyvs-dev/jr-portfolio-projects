@@ -2,8 +2,10 @@ import type { CriterionResult, Evaluation, Patient } from "@/lib/api";
 
 export function statusClass(status: string) {
   if (status === "Likely Match") return "badge match";
+  if (status === "Approved") return "badge match";
   if (status === "Requires Review") return "badge review";
   if (status === "Not Eligible") return "badge reject";
+  if (status === "Rejected") return "badge reject";
   return "badge info";
 }
 
@@ -18,7 +20,7 @@ export function joinList(items: string[]) {
   return items.length ? items.join(", ") : "None";
 }
 
-export function formatLabs(labs: Record<string, string | number>) {
+export function formatLabs(labs: Record<string, string | number | boolean>) {
   return Object.entries(labs)
     .map(([key, value]) => `${key.replace(/_/g, " ")}: ${value}`)
     .join(", ");
@@ -37,6 +39,7 @@ export function sortPatientsForTrial(items: Patient[]) {
       outcomeOrder(a.seeded_outcome) - outcomeOrder(b.seeded_outcome);
 
     if (outcomeDelta !== 0) return outcomeDelta;
+
     return b.seeded_score - a.seeded_score;
   });
 }
@@ -47,10 +50,12 @@ function evaluationTimestampValue(value: string) {
 }
 
 function recommendationRank(recommendation?: string) {
-  if (recommendation === "Likely Match") return 0;
-  if (recommendation === "Requires Review") return 1;
-  if (recommendation === "Not Eligible") return 2;
-  return 3;
+  if (recommendation === "Requires Review") return 0;
+  if (recommendation === "Approved") return 1;
+  if (recommendation === "Likely Match") return 2;
+  if (recommendation === "Rejected") return 3;
+  if (recommendation === "Not Eligible") return 4;
+  return 5;
 }
 
 export function dedupeEvaluationsByPatient(items: Evaluation[]) {
@@ -86,7 +91,10 @@ export function dedupeEvaluationsByPatient(items: Evaluation[]) {
       recommendationRank(b.recommendation);
 
     if (rankDelta !== 0) return rankDelta;
-    if (b.match_score !== a.match_score) return b.match_score - a.match_score;
+
+    if (b.match_score !== a.match_score) {
+      return b.match_score - a.match_score;
+    }
 
     return (
       evaluationTimestampValue(b.submitted_at) -

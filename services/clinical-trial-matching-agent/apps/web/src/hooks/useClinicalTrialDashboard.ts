@@ -75,10 +75,10 @@ function buildHumanReviewEvent(
     detail:
       decision === "approved"
         ? note?.trim()
-          ? `Approved by reviewer. Note: ${note.trim()}`
+          ? `Approved by reviewer.\nNote: ${note.trim()}`
           : "Approved by reviewer."
         : note?.trim()
-          ? `Rejected by reviewer. Note: ${note.trim()}`
+          ? `Rejected by reviewer.\nNote: ${note.trim()}`
           : "Rejected by reviewer.",
     timestamp: new Date().toISOString(),
   };
@@ -89,14 +89,12 @@ export function useClinicalTrialDashboard() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [reviews, setReviews] = useState<ReviewTask[]>([]);
-  const [activeTrialId, setActiveTrialId] = useState<string>("");
-  const [selectedEvaluationId, setSelectedEvaluationId] = useState<string>("");
-
+  const [activeTrialId, setActiveTrialId] = useState("");
+  const [selectedEvaluationId, setSelectedEvaluationId] = useState("");
   const [activeReviewEvaluationId, setActiveReviewEvaluationId] = useState<
     string | null
   >(null);
   const [reviewNote, setReviewNote] = useState("");
-
   const [isLoading, setIsLoading] = useState(true);
   const [isStartingEvaluation, setIsStartingEvaluation] = useState(false);
   const [isChangingTrial, setIsChangingTrial] = useState(false);
@@ -280,7 +278,6 @@ export function useClinicalTrialDashboard() {
       const fullPatient = availableTrialPatients.find(
         (item) => item.id === patient.id,
       );
-
       if (!fullPatient) return;
 
       void handleSelectPatient(fullPatient);
@@ -360,15 +357,15 @@ export function useClinicalTrialDashboard() {
         evaluation.id === activeReviewEvaluation.id
           ? {
               ...evaluation,
-              recommendation: "Likely Match",
+              recommendation: "Approved",
               review_required: false,
               explanation: note
                 ? `${evaluation.explanation} Reviewer note: ${note}`
                 : evaluation.explanation,
               workflow_events: [
-                ...(evaluation.workflow_events || []),
+                ...((evaluation.workflow_events || []) as WorkflowEvent[]),
                 reviewEvent,
-              ],
+              ] as WorkflowEvent[],
             }
           : evaluation,
       ),
@@ -392,6 +389,7 @@ export function useClinicalTrialDashboard() {
       note,
     });
 
+    setSelectedEvaluationId(activeReviewEvaluation.id);
     setActiveReviewEvaluationId(null);
     setReviewNote("");
   }, [activeReviewEvaluation, reviewNote, activeTrialId]);
@@ -407,7 +405,7 @@ export function useClinicalTrialDashboard() {
         evaluation.id === activeReviewEvaluation.id
           ? {
               ...evaluation,
-              recommendation: "Not Eligible",
+              recommendation: "Rejected",
               review_required: false,
               explanation: note
                 ? `${evaluation.explanation} Reviewer note: ${note}`
@@ -439,6 +437,7 @@ export function useClinicalTrialDashboard() {
       note,
     });
 
+    setSelectedEvaluationId(activeReviewEvaluation.id);
     setActiveReviewEvaluationId(null);
     setReviewNote("");
   }, [activeReviewEvaluation, reviewNote, activeTrialId]);
