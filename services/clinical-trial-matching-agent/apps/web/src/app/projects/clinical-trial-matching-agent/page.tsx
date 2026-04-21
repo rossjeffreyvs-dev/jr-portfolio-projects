@@ -42,6 +42,7 @@ export default function ClinicalTrialProjectPage() {
     handleCloseReview,
     handleApproveReview,
     handleRejectReview,
+    handleRemoveEvaluation,
   } = useClinicalTrialDashboard();
 
   if (isLoading) {
@@ -124,6 +125,7 @@ export default function ClinicalTrialProjectPage() {
           onReplayWorkflow={handleReplayWorkflow}
           onSelectEvaluation={setSelectedEvaluationId}
           onReviewCase={handleOpenReview}
+          onRemoveEvaluation={handleRemoveEvaluation}
         />
 
         <PatientSelectorModal
@@ -162,7 +164,7 @@ export default function ClinicalTrialProjectPage() {
         />
 
         {patientModalError ? (
-          <div className="mt-4 text-sm text-red-600">{patientModalError}</div>
+          <div className="error-text">{patientModalError}</div>
         ) : null}
       </main>
     </div>

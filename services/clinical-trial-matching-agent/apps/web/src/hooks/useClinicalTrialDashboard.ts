@@ -8,6 +8,7 @@ import {
   getPatientsForTrial,
   getReviews,
   getTrials,
+  removeEvaluation,
   startEvaluation,
   type Evaluation,
   type Patient,
@@ -219,6 +220,16 @@ export function useClinicalTrialDashboard() {
     [evaluations, activeReviewEvaluationId],
   );
 
+  const activeReviewPatient = useMemo(() => {
+    if (!activeReviewEvaluation) return null;
+
+    return (
+      patients.find(
+        (patient) => patient.id === activeReviewEvaluation.patient_id,
+      ) || null
+    );
+  }, [patients, activeReviewEvaluation]);
+
   const handleRemoveEvaluation = useCallback(
     async (evaluationId: string) => {
       try {
@@ -239,16 +250,6 @@ export function useClinicalTrialDashboard() {
     },
     [loadDashboard, selectedEvaluationId],
   );
-
-  const activeReviewPatient = useMemo(() => {
-    if (!activeReviewEvaluation) return null;
-
-    return (
-      patients.find(
-        (patient) => patient.id === activeReviewEvaluation.patient_id,
-      ) || null
-    );
-  }, [patients, activeReviewEvaluation]);
 
   const handleOpenPatientModal = useCallback(async () => {
     if (!activeTrial || isStartingEvaluation) {
@@ -504,5 +505,6 @@ export function useClinicalTrialDashboard() {
     handleCloseReview,
     handleApproveReview,
     handleRejectReview,
+    handleRemoveEvaluation,
   };
 }

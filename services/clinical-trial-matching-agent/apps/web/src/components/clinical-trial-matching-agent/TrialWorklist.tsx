@@ -10,6 +10,7 @@ type TrialWorklistProps = {
   reviewCards: ReviewTask[];
   selectedEvaluationId?: string;
   onSelectEvaluation: (evaluationId: string) => void;
+  onRemoveEvaluation: (evaluationId: string) => void;
 };
 
 type WorklistMenuProps = {
@@ -84,18 +85,26 @@ export default function TrialWorklist({
   reviewCards,
   selectedEvaluationId,
   onSelectEvaluation,
+  onRemoveEvaluation,
 }: TrialWorklistProps) {
   function handleRemoveFromWorklist(evaluationId: string) {
-    console.log("remove from worklist", { evaluationId });
+    onRemoveEvaluation(evaluationId);
   }
 
   if (evaluations.length === 0) {
     return (
-      <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-center">
-        <p className="text-base font-semibold text-slate-900">
+      <div className="cardish" style={{ textAlign: "center" }}>
+        <p
+          style={{
+            margin: 0,
+            fontSize: 16,
+            fontWeight: 700,
+            color: "var(--ink)",
+          }}
+        >
           No evaluations yet for this trial
         </p>
-        <p className="mt-2 text-sm text-slate-600">
+        <p style={{ marginTop: 8 }}>
           Use Find Patients for Trial to open the candidate list and start a new
           evaluation.
         </p>

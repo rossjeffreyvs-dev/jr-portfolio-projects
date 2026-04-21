@@ -28,6 +28,7 @@ type ClinicalTrialDashboardProps = {
   onReplayWorkflow: () => void;
   onSelectEvaluation: (evaluationId: string) => void;
   onReviewCase: (evaluationId: string) => void;
+  onRemoveEvaluation: (evaluationId: string) => void;
 };
 
 export default function ClinicalTrialDashboard({
@@ -46,6 +47,7 @@ export default function ClinicalTrialDashboard({
   onReplayWorkflow,
   onSelectEvaluation,
   onReviewCase,
+  onRemoveEvaluation,
 }: ClinicalTrialDashboardProps) {
   const [workspaceTab, setWorkspaceTab] =
     useState<WorkspaceTab>("active-trial");
@@ -127,6 +129,7 @@ export default function ClinicalTrialDashboard({
                 reviewCards={reviewCards}
                 selectedEvaluationId={selectedEvaluation?.id}
                 onSelectEvaluation={handleOpenEvaluation}
+                onRemoveEvaluation={onRemoveEvaluation}
               />
             </div>
           </section>
