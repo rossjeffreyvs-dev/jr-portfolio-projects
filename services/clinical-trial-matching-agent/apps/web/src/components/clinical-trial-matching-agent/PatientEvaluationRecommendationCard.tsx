@@ -8,6 +8,7 @@ type PatientEvaluationRecommendationCardProps = {
   selectedEvaluation?: Evaluation;
   onReviewCase?: (evaluationId: string) => void;
   isEvaluationInProgress?: boolean;
+  showFinalRecommendation?: boolean;
 };
 
 function asText(value: unknown, fallback = "—") {
@@ -84,6 +85,7 @@ export default function PatientEvaluationRecommendationCard({
   selectedEvaluation,
   onReviewCase,
   isEvaluationInProgress = false,
+  showFinalRecommendation = true,
 }: PatientEvaluationRecommendationCardProps) {
   if (!selectedEvaluation || !selectedPatient) {
     return (
@@ -103,16 +105,19 @@ export default function PatientEvaluationRecommendationCard({
     );
   }
 
-  const recommendation = isEvaluationInProgress
+  const shouldShowLiveState =
+    isEvaluationInProgress && !showFinalRecommendation;
+
+  const recommendation = shouldShowLiveState
     ? "Running Evaluation"
     : selectedEvaluation.recommendation ||
       (selectedEvaluation.review_required ? "Requires Review" : "In Progress");
 
-  const matchScore = isEvaluationInProgress
+  const matchScore = shouldShowLiveState
     ? "—"
     : getEvaluationField(selectedEvaluation, ["match_score"], "—");
 
-  const confidence = isEvaluationInProgress
+  const confidence = shouldShowLiveState
     ? "—"
     : getEvaluationField(
         selectedEvaluation,
@@ -120,7 +125,7 @@ export default function PatientEvaluationRecommendationCard({
         "—",
       );
 
-  const hardBlockers = isEvaluationInProgress
+  const hardBlockers = shouldShowLiveState
     ? "—"
     : getEvaluationField(
         selectedEvaluation,
@@ -150,7 +155,7 @@ export default function PatientEvaluationRecommendationCard({
     "comorbidity_summary",
   ]);
 
-  const missingInfo = isEvaluationInProgress
+  const missingInfo = shouldShowLiveState
     ? "Assessing patient context and protocol criteria"
     : getEvaluationField(
         selectedEvaluation,
@@ -158,7 +163,7 @@ export default function PatientEvaluationRecommendationCard({
         "None",
       );
 
-  const rationale = isEvaluationInProgress
+  const rationale = shouldShowLiveState
     ? "Eligibility evaluation in progress. Building recommendation from patient context, biomarkers, labs, prior therapies, and protocol criteria."
     : getEvaluationField(
         selectedEvaluation,
@@ -167,7 +172,7 @@ export default function PatientEvaluationRecommendationCard({
       );
 
   const shouldShowReviewCase =
-    !isEvaluationInProgress &&
+    !shouldShowLiveState &&
     (Boolean(selectedEvaluation.review_required) ||
       recommendation === "Requires Review");
 
@@ -212,7 +217,7 @@ export default function PatientEvaluationRecommendationCard({
             className={getRecommendationBadgeClass(
               recommendation,
               selectedEvaluation.review_required,
-              isEvaluationInProgress,
+              shouldShowLiveState,
             )}
           >
             {recommendation}
@@ -279,7 +284,7 @@ export default function PatientEvaluationRecommendationCard({
             <div className="meta-item">
               <strong>Review required</strong>
               <span>
-                {isEvaluationInProgress
+                {shouldShowLiveState
                   ? "Pending"
                   : selectedEvaluation.review_required
                     ? "Yes"

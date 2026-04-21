@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo } from "react";
 import type { Evaluation, WorkflowEvent } from "@/lib/api";
 
 type WorkflowActivityCardProps = {
   selectedEvaluation?: Evaluation;
-  startedEvaluationId?: string | null;
-  animationStartDelayMs?: number;
-  stepDelayMs?: number;
+  visibleEventCount?: number;
+  isEvaluationInProgress?: boolean;
 };
 
 function formatTimestamp(timestamp?: string) {
@@ -27,76 +26,13 @@ function formatTimestamp(timestamp?: string) {
 
 export default function WorkflowActivityCard({
   selectedEvaluation,
-  startedEvaluationId,
-  animationStartDelayMs = 800,
-  stepDelayMs = 1150,
+  visibleEventCount,
+  isEvaluationInProgress = false,
 }: WorkflowActivityCardProps) {
   const events = useMemo(
     () => selectedEvaluation?.workflow_events || [],
     [selectedEvaluation],
   );
-
-  const [visibleCount, setVisibleCount] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const timersRef = useRef<number[]>([]);
-  const lastAnimatedEvaluationRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    timersRef.current.forEach((timer) => window.clearTimeout(timer));
-    timersRef.current = [];
-
-    if (!selectedEvaluation) {
-      setVisibleCount(0);
-      setIsAnimating(false);
-      lastAnimatedEvaluationRef.current = null;
-      return;
-    }
-
-    const isFreshStartedEvaluation =
-      startedEvaluationId === selectedEvaluation.id &&
-      lastAnimatedEvaluationRef.current !== selectedEvaluation.id &&
-      events.length > 0;
-
-    if (isFreshStartedEvaluation) {
-      lastAnimatedEvaluationRef.current = selectedEvaluation.id;
-      setVisibleCount(0);
-      setIsAnimating(true);
-
-      events.forEach((_, index) => {
-        const timer = window.setTimeout(
-          () => {
-            setVisibleCount(index + 1);
-
-            if (index === events.length - 1) {
-              setIsAnimating(false);
-            }
-          },
-          animationStartDelayMs + index * stepDelayMs,
-        );
-
-        timersRef.current.push(timer);
-      });
-
-      return () => {
-        timersRef.current.forEach((timer) => window.clearTimeout(timer));
-        timersRef.current = [];
-      };
-    }
-
-    setIsAnimating(false);
-    setVisibleCount(events.length);
-
-    return () => {
-      timersRef.current.forEach((timer) => window.clearTimeout(timer));
-      timersRef.current = [];
-    };
-  }, [
-    animationStartDelayMs,
-    events,
-    selectedEvaluation,
-    startedEvaluationId,
-    stepDelayMs,
-  ]);
 
   if (!selectedEvaluation) {
     return (
@@ -114,11 +50,14 @@ export default function WorkflowActivityCard({
     );
   }
 
+  const visibleCount =
+    typeof visibleEventCount === "number" ? visibleEventCount : events.length;
+
   const visibleEvents = events.slice(0, visibleCount);
 
   return (
     <>
-      {isAnimating && visibleEvents.length === 0 ? (
+      {isEvaluationInProgress && visibleEvents.length === 0 ? (
         <div
           className="workflow-detail"
           style={{ marginBottom: 12, fontWeight: 600 }}
@@ -156,7 +95,7 @@ export default function WorkflowActivityCard({
         })}
       </div>
 
-      {isAnimating ? (
+      {isEvaluationInProgress ? (
         <div
           className="workflow-detail"
           style={{ marginTop: 12, fontWeight: 600 }}
