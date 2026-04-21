@@ -31,10 +31,14 @@ type ClinicalTrialDashboardProps = {
   onRemoveEvaluation: (evaluationId: string) => void;
 };
 
-const FIRST_SCROLL_DELAY_MS = 180;
-const PANEL_PAUSE_MS = 1300;
-const SECOND_SCROLL_DELAY_MS = 120;
-const START_BANNER_DURATION_MS = 4200;
+const BANNER_SCROLL_DELAY_MS = 140;
+const BANNER_PAUSE_MS = 1800;
+const EVALUATION_SCROLL_DELAY_MS = 140;
+const EVALUATION_PANEL_PAUSE_MS = 1700;
+const WORKFLOW_SCROLL_DELAY_MS = 180;
+
+const WORKFLOW_INITIAL_DELAY_MS = 800;
+const WORKFLOW_STEP_DELAY_MS = 1150;
 
 export default function ClinicalTrialDashboard({
   activeTrial,
@@ -59,7 +63,9 @@ export default function ClinicalTrialDashboard({
   const [evaluationStartBanner, setEvaluationStartBanner] = useState<
     string | null
   >(null);
+  const [isEvaluationInProgress, setIsEvaluationInProgress] = useState(false);
 
+  const bannerRef = useRef<HTMLDivElement | null>(null);
   const evaluationSectionRef = useRef<HTMLElement | null>(null);
   const workflowSectionRef = useRef<HTMLElement | null>(null);
   const lastStartedEvaluationRef = useRef<string | null>(null);
@@ -83,6 +89,7 @@ export default function ClinicalTrialDashboard({
     if (!startedEvaluationId) {
       lastStartedEvaluationRef.current = null;
       setEvaluationStartBanner(null);
+      setIsEvaluationInProgress(false);
       return;
     }
 
@@ -96,6 +103,7 @@ export default function ClinicalTrialDashboard({
 
     lastStartedEvaluationRef.current = startedEvaluationId;
     setWorkspaceTab("patient-evaluation");
+    setIsEvaluationInProgress(true);
 
     const patientLabel =
       resolvedSelectedPatient?.display_name ||
@@ -108,34 +116,56 @@ export default function ClinicalTrialDashboard({
       `Patient ${patientLabel} selected. Running eligibility evaluation for ${trialLabel}…`,
     );
 
-    let pauseTimer: number | undefined;
-    let secondScrollTimer: number | undefined;
+    const workflowEventCount = selectedEvaluation.workflow_events?.length || 0;
+    const workflowAnimationDurationMs =
+      WORKFLOW_INITIAL_DELAY_MS + workflowEventCount * WORKFLOW_STEP_DELAY_MS;
+    const totalExperienceDurationMs =
+      BANNER_SCROLL_DELAY_MS +
+      BANNER_PAUSE_MS +
+      EVALUATION_SCROLL_DELAY_MS +
+      EVALUATION_PANEL_PAUSE_MS +
+      WORKFLOW_SCROLL_DELAY_MS +
+      workflowAnimationDurationMs +
+      300;
 
-    const firstScrollTimer = window.setTimeout(() => {
-      evaluationSectionRef.current?.scrollIntoView({
+    let bannerPauseTimer: number | undefined;
+    let evaluationPauseTimer: number | undefined;
+    let workflowScrollTimer: number | undefined;
+
+    const bannerScrollTimer = window.setTimeout(() => {
+      bannerRef.current?.scrollIntoView({
         behavior: "smooth",
         block: "start",
       });
 
-      pauseTimer = window.setTimeout(() => {
-        secondScrollTimer = window.setTimeout(() => {
-          workflowSectionRef.current?.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-          });
-        }, SECOND_SCROLL_DELAY_MS);
-      }, PANEL_PAUSE_MS);
-    }, FIRST_SCROLL_DELAY_MS);
+      bannerPauseTimer = window.setTimeout(() => {
+        evaluationSectionRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
 
-    const bannerTimer = window.setTimeout(() => {
+        evaluationPauseTimer = window.setTimeout(() => {
+          workflowScrollTimer = window.setTimeout(() => {
+            workflowSectionRef.current?.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          }, WORKFLOW_SCROLL_DELAY_MS);
+        }, EVALUATION_PANEL_PAUSE_MS);
+      }, BANNER_PAUSE_MS);
+    }, BANNER_SCROLL_DELAY_MS);
+
+    const completeTimer = window.setTimeout(() => {
       setEvaluationStartBanner(null);
-    }, START_BANNER_DURATION_MS);
+      setIsEvaluationInProgress(false);
+    }, totalExperienceDurationMs);
 
     return () => {
-      window.clearTimeout(firstScrollTimer);
-      if (pauseTimer) window.clearTimeout(pauseTimer);
-      if (secondScrollTimer) window.clearTimeout(secondScrollTimer);
-      window.clearTimeout(bannerTimer);
+      window.clearTimeout(bannerScrollTimer);
+      if (bannerPauseTimer) window.clearTimeout(bannerPauseTimer);
+      if (evaluationPauseTimer) window.clearTimeout(evaluationPauseTimer);
+      if (workflowScrollTimer) window.clearTimeout(workflowScrollTimer);
+      window.clearTimeout(completeTimer);
     };
   }, [
     activeTrial,
@@ -234,6 +264,7 @@ export default function ClinicalTrialDashboard({
         <>
           {evaluationStartBanner ? (
             <div
+              ref={bannerRef}
               className="cardish"
               style={{
                 marginTop: 28,
@@ -278,6 +309,7 @@ export default function ClinicalTrialDashboard({
               selectedPatient={resolvedSelectedPatient}
               selectedEvaluation={selectedEvaluation}
               onReviewCase={onReviewCase}
+              isEvaluationInProgress={isEvaluationInProgress}
             />
           </section>
 
@@ -291,6 +323,15 @@ export default function ClinicalTrialDashboard({
               <WorkflowActivityCard
                 selectedEvaluation={selectedEvaluation}
                 startedEvaluationId={startedEvaluationId}
+                animationStartDelayMs={
+                  BANNER_SCROLL_DELAY_MS +
+                  BANNER_PAUSE_MS +
+                  EVALUATION_SCROLL_DELAY_MS +
+                  EVALUATION_PANEL_PAUSE_MS +
+                  WORKFLOW_SCROLL_DELAY_MS +
+                  WORKFLOW_INITIAL_DELAY_MS
+                }
+                stepDelayMs={WORKFLOW_STEP_DELAY_MS}
               />
             </div>
           </section>

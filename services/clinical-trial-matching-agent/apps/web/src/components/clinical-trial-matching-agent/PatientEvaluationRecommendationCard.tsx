@@ -7,6 +7,7 @@ type PatientEvaluationRecommendationCardProps = {
   selectedPatient?: Patient;
   selectedEvaluation?: Evaluation;
   onReviewCase?: (evaluationId: string) => void;
+  isEvaluationInProgress?: boolean;
 };
 
 function asText(value: unknown, fallback = "—") {
@@ -68,7 +69,9 @@ function getEvaluationField(
 function getRecommendationBadgeClass(
   recommendation?: string,
   reviewRequired?: boolean,
+  isEvaluationInProgress?: boolean,
 ) {
+  if (isEvaluationInProgress) return "badge info";
   if (reviewRequired) return "badge review";
   if (recommendation === "Likely Match") return "badge match";
   if (recommendation === "Not Eligible") return "badge reject";
@@ -80,6 +83,7 @@ export default function PatientEvaluationRecommendationCard({
   selectedPatient,
   selectedEvaluation,
   onReviewCase,
+  isEvaluationInProgress = false,
 }: PatientEvaluationRecommendationCardProps) {
   if (!selectedEvaluation || !selectedPatient) {
     return (
@@ -87,10 +91,10 @@ export default function PatientEvaluationRecommendationCard({
         <span className="section-label">
           Patient Evaluation and Recommendation
         </span>
-        <h2 style={{ marginTop: 16, marginBottom: 12 }}>
-          No evaluation selected
-        </h2>
-        <p style={{ margin: 0 }}>
+
+        <h2 style={{ marginTop: 16 }}>No evaluation selected</h2>
+
+        <p style={{ marginTop: 8 }}>
           Choose a case from the Active Trial worklist to load patient
           evaluation details, recommendation, workflow activity, criteria, and
           audit trail.
@@ -99,28 +103,33 @@ export default function PatientEvaluationRecommendationCard({
     );
   }
 
-  const recommendation =
-    selectedEvaluation.recommendation ||
-    (selectedEvaluation.review_required ? "Requires Review" : "In Progress");
+  const recommendation = isEvaluationInProgress
+    ? "Running Evaluation"
+    : selectedEvaluation.recommendation ||
+      (selectedEvaluation.review_required ? "Requires Review" : "In Progress");
 
-  const matchScore = getEvaluationField(
-    selectedEvaluation,
-    ["match_score"],
-    "—",
-  );
-  const confidence = getEvaluationField(
-    selectedEvaluation,
-    ["confidence", "confidence_level"],
-    "—",
-  );
+  const matchScore = isEvaluationInProgress
+    ? "—"
+    : getEvaluationField(selectedEvaluation, ["match_score"], "—");
 
-  const hardBlockers = getEvaluationField(
-    selectedEvaluation,
-    ["hard_blockers", "blockers_count"],
-    "0",
-  );
+  const confidence = isEvaluationInProgress
+    ? "—"
+    : getEvaluationField(
+        selectedEvaluation,
+        ["confidence", "confidence_level"],
+        "—",
+      );
+
+  const hardBlockers = isEvaluationInProgress
+    ? "—"
+    : getEvaluationField(
+        selectedEvaluation,
+        ["hard_blockers", "blockers_count"],
+        "0",
+      );
 
   const diagnosis = getPatientField(selectedPatient, ["diagnosis"]);
+
   const biomarkers = getPatientField(selectedPatient, [
     "biomarkers",
     "biomarker_summary",
@@ -128,32 +137,39 @@ export default function PatientEvaluationRecommendationCard({
   ]);
 
   const ecog = getPatientField(selectedPatient, ["ecog", "performance_status"]);
+
   const priorTherapies = getPatientField(selectedPatient, [
     "prior_therapies",
     "therapy_history",
   ]);
 
   const labs = getPatientField(selectedPatient, ["labs", "lab_summary"]);
+
   const comorbidities = getPatientField(selectedPatient, [
     "comorbidities",
     "comorbidity_summary",
   ]);
 
-  const missingInfo = getEvaluationField(
-    selectedEvaluation,
-    ["missing_information", "missing_info"],
-    "None",
-  );
+  const missingInfo = isEvaluationInProgress
+    ? "Assessing patient context and protocol criteria"
+    : getEvaluationField(
+        selectedEvaluation,
+        ["missing_information", "missing_info"],
+        "None",
+      );
 
-  const rationale = getEvaluationField(
-    selectedEvaluation,
-    ["summary", "reasoning_summary", "notes", "explanation"],
-    "Supporting evidence indicates a manual review step is still required before final coordinator action.",
-  );
+  const rationale = isEvaluationInProgress
+    ? "Eligibility evaluation in progress. Building recommendation from patient context, biomarkers, labs, prior therapies, and protocol criteria."
+    : getEvaluationField(
+        selectedEvaluation,
+        ["summary", "reasoning_summary", "notes", "explanation"],
+        "Supporting evidence indicates a manual review step is still required before final coordinator action.",
+      );
 
   const shouldShowReviewCase =
-    Boolean(selectedEvaluation.review_required) ||
-    recommendation === "Requires Review";
+    !isEvaluationInProgress &&
+    (Boolean(selectedEvaluation.review_required) ||
+      recommendation === "Requires Review");
 
   return (
     <>
@@ -165,19 +181,19 @@ export default function PatientEvaluationRecommendationCard({
         style={{
           display: "flex",
           justifyContent: "space-between",
-          gap: 20,
+          alignItems: "flex-start",
+          gap: 16,
           flexWrap: "wrap",
           marginTop: 16,
-          alignItems: "flex-start",
         }}
       >
-        <div style={{ minWidth: 0, flex: "1 1 640px" }}>
-          <h2 style={{ marginTop: 0, marginBottom: 8 }}>
+        <div>
+          <h2 style={{ marginTop: 0, marginBottom: 10 }}>
             {(selectedPatient.display_name || selectedPatient.id) + " — "}
             {activeTrial?.title || "Selected Trial"}
           </h2>
 
-          <p style={{ marginTop: 0, marginBottom: 0 }}>
+          <p style={{ marginTop: 0 }}>
             Review the recommendation, supporting patient context, and active
             trial details before moving to workflow, criteria evidence, and
             audit history.
@@ -190,13 +206,13 @@ export default function PatientEvaluationRecommendationCard({
             alignItems: "center",
             gap: 12,
             flexWrap: "wrap",
-            justifyContent: "flex-end",
           }}
         >
           <span
             className={getRecommendationBadgeClass(
-              selectedEvaluation.recommendation,
+              recommendation,
               selectedEvaluation.review_required,
+              isEvaluationInProgress,
             )}
           >
             {recommendation}
@@ -205,7 +221,7 @@ export default function PatientEvaluationRecommendationCard({
           {shouldShowReviewCase ? (
             <button
               type="button"
-              className="primary-button"
+              className="primary-btn small"
               onClick={() => onReviewCase?.(selectedEvaluation.id)}
             >
               Review Case
@@ -214,119 +230,106 @@ export default function PatientEvaluationRecommendationCard({
         </div>
       </div>
 
-      <div
-        className="dashboard-grid"
-        style={{
-          marginTop: 24,
-          alignItems: "stretch",
-          rowGap: 18,
-        }}
-      >
-        <div className="col-4" style={{ minWidth: 0, display: "flex" }}>
-          <div className="card" style={{ height: "100%", width: "100%" }}>
-            <h3 style={{ marginTop: 0, marginBottom: 16 }}>
-              Selected Evaluation
-            </h3>
+      <div className="dashboard-grid" style={{ marginTop: 16 }}>
+        <section className="cardish col-4">
+          <h3 style={{ marginTop: 0 }}>Selected Evaluation</h3>
 
-            <div className="meta-list">
-              <div className="meta-item">
-                <strong>Patient</strong>
-                <span>{selectedPatient.display_name || "—"}</span>
-              </div>
+          <div className="meta-list">
+            <div className="meta-item">
+              <strong>Patient</strong>
+              <span>{selectedPatient.display_name || "—"}</span>
+            </div>
 
-              <div className="meta-item">
-                <strong>Diagnosis</strong>
-                <span>{diagnosis}</span>
-              </div>
+            <div className="meta-item">
+              <strong>Diagnosis</strong>
+              <span>{diagnosis}</span>
+            </div>
 
-              <div className="meta-item">
-                <strong>Active trial</strong>
-                <span>{activeTrial?.title || "—"}</span>
-              </div>
+            <div className="meta-item">
+              <strong>Active trial</strong>
+              <span>{activeTrial?.title || "—"}</span>
+            </div>
 
-              <div className="meta-item">
-                <strong>Missing information</strong>
-                <span>{missingInfo}</span>
-              </div>
+            <div className="meta-item">
+              <strong>Missing information</strong>
+              <span>{missingInfo}</span>
             </div>
           </div>
-        </div>
+        </section>
 
-        <div className="col-4" style={{ minWidth: 0, display: "flex" }}>
-          <div className="card" style={{ height: "100%", width: "100%" }}>
-            <h3 style={{ marginTop: 0, marginBottom: 16 }}>Recommendation</h3>
+        <section className="cardish col-4">
+          <h3 style={{ marginTop: 0 }}>Recommendation</h3>
 
-            <div className="meta-list">
-              <div className="meta-item">
-                <strong>Status</strong>
-                <span>{recommendation}</span>
-              </div>
+          <div className="meta-list">
+            <div className="meta-item">
+              <strong>Status</strong>
+              <span>{recommendation}</span>
+            </div>
 
-              <div className="meta-item">
-                <strong>Match score</strong>
-                <span>{matchScore === "—" ? "—" : `${matchScore}%`}</span>
-              </div>
+            <div className="meta-item">
+              <strong>Match score</strong>
+              <span>{matchScore === "—" ? "—" : `${matchScore}%`}</span>
+            </div>
 
-              <div className="meta-item">
-                <strong>Confidence</strong>
-                <span>{confidence}</span>
-              </div>
+            <div className="meta-item">
+              <strong>Confidence</strong>
+              <span>{confidence}</span>
+            </div>
 
-              <div className="meta-item">
-                <strong>Review required</strong>
-                <span>{selectedEvaluation.review_required ? "Yes" : "No"}</span>
-              </div>
+            <div className="meta-item">
+              <strong>Review required</strong>
+              <span>
+                {isEvaluationInProgress
+                  ? "Pending"
+                  : selectedEvaluation.review_required
+                    ? "Yes"
+                    : "No"}
+              </span>
+            </div>
 
-              <div className="meta-item">
-                <strong>Hard blockers</strong>
-                <span>{hardBlockers}</span>
-              </div>
+            <div className="meta-item">
+              <strong>Hard blockers</strong>
+              <span>{hardBlockers}</span>
             </div>
           </div>
-        </div>
+        </section>
 
-        <div className="col-4" style={{ minWidth: 0, display: "flex" }}>
-          <div className="card" style={{ height: "100%", width: "100%" }}>
-            <h3 style={{ marginTop: 0, marginBottom: 16 }}>
-              Supporting Context
-            </h3>
+        <section className="cardish col-4">
+          <h3 style={{ marginTop: 0 }}>Supporting Context</h3>
 
-            <div className="meta-list">
-              <div className="meta-item">
-                <strong>Biomarkers</strong>
-                <span>{biomarkers}</span>
-              </div>
+          <div className="meta-list">
+            <div className="meta-item">
+              <strong>Biomarkers</strong>
+              <span>{biomarkers}</span>
+            </div>
 
-              <div className="meta-item">
-                <strong>ECOG</strong>
-                <span>{ecog}</span>
-              </div>
+            <div className="meta-item">
+              <strong>ECOG</strong>
+              <span>{ecog}</span>
+            </div>
 
-              <div className="meta-item">
-                <strong>Prior therapies</strong>
-                <span>{priorTherapies}</span>
-              </div>
+            <div className="meta-item">
+              <strong>Prior therapies</strong>
+              <span>{priorTherapies}</span>
+            </div>
 
-              <div className="meta-item">
-                <strong>Labs</strong>
-                <span>{labs}</span>
-              </div>
+            <div className="meta-item">
+              <strong>Labs</strong>
+              <span>{labs}</span>
+            </div>
 
-              <div className="meta-item">
-                <strong>Comorbidities</strong>
-                <span>{comorbidities}</span>
-              </div>
+            <div className="meta-item">
+              <strong>Comorbidities</strong>
+              <span>{comorbidities}</span>
             </div>
           </div>
-        </div>
+        </section>
       </div>
 
-      <div className="card" style={{ marginTop: 18 }}>
-        <h3 style={{ marginTop: 0, marginBottom: 12 }}>
-          Recommendation Summary
-        </h3>
-        <p style={{ margin: 0 }}>{rationale}</p>
-      </div>
+      <section className="cardish" style={{ marginTop: 18 }}>
+        <h3 style={{ marginTop: 0 }}>Recommendation Summary</h3>
+        <p style={{ marginTop: 8, marginBottom: 0 }}>{rationale}</p>
+      </section>
     </>
   );
 }

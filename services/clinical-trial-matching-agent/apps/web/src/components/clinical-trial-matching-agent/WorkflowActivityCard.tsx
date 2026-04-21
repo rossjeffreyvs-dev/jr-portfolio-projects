@@ -6,10 +6,9 @@ import type { Evaluation, WorkflowEvent } from "@/lib/api";
 type WorkflowActivityCardProps = {
   selectedEvaluation?: Evaluation;
   startedEvaluationId?: string | null;
+  animationStartDelayMs?: number;
+  stepDelayMs?: number;
 };
-
-const INITIAL_DELAY_MS = 500;
-const STEP_DELAY_MS = 850;
 
 function formatTimestamp(timestamp?: string) {
   if (!timestamp) return null;
@@ -29,13 +28,16 @@ function formatTimestamp(timestamp?: string) {
 export default function WorkflowActivityCard({
   selectedEvaluation,
   startedEvaluationId,
+  animationStartDelayMs = 800,
+  stepDelayMs = 1150,
 }: WorkflowActivityCardProps) {
   const events = useMemo(
     () => selectedEvaluation?.workflow_events || [],
     [selectedEvaluation],
   );
 
-  const [visibleCount, setVisibleCount] = useState(events.length);
+  const [visibleCount, setVisibleCount] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
   const timersRef = useRef<number[]>([]);
   const lastAnimatedEvaluationRef = useRef<string | null>(null);
 
@@ -45,39 +47,56 @@ export default function WorkflowActivityCard({
 
     if (!selectedEvaluation) {
       setVisibleCount(0);
+      setIsAnimating(false);
       lastAnimatedEvaluationRef.current = null;
       return;
     }
 
-    const shouldAnimate =
+    const isFreshStartedEvaluation =
       startedEvaluationId === selectedEvaluation.id &&
       lastAnimatedEvaluationRef.current !== selectedEvaluation.id &&
       events.length > 0;
 
-    if (!shouldAnimate) {
-      setVisibleCount(events.length);
-      return;
+    if (isFreshStartedEvaluation) {
+      lastAnimatedEvaluationRef.current = selectedEvaluation.id;
+      setVisibleCount(0);
+      setIsAnimating(true);
+
+      events.forEach((_, index) => {
+        const timer = window.setTimeout(
+          () => {
+            setVisibleCount(index + 1);
+
+            if (index === events.length - 1) {
+              setIsAnimating(false);
+            }
+          },
+          animationStartDelayMs + index * stepDelayMs,
+        );
+
+        timersRef.current.push(timer);
+      });
+
+      return () => {
+        timersRef.current.forEach((timer) => window.clearTimeout(timer));
+        timersRef.current = [];
+      };
     }
 
-    lastAnimatedEvaluationRef.current = selectedEvaluation.id;
-    setVisibleCount(0);
-
-    events.forEach((_, index) => {
-      const timer = window.setTimeout(
-        () => {
-          setVisibleCount(index + 1);
-        },
-        INITIAL_DELAY_MS + index * STEP_DELAY_MS,
-      );
-
-      timersRef.current.push(timer);
-    });
+    setIsAnimating(false);
+    setVisibleCount(events.length);
 
     return () => {
       timersRef.current.forEach((timer) => window.clearTimeout(timer));
       timersRef.current = [];
     };
-  }, [events, selectedEvaluation, startedEvaluationId]);
+  }, [
+    animationStartDelayMs,
+    events,
+    selectedEvaluation,
+    startedEvaluationId,
+    stepDelayMs,
+  ]);
 
   if (!selectedEvaluation) {
     return (
@@ -96,12 +115,18 @@ export default function WorkflowActivityCard({
   }
 
   const visibleEvents = events.slice(0, visibleCount);
-  const isAnimating =
-    startedEvaluationId === selectedEvaluation.id &&
-    visibleCount < events.length;
 
   return (
     <>
+      {isAnimating && visibleEvents.length === 0 ? (
+        <div
+          className="workflow-detail"
+          style={{ marginBottom: 12, fontWeight: 600 }}
+        >
+          Initializing eligibility evaluation…
+        </div>
+      ) : null}
+
       <div className="workflow-list">
         {visibleEvents.map((item: WorkflowEvent, index: number) => {
           const timestamp = formatTimestamp(item.timestamp);
