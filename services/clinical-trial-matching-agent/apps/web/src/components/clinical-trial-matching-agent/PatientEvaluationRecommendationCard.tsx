@@ -6,16 +6,24 @@ type PatientEvaluationRecommendationCardProps = {
   activeTrial?: Trial;
   selectedPatient?: Patient;
   selectedEvaluation?: Evaluation;
+  onReviewCase?: (evaluationId: string) => void;
 };
 
 function asText(value: unknown, fallback = "—") {
   if (value === null || value === undefined) return fallback;
+
   if (Array.isArray(value)) {
     return value.length > 0 ? value.join(", ") : fallback;
   }
+
   if (typeof value === "string") {
     return value.trim().length > 0 ? value : fallback;
   }
+
+  if (typeof value === "object") {
+    return fallback;
+  }
+
   return String(value);
 }
 
@@ -71,6 +79,7 @@ export default function PatientEvaluationRecommendationCard({
   activeTrial,
   selectedPatient,
   selectedEvaluation,
+  onReviewCase,
 }: PatientEvaluationRecommendationCardProps) {
   if (!selectedEvaluation || !selectedPatient) {
     return (
@@ -99,7 +108,6 @@ export default function PatientEvaluationRecommendationCard({
     ["match_score"],
     "—",
   );
-
   const confidence = getEvaluationField(
     selectedEvaluation,
     ["confidence", "confidence_level"],
@@ -143,6 +151,10 @@ export default function PatientEvaluationRecommendationCard({
     "Supporting evidence indicates a manual review step is still required before final coordinator action.",
   );
 
+  const shouldShowReviewCase =
+    Boolean(selectedEvaluation.review_required) ||
+    recommendation === "Requires Review";
+
   return (
     <>
       <span className="section-label">
@@ -172,26 +184,76 @@ export default function PatientEvaluationRecommendationCard({
           </p>
         </div>
 
-        <span
-          className={getRecommendationBadgeClass(
-            selectedEvaluation.recommendation,
-            selectedEvaluation.review_required,
-          )}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            flexWrap: "wrap",
+            justifyContent: "flex-end",
+          }}
         >
-          {recommendation}
-        </span>
+          <span
+            className={getRecommendationBadgeClass(
+              selectedEvaluation.recommendation,
+              selectedEvaluation.review_required,
+            )}
+          >
+            {recommendation}
+          </span>
+
+          {shouldShowReviewCase ? (
+            <button
+              type="button"
+              className="primary-button"
+              onClick={() => onReviewCase?.(selectedEvaluation.id)}
+            >
+              Review Case
+            </button>
+          ) : null}
+        </div>
       </div>
 
       <div
         className="dashboard-grid"
         style={{
           marginTop: 24,
-          alignItems: "start",
+          alignItems: "stretch",
           rowGap: 18,
         }}
       >
-        <div className="col-4" style={{ minWidth: 0 }}>
-          <div className="card" style={{ height: "100%" }}>
+        <div className="col-4" style={{ minWidth: 0, display: "flex" }}>
+          <div className="card" style={{ height: "100%", width: "100%" }}>
+            <h3 style={{ marginTop: 0, marginBottom: 16 }}>
+              Selected Evaluation
+            </h3>
+
+            <div className="meta-list">
+              <div className="meta-item">
+                <strong>Patient</strong>
+                <span>{selectedPatient.display_name || "—"}</span>
+              </div>
+
+              <div className="meta-item">
+                <strong>Diagnosis</strong>
+                <span>{diagnosis}</span>
+              </div>
+
+              <div className="meta-item">
+                <strong>Active trial</strong>
+                <span>{activeTrial?.title || "—"}</span>
+              </div>
+
+              <div className="meta-item">
+                <strong>Missing information</strong>
+                <span>{missingInfo}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="col-4" style={{ minWidth: 0, display: "flex" }}>
+          <div className="card" style={{ height: "100%", width: "100%" }}>
             <h3 style={{ marginTop: 0, marginBottom: 16 }}>Recommendation</h3>
 
             <div className="meta-list">
@@ -223,43 +285,8 @@ export default function PatientEvaluationRecommendationCard({
           </div>
         </div>
 
-        <div className="col-4" style={{ minWidth: 0 }}>
-          <div className="card" style={{ height: "100%" }}>
-            <h3 style={{ marginTop: 0, marginBottom: 16 }}>
-              Selected Evaluation
-            </h3>
-
-            <div className="meta-list">
-              <div className="meta-item">
-                <strong>Patient</strong>
-                <span>{selectedPatient.display_name || "—"}</span>
-              </div>
-
-              <div className="meta-item">
-                <strong>Patient ID</strong>
-                <span>{selectedPatient.id}</span>
-              </div>
-
-              <div className="meta-item">
-                <strong>Diagnosis</strong>
-                <span>{diagnosis}</span>
-              </div>
-
-              <div className="meta-item">
-                <strong>Active trial</strong>
-                <span>{activeTrial?.title || "—"}</span>
-              </div>
-
-              <div className="meta-item">
-                <strong>Missing information</strong>
-                <span>{missingInfo}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-4" style={{ minWidth: 0 }}>
-          <div className="card" style={{ height: "100%" }}>
+        <div className="col-4" style={{ minWidth: 0, display: "flex" }}>
+          <div className="card" style={{ height: "100%", width: "100%" }}>
             <h3 style={{ marginTop: 0, marginBottom: 16 }}>
               Supporting Context
             </h3>

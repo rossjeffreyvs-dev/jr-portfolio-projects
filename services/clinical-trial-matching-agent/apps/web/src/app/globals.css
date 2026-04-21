@@ -213,17 +213,35 @@ th {
   background: #1e2b5c;
   color: #ffffff;
   border: none;
+
+  height: 40px; /* ✅ SAME HEIGHT */
+  padding: 0 18px;
+
   border-radius: 999px;
-  padding: 10px 18px;
   font-size: 14px;
   font-weight: 600;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
   cursor: pointer;
-  transition: all 120ms ease;
+  transition:
+    transform 120ms ease,
+    background-color 120ms ease,
+    box-shadow 120ms ease;
 }
 
+/* ✅ Improved hover (feels more “product-grade”) */
 .primary-button:hover {
   transform: translateY(-1px);
   background: #162347;
+  box-shadow: 0 6px 16px rgba(30, 43, 92, 0.25);
+}
+
+.primary-button:active {
+  transform: translateY(0);
+  box-shadow: none;
 }
 
 .primary-button:disabled {
@@ -237,18 +255,31 @@ th {
 .secondary-button {
   background: #ffffff;
   color: #1e2b5c;
+
+  height: 40px; /* ✅ MATCH */
+  padding: 0 18px;
+
   border: 1px solid #cbd5e1;
   border-radius: 999px;
-  padding: 10px 18px;
+
   font-size: 14px;
   font-weight: 600;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
   cursor: pointer;
-  transition: all 120ms ease;
+  transition:
+    transform 120ms ease,
+    border-color 120ms ease,
+    background-color 120ms ease;
 }
 
 .secondary-button:hover {
   transform: translateY(-1px);
   border-color: #94a3b8;
+  background: #f8fafc;
 }
 
 .secondary-button:disabled {
@@ -610,12 +641,19 @@ th {
 
 /* Badges */
 
+/* Badges */
+
 .badge {
   display: inline-flex;
-  padding: 6px 10px;
+  align-items: center;
+  justify-content: center;
+
+  height: 40px; /* ✅ MATCH BUTTON HEIGHT */
+  padding: 0 16px; /* remove vertical padding */
+
   border-radius: 999px;
-  font-size: 12px;
-  font-weight: 800;
+  font-size: 13px;
+  font-weight: 700;
   white-space: nowrap;
 }
 

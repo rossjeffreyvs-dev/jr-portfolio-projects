@@ -149,6 +149,7 @@ export default function ClinicalTrialDashboard({
               activeTrial={activeTrial}
               selectedPatient={selectedPatient || selectedWorklistPatient}
               selectedEvaluation={selectedEvaluation}
+              onReviewCase={onReviewCase}
             />
           </section>
 
@@ -161,10 +162,6 @@ export default function ClinicalTrialDashboard({
 
           <section className="card" style={{ marginTop: 28 }}>
             <span className="section-label">Criteria Match Table</span>
-
-            <h2 style={{ marginTop: 16, marginBottom: 20 }}>
-              Criterion-by-criterion evaluation
-            </h2>
 
             <CriteriaMatchTable selectedEvaluation={selectedEvaluation} />
           </section>
