@@ -207,6 +207,56 @@ th {
   margin-top: 16px;
 }
 
+/* === Simulation Controls Buttons === */
+
+.primary-button {
+  background: #1e2b5c;
+  color: #ffffff;
+  border: none;
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.primary-button:hover {
+  transform: translateY(-1px);
+  background: #162347;
+}
+
+.primary-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Secondary buttons */
+
+.secondary-button {
+  background: #ffffff;
+  color: #1e2b5c;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.secondary-button:hover {
+  transform: translateY(-1px);
+  border-color: #94a3b8;
+}
+
+.secondary-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .section-label {
   display: inline-flex;
   border-radius: 999px;

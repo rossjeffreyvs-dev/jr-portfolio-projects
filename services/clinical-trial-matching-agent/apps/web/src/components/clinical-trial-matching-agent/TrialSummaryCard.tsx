@@ -9,9 +9,6 @@ export default function TrialSummaryCard({
 }: TrialSummaryCardProps) {
   return (
     <article className="card col-6">
-      <span className="section-label">E. Supporting Context</span>
-      <h2>Trial Summary</h2>
-
       <div className="meta-list">
         <div className="meta-item">
           <strong>Title</strong>

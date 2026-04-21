@@ -61,7 +61,7 @@ function WorklistMenu({ evaluationId, onRemove }: WorklistMenuProps) {
         …
       </button>
 
-      {isOpen ? (
+      {isOpen && (
         <div className="queue-menu-popover">
           <button
             type="button"
@@ -74,7 +74,7 @@ function WorklistMenu({ evaluationId, onRemove }: WorklistMenuProps) {
             Remove from Worklist
           </button>
         </div>
-      ) : null}
+      )}
     </div>
   );
 }
@@ -91,111 +91,96 @@ export default function TrialWorklist({
     console.log("remove from worklist", { evaluationId });
   }
 
-  return (
-    <section className="card">
-      <div className="section-header">
-        <div>
-          <span className="section-label">B. Trial Worklist</span>
-          <h2>Queued evaluations for the active trial</h2>
-          <p>
-            Select a case to inspect details below, or use the action button to
-            review flagged evaluations.
-          </p>
-        </div>
+  if (evaluations.length === 0) {
+    return (
+      <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-center">
+        <p className="text-base font-semibold text-slate-900">
+          No evaluations yet for this trial
+        </p>
+        <p className="mt-2 text-sm text-slate-600">
+          Use Find Patients for Trial to open the candidate list and start a new
+          evaluation.
+        </p>
       </div>
+    );
+  }
 
-      {evaluations.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-center">
-          <p className="text-base font-semibold text-slate-900">
-            No evaluations yet for this trial
-          </p>
-          <p className="mt-2 text-sm text-slate-600">
-            Use Find Patients for Trial to open the candidate list and start a
-            new evaluation.
-          </p>
-        </div>
-      ) : (
-        <div className="queue-grid">
-          {evaluations.map((evaluation) => {
-            const patient = patients.find(
-              (item) => item.id === evaluation.patient_id,
-            );
+  return (
+    <div className="queue-grid">
+      {evaluations.map((evaluation) => {
+        const patient = patients.find(
+          (item) => item.id === evaluation.patient_id,
+        );
 
-            const isSelected = evaluation.id === selectedEvaluationId;
+        const isSelected = evaluation.id === selectedEvaluationId;
 
-            const hasReviewTask = reviewCards.some(
-              (review) => review.patient_id === evaluation.patient_id,
-            );
+        const hasReviewTask = reviewCards.some(
+          (review) => review.patient_id === evaluation.patient_id,
+        );
 
-            const requiresReview = evaluation.review_required || hasReviewTask;
+        const requiresReview = evaluation.review_required || hasReviewTask;
 
-            return (
-              <article
-                key={evaluation.id}
-                className={`queue-card queue-card-button ${
-                  isSelected ? "selected" : ""
+        return (
+          <article
+            key={evaluation.id}
+            className={`queue-card queue-card-button ${
+              isSelected ? "selected" : ""
+            }`}
+            onClick={() => onSelectEvaluation(evaluation.id)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                onSelectEvaluation(evaluation.id);
+              }
+            }}
+          >
+            <div className="queue-top-row">
+              <div className="queue-top-meta">
+                <div className="queue-patient-id">{evaluation.patient_id}</div>
+                <div className="eyebrow queue-match-inline">
+                  Match score: {evaluation.match_score}%
+                </div>
+              </div>
+
+              <div className="queue-top-actions">
+                <span className={statusClass(evaluation.recommendation)}>
+                  {evaluation.recommendation}
+                </span>
+
+                <WorklistMenu
+                  evaluationId={evaluation.id}
+                  onRemove={handleRemoveFromWorklist}
+                />
+              </div>
+            </div>
+
+            <h3>{patient?.diagnosis?.[0] || "Diagnosis unavailable"}</h3>
+
+            <p className="queue-note">{evaluation.explanation}</p>
+
+            <div className="queue-cta-row">
+              <button
+                type="button"
+                className={`queue-cta-btn ${
+                  requiresReview ? "queue-cta-review" : "queue-cta-secondary"
                 }`}
-                onClick={() => onSelectEvaluation(evaluation.id)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
+                onClick={(event) => {
+                  event.stopPropagation();
+
+                  if (requiresReview) {
+                    onReviewCase(evaluation.id);
+                  } else {
                     onSelectEvaluation(evaluation.id);
                   }
                 }}
               >
-                <div className="queue-top-row">
-                  <div className="queue-top-meta">
-                    <div className="queue-patient-id">
-                      {evaluation.patient_id}
-                    </div>
-                    <div className="eyebrow queue-match-inline">
-                      Match score: {evaluation.match_score}%
-                    </div>
-                  </div>
-
-                  <div className="queue-top-actions">
-                    <span className={statusClass(evaluation.recommendation)}>
-                      {evaluation.recommendation}
-                    </span>
-
-                    <WorklistMenu
-                      evaluationId={evaluation.id}
-                      onRemove={handleRemoveFromWorklist}
-                    />
-                  </div>
-                </div>
-
-                <h3>{patient?.diagnosis?.[0] || "Diagnosis unavailable"}</h3>
-
-                <p className="queue-note">{evaluation.explanation}</p>
-
-                <div className="queue-cta-row">
-                  <button
-                    type="button"
-                    className={`queue-cta-btn ${
-                      requiresReview
-                        ? "queue-cta-review"
-                        : "queue-cta-secondary"
-                    }`}
-                    onClick={(event) => {
-                      event.stopPropagation();
-
-                      if (requiresReview) {
-                        onReviewCase(evaluation.id);
-                      } else {
-                        onSelectEvaluation(evaluation.id);
-                      }
-                    }}
-                  >
-                    {requiresReview ? "Review Case →" : "View Evaluation →"}
-                  </button>
-                </div>
-              </article>
-            );
-          })}
-        </div>
-      )}
-    </section>
+                {requiresReview ? "Review Case →" : "View Evaluation →"}
+              </button>
+            </div>
+          </article>
+        );
+      })}
+    </div>
   );
 }

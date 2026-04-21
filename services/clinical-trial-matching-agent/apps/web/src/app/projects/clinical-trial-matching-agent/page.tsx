@@ -40,6 +40,23 @@ export default function ClinicalTrialProjectPage() {
   if (isLoading) {
     return (
       <div className="page-shell">
+        <header className="site-header">
+          <div className="brand">
+            <div className="brand-mark">JR</div>
+            <div>Projects</div>
+          </div>
+
+          <nav className="top-nav">
+            <a href="#">Home</a>
+            <a href="#" className="active">
+              Projects
+            </a>
+            <a href="#">Blog</a>
+            <a href="#">About</a>
+            <a href="#">Contact</a>
+          </nav>
+        </header>
+
         <main className="container">
           <section className="hero">
             <h1>Multi-Agent Clinical Trial Matching System</h1>
@@ -107,7 +124,7 @@ export default function ClinicalTrialProjectPage() {
           trialTitle={activeTrial?.title}
           isLoading={isLoadingTrialPatients}
           isStartingEvaluation={isStartingEvaluation}
-          patientActionLabel="Starting Evaluation..."
+          patientActionLabel="Initializing evaluation..."
           onClose={handleClosePatientModal}
           onStartEvaluation={handleStartEvaluationFromModal}
         />
