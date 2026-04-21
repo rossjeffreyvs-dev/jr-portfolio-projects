@@ -10,7 +10,6 @@ type TrialWorklistProps = {
   reviewCards: ReviewTask[];
   selectedEvaluationId?: string;
   onSelectEvaluation: (evaluationId: string) => void;
-  onReviewCase: (evaluationId: string) => void;
 };
 
 type WorklistMenuProps = {
@@ -85,7 +84,6 @@ export default function TrialWorklist({
   reviewCards,
   selectedEvaluationId,
   onSelectEvaluation,
-  onReviewCase,
 }: TrialWorklistProps) {
   function handleRemoveFromWorklist(evaluationId: string) {
     console.log("remove from worklist", { evaluationId });
@@ -167,15 +165,10 @@ export default function TrialWorklist({
                 }`}
                 onClick={(event) => {
                   event.stopPropagation();
-
-                  if (requiresReview) {
-                    onReviewCase(evaluation.id);
-                  } else {
-                    onSelectEvaluation(evaluation.id);
-                  }
+                  onSelectEvaluation(evaluation.id);
                 }}
               >
-                {requiresReview ? "Review Case →" : "View Evaluation →"}
+                View Evaluation →
               </button>
             </div>
           </article>

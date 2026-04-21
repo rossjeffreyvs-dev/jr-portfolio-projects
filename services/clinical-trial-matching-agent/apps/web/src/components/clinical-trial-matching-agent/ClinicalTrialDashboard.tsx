@@ -56,6 +56,11 @@ export default function ClinicalTrialDashboard({
     );
   }, [patients, selectedEvaluation]);
 
+  function handleOpenEvaluation(evaluationId: string) {
+    onSelectEvaluation(evaluationId);
+    setWorkspaceTab("patient-evaluation");
+  }
+
   return (
     <>
       <DashboardControls
@@ -119,8 +124,7 @@ export default function ClinicalTrialDashboard({
                 patients={patients}
                 reviewCards={reviewCards}
                 selectedEvaluationId={selectedEvaluation?.id}
-                onSelectEvaluation={onSelectEvaluation}
-                onReviewCase={onReviewCase}
+                onSelectEvaluation={handleOpenEvaluation}
               />
             </div>
           </section>
@@ -162,6 +166,10 @@ export default function ClinicalTrialDashboard({
 
           <section className="card" style={{ marginTop: 28 }}>
             <span className="section-label">Criteria Match Table</span>
+
+            <h2 style={{ marginTop: 16, marginBottom: 20 }}>
+              Criterion-by-criterion evaluation
+            </h2>
 
             <CriteriaMatchTable selectedEvaluation={selectedEvaluation} />
           </section>
