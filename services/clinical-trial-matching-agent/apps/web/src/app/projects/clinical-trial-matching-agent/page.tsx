@@ -1,6 +1,7 @@
 "use client";
 
 import PatientSelectorModal from "@/components/PatientSelectorModal";
+import ChangeTrialModal from "@/components/clinical-trial-matching-agent/ChangeTrialModal";
 import ClinicalTrialDashboard from "@/components/clinical-trial-matching-agent/ClinicalTrialDashboard";
 import ReviewCasePanel from "@/components/clinical-trial-matching-agent/ReviewCasePanel";
 import { useClinicalTrialDashboard } from "@/hooks/useClinicalTrialDashboard";
@@ -8,7 +9,9 @@ import { useClinicalTrialDashboard } from "@/hooks/useClinicalTrialDashboard";
 export default function ClinicalTrialProjectPage() {
   const {
     isLoading,
+    trials,
     activeTrial,
+    activeTrialId,
     selectedPatient,
     selectedEvaluation,
     evaluations,
@@ -20,16 +23,20 @@ export default function ClinicalTrialProjectPage() {
     isStartingEvaluation,
     isChangingTrial,
     isPatientModalOpen,
+    isChangeTrialModalOpen,
     modalPatients,
     activeReviewEvaluation,
     activeReviewPatient,
     reviewNote,
+    startedEvaluationId,
     setReviewNote,
     setSelectedEvaluationId,
     handleOpenPatientModal,
-    handleChangeTrial,
+    handleOpenChangeTrialModal,
+    handleSelectTrial,
     handleReplayWorkflow,
     handleClosePatientModal,
+    handleCloseChangeTrialModal,
     handleStartEvaluationFromModal,
     handleOpenReview,
     handleCloseReview,
@@ -111,8 +118,9 @@ export default function ClinicalTrialProjectPage() {
           error={error}
           isLoadingTrialPatients={isLoadingTrialPatients}
           isChangingTrial={isChangingTrial}
+          startedEvaluationId={startedEvaluationId}
           onOpenPatientModal={handleOpenPatientModal}
-          onChangeTrial={handleChangeTrial}
+          onChangeTrial={handleOpenChangeTrialModal}
           onReplayWorkflow={handleReplayWorkflow}
           onSelectEvaluation={setSelectedEvaluationId}
           onReviewCase={handleOpenReview}
@@ -124,9 +132,22 @@ export default function ClinicalTrialProjectPage() {
           trialTitle={activeTrial?.title}
           isLoading={isLoadingTrialPatients}
           isStartingEvaluation={isStartingEvaluation}
-          patientActionLabel="Initializing evaluation..."
+          patientActionLabel={
+            isStartingEvaluation
+              ? "Loading patient + trial context..."
+              : "Initializing evaluation..."
+          }
           onClose={handleClosePatientModal}
           onStartEvaluation={handleStartEvaluationFromModal}
+        />
+
+        <ChangeTrialModal
+          isOpen={isChangeTrialModalOpen}
+          trials={trials}
+          activeTrialId={activeTrialId}
+          isChangingTrial={isChangingTrial}
+          onClose={handleCloseChangeTrialModal}
+          onSelectTrial={handleSelectTrial}
         />
 
         <ReviewCasePanel

@@ -103,31 +103,39 @@ export function useClinicalTrialDashboard() {
     null,
   );
   const [isPatientModalOpen, setIsPatientModalOpen] = useState(false);
+  const [isChangeTrialModalOpen, setIsChangeTrialModalOpen] = useState(false);
   const [trialPatients, setTrialPatients] = useState<Patient[]>([]);
   const [isLoadingTrialPatients, setIsLoadingTrialPatients] = useState(false);
+  const [startedEvaluationId, setStartedEvaluationId] = useState<string | null>(
+    null,
+  );
 
   const loadDashboard = useCallback(async (preferredEvaluationId?: string) => {
     setError(null);
 
     const trialResponse = await getTrials();
-    const activeId = trialResponse.active_trial_id;
+    const nextTrials = trialResponse.items || [];
+    const resolvedActiveTrialId =
+      trialResponse.active_trial_id || nextTrials[0]?.id || "";
 
     const [patientResponse, evaluationResponse, reviewResponse] =
       await Promise.all([
         getPatients(),
-        getEvaluations(activeId),
+        resolvedActiveTrialId
+          ? getEvaluations(resolvedActiveTrialId)
+          : Promise.resolve({ items: [] as Evaluation[] }),
         getReviews(),
       ]);
 
     const uniqueEvaluations = dedupeEvaluationsByPatient(
-      evaluationResponse.items,
+      evaluationResponse.items || [],
     );
 
-    setTrials(trialResponse.items);
-    setActiveTrialId(activeId);
-    setPatients(patientResponse.items);
+    setTrials(nextTrials);
+    setActiveTrialId(resolvedActiveTrialId);
+    setPatients(patientResponse.items || []);
     setEvaluations(uniqueEvaluations);
-    setReviews(reviewResponse.items);
+    setReviews(reviewResponse.items || []);
 
     const nextSelected =
       preferredEvaluationId ||
@@ -222,7 +230,12 @@ export function useClinicalTrialDashboard() {
   }, [patients, activeReviewEvaluation]);
 
   const handleOpenPatientModal = useCallback(async () => {
-    if (!activeTrial || isStartingEvaluation) return;
+    if (!activeTrial || isStartingEvaluation) {
+      if (!activeTrial) {
+        setError("No active trial is available. Select a trial first.");
+      }
+      return;
+    }
 
     setError(null);
     setPatientModalError(null);
@@ -232,7 +245,7 @@ export function useClinicalTrialDashboard() {
 
     try {
       const response = await getPatientsForTrial(activeTrial.id);
-      setTrialPatients(response.items);
+      setTrialPatients(response.items || []);
     } catch (err) {
       const message =
         err instanceof Error
@@ -258,6 +271,7 @@ export function useClinicalTrialDashboard() {
         const evaluation = await startEvaluation(patient.id, activeTrial.id);
         setIsPatientModalOpen(false);
         setTrialPatients([]);
+        setStartedEvaluationId(evaluation.id);
         await loadDashboard(evaluation.id);
       } catch (err) {
         const message =
@@ -285,33 +299,47 @@ export function useClinicalTrialDashboard() {
     [availableTrialPatients, handleSelectPatient],
   );
 
-  const handleChangeTrial = useCallback(async () => {
-    if (trials.length <= 1 || isChangingTrial) return;
+  const handleOpenChangeTrialModal = useCallback(() => {
+    setIsChangeTrialModalOpen(true);
+  }, []);
 
-    setIsChangingTrial(true);
-    setError(null);
+  const handleCloseChangeTrialModal = useCallback(() => {
+    setIsChangeTrialModalOpen(false);
+  }, []);
 
-    try {
-      const currentIndex = trials.findIndex(
-        (trial) => trial.id === activeTrialId,
-      );
-      const nextTrial = trials[(currentIndex + 1) % trials.length] || trials[0];
+  const handleSelectTrial = useCallback(
+    async (trialId: string) => {
+      if (!trialId || isChangingTrial) return;
 
-      await activateTrial(nextTrial.id);
-      setActiveReviewEvaluationId(null);
-      setReviewNote("");
-      await loadDashboard();
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Unable to change trial.";
-      setError(message);
-    } finally {
-      setIsChangingTrial(false);
-    }
-  }, [trials, isChangingTrial, activeTrialId, loadDashboard]);
+      if (trialId === activeTrialId) {
+        setIsChangeTrialModalOpen(false);
+        return;
+      }
+
+      setIsChangingTrial(true);
+      setError(null);
+
+      try {
+        await activateTrial(trialId);
+        setActiveReviewEvaluationId(null);
+        setReviewNote("");
+        setStartedEvaluationId(null);
+        setIsChangeTrialModalOpen(false);
+        await loadDashboard();
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Unable to change trial.";
+        setError(message);
+      } finally {
+        setIsChangingTrial(false);
+      }
+    },
+    [activeTrialId, isChangingTrial, loadDashboard],
+  );
 
   const handleReplayWorkflow = useCallback(() => {
     if (selectedEvaluation) {
+      setStartedEvaluationId(selectedEvaluation.id);
       setSelectedEvaluationId(selectedEvaluation.id);
     }
   }, [selectedEvaluation]);
@@ -323,23 +351,11 @@ export function useClinicalTrialDashboard() {
     setTrialPatients([]);
   }, []);
 
-  const handleOpenReview = useCallback(
-    (evaluationId: string) => {
-      const matchedEvaluation =
-        evaluations.find((evaluation) => evaluation.id === evaluationId) ||
-        null;
-
-      console.log("open review fired", evaluationId, {
-        foundEvaluation: Boolean(matchedEvaluation),
-        selectedBefore: selectedEvaluationId,
-      });
-
-      setActiveReviewEvaluationId(evaluationId);
-      setReviewNote("");
-      setSelectedEvaluationId(evaluationId);
-    },
-    [evaluations, selectedEvaluationId],
-  );
+  const handleOpenReview = useCallback((evaluationId: string) => {
+    setActiveReviewEvaluationId(evaluationId);
+    setReviewNote("");
+    setSelectedEvaluationId(evaluationId);
+  }, []);
 
   const handleCloseReview = useCallback(() => {
     setActiveReviewEvaluationId(null);
@@ -357,13 +373,13 @@ export function useClinicalTrialDashboard() {
         evaluation.id === activeReviewEvaluation.id
           ? {
               ...evaluation,
-              recommendation: "Approved",
+              recommendation: "Approved" as Evaluation["recommendation"],
               review_required: false,
               explanation: note
                 ? `${evaluation.explanation} Reviewer note: ${note}`
                 : evaluation.explanation,
               workflow_events: [
-                ...((evaluation.workflow_events || []) as WorkflowEvent[]),
+                ...(evaluation.workflow_events || []),
                 reviewEvent,
               ] as WorkflowEvent[],
             }
@@ -383,11 +399,6 @@ export function useClinicalTrialDashboard() {
           : review,
       ),
     );
-
-    console.log("approve review", {
-      evaluationId: activeReviewEvaluation.id,
-      note,
-    });
 
     setSelectedEvaluationId(activeReviewEvaluation.id);
     setActiveReviewEvaluationId(null);
@@ -405,13 +416,13 @@ export function useClinicalTrialDashboard() {
         evaluation.id === activeReviewEvaluation.id
           ? {
               ...evaluation,
-              recommendation: "Rejected",
+              recommendation: "Rejected" as Evaluation["recommendation"],
               review_required: false,
               explanation: note
                 ? `${evaluation.explanation} Reviewer note: ${note}`
                 : evaluation.explanation,
               workflow_events: [
-                ...((evaluation.workflow_events || []) as WorkflowEvent[]),
+                ...(evaluation.workflow_events || []),
                 reviewEvent,
               ] as WorkflowEvent[],
             }
@@ -432,11 +443,6 @@ export function useClinicalTrialDashboard() {
       ),
     );
 
-    console.log("reject review", {
-      evaluationId: activeReviewEvaluation.id,
-      note,
-    });
-
     setSelectedEvaluationId(activeReviewEvaluation.id);
     setActiveReviewEvaluationId(null);
     setReviewNote("");
@@ -444,7 +450,9 @@ export function useClinicalTrialDashboard() {
 
   return {
     isLoading,
+    trials,
     activeTrial,
+    activeTrialId,
     selectedPatient,
     selectedEvaluation,
     evaluations,
@@ -456,16 +464,20 @@ export function useClinicalTrialDashboard() {
     isStartingEvaluation,
     isChangingTrial,
     isPatientModalOpen,
+    isChangeTrialModalOpen,
     modalPatients,
     activeReviewEvaluation,
     activeReviewPatient,
     reviewNote,
+    startedEvaluationId,
     setReviewNote,
     setSelectedEvaluationId,
     handleOpenPatientModal,
-    handleChangeTrial,
+    handleOpenChangeTrialModal,
+    handleSelectTrial,
     handleReplayWorkflow,
     handleClosePatientModal,
+    handleCloseChangeTrialModal,
     handleStartEvaluationFromModal,
     handleOpenReview,
     handleCloseReview,

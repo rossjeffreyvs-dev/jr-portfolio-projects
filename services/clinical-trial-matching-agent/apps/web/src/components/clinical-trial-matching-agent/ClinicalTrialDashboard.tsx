@@ -22,6 +22,7 @@ type ClinicalTrialDashboardProps = {
   error?: string | null;
   isLoadingTrialPatients: boolean;
   isChangingTrial: boolean;
+  startedEvaluationId?: string | null;
   onOpenPatientModal: () => void;
   onChangeTrial: () => void;
   onReplayWorkflow: () => void;
@@ -39,6 +40,7 @@ export default function ClinicalTrialDashboard({
   error,
   isLoadingTrialPatients,
   isChangingTrial,
+  startedEvaluationId,
   onOpenPatientModal,
   onChangeTrial,
   onReplayWorkflow,
