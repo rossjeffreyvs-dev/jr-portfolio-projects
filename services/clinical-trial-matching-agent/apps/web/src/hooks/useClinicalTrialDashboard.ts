@@ -13,6 +13,7 @@ import {
   type Patient,
   type ReviewTask,
   type Trial,
+  type WorkflowEvent,
 } from "@/lib/api";
 import {
   dedupeEvaluationsByPatient,
@@ -61,6 +62,26 @@ function mapPatientsToModalRows(patients: Patient[]): ModalPatient[] {
       ? patient.notes.join(" ")
       : patient.seeded_reason || "No summary available.",
   }));
+}
+
+function buildHumanReviewEvent(
+  decision: "approved" | "rejected",
+  note?: string,
+): WorkflowEvent {
+  return {
+    stage: "human_review",
+    label: "Human Review",
+    status: "complete",
+    detail:
+      decision === "approved"
+        ? note?.trim()
+          ? `Approved by reviewer. Note: ${note.trim()}`
+          : "Approved by reviewer."
+        : note?.trim()
+          ? `Rejected by reviewer. Note: ${note.trim()}`
+          : "Rejected by reviewer.",
+    timestamp: new Date().toISOString(),
+  };
 }
 
 export function useClinicalTrialDashboard() {
@@ -191,13 +212,6 @@ export function useClinicalTrialDashboard() {
       ) || null,
     [evaluations, activeReviewEvaluationId],
   );
-
-  console.log("review state", {
-    activeReviewEvaluationId,
-    activeReviewEvaluationFound: Boolean(activeReviewEvaluation),
-    selectedEvaluationId,
-    evaluationIds: evaluations.map((evaluation) => evaluation.id),
-  });
 
   const activeReviewPatient = useMemo(() => {
     if (!activeReviewEvaluation) return null;
@@ -338,26 +352,96 @@ export function useClinicalTrialDashboard() {
   const handleApproveReview = useCallback(() => {
     if (!activeReviewEvaluation) return;
 
+    const note = reviewNote.trim();
+    const reviewEvent = buildHumanReviewEvent("approved", note);
+
+    setEvaluations((prev) =>
+      prev.map((evaluation) =>
+        evaluation.id === activeReviewEvaluation.id
+          ? {
+              ...evaluation,
+              recommendation: "Likely Match",
+              review_required: false,
+              explanation: note
+                ? `${evaluation.explanation} Reviewer note: ${note}`
+                : evaluation.explanation,
+              workflow_events: [
+                ...(evaluation.workflow_events || []),
+                reviewEvent,
+              ],
+            }
+          : evaluation,
+      ),
+    );
+
+    setReviews((prev) =>
+      prev.map((review) =>
+        review.patient_id === activeReviewEvaluation.patient_id &&
+        review.trial_id === activeTrialId &&
+        review.review_status !== "Resolved"
+          ? {
+              ...review,
+              review_status: "Resolved",
+            }
+          : review,
+      ),
+    );
+
     console.log("approve review", {
       evaluationId: activeReviewEvaluation.id,
-      note: reviewNote,
+      note,
     });
 
     setActiveReviewEvaluationId(null);
     setReviewNote("");
-  }, [activeReviewEvaluation, reviewNote]);
+  }, [activeReviewEvaluation, reviewNote, activeTrialId]);
 
   const handleRejectReview = useCallback(() => {
     if (!activeReviewEvaluation) return;
 
+    const note = reviewNote.trim();
+    const reviewEvent = buildHumanReviewEvent("rejected", note);
+
+    setEvaluations((prev) =>
+      prev.map((evaluation) =>
+        evaluation.id === activeReviewEvaluation.id
+          ? {
+              ...evaluation,
+              recommendation: "Not Eligible",
+              review_required: false,
+              explanation: note
+                ? `${evaluation.explanation} Reviewer note: ${note}`
+                : evaluation.explanation,
+              workflow_events: [
+                ...((evaluation.workflow_events || []) as WorkflowEvent[]),
+                reviewEvent,
+              ] as WorkflowEvent[],
+            }
+          : evaluation,
+      ),
+    );
+
+    setReviews((prev) =>
+      prev.map((review) =>
+        review.patient_id === activeReviewEvaluation.patient_id &&
+        review.trial_id === activeTrialId &&
+        review.review_status !== "Resolved"
+          ? {
+              ...review,
+              review_status: "Resolved",
+            }
+          : review,
+      ),
+    );
+
     console.log("reject review", {
       evaluationId: activeReviewEvaluation.id,
-      note: reviewNote,
+      note,
     });
 
     setActiveReviewEvaluationId(null);
     setReviewNote("");
-  }, [activeReviewEvaluation, reviewNote]);
+  }, [activeReviewEvaluation, reviewNote, activeTrialId]);
 
   return {
     isLoading,
@@ -374,19 +458,16 @@ export function useClinicalTrialDashboard() {
     isChangingTrial,
     isPatientModalOpen,
     modalPatients,
-
     activeReviewEvaluation,
     activeReviewPatient,
     reviewNote,
     setReviewNote,
-
     setSelectedEvaluationId,
     handleOpenPatientModal,
     handleChangeTrial,
     handleReplayWorkflow,
     handleClosePatientModal,
     handleStartEvaluationFromModal,
-
     handleOpenReview,
     handleCloseReview,
     handleApproveReview,

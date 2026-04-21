@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import type { Evaluation, Patient, ReviewTask } from "@/lib/api";
 import { statusClass } from "./dashboardUtils";
 
@@ -10,6 +13,72 @@ type TrialWorklistProps = {
   onReviewCase: (evaluationId: string) => void;
 };
 
+type WorklistMenuProps = {
+  evaluationId: string;
+  onRemove: (evaluationId: string) => void;
+};
+
+function WorklistMenu({ evaluationId, onRemove }: WorklistMenuProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (!menuRef.current) return;
+      if (!menuRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, []);
+
+  return (
+    <div
+      ref={menuRef}
+      className="queue-menu"
+      onClick={(event) => event.stopPropagation()}
+    >
+      <button
+        type="button"
+        className="queue-menu-trigger"
+        aria-label="Open worklist menu"
+        aria-expanded={isOpen}
+        onClick={() => setIsOpen((prev) => !prev)}
+      >
+        …
+      </button>
+
+      {isOpen ? (
+        <div className="queue-menu-popover">
+          <button
+            type="button"
+            className="queue-menu-item queue-menu-item-danger"
+            onClick={() => {
+              onRemove(evaluationId);
+              setIsOpen(false);
+            }}
+          >
+            Remove from Worklist
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export default function TrialWorklist({
   evaluations,
   patients,
@@ -18,6 +87,10 @@ export default function TrialWorklist({
   onSelectEvaluation,
   onReviewCase,
 }: TrialWorklistProps) {
+  function handleRemoveFromWorklist(evaluationId: string) {
+    console.log("remove from worklist", { evaluationId });
+  }
+
   return (
     <section className="card">
       <div className="section-header">
@@ -25,8 +98,8 @@ export default function TrialWorklist({
           <span className="section-label">B. Trial Worklist</span>
           <h2>Queued evaluations for the active trial</h2>
           <p>
-            Select a card to update the case summary, recommendation, workflow
-            activity, audit trail, and supporting context below.
+            Select a case to inspect details below, or use the action button to
+            review flagged evaluations.
           </p>
         </div>
       </div>
@@ -43,7 +116,7 @@ export default function TrialWorklist({
         </div>
       ) : (
         <div className="queue-grid">
-          {evaluations.map((evaluation, index) => {
+          {evaluations.map((evaluation) => {
             const patient = patients.find(
               (item) => item.id === evaluation.patient_id,
             );
@@ -72,43 +145,41 @@ export default function TrialWorklist({
                 }}
               >
                 <div className="queue-top-row">
-                  <div className="eyebrow">
-                    Rank #{index + 1} •{" "}
-                    {patient?.display_name || evaluation.patient_id}
+                  <div className="queue-top-meta">
+                    <div className="queue-patient-id">
+                      {evaluation.patient_id}
+                    </div>
+                    <div className="eyebrow queue-match-inline">
+                      Match score: {evaluation.match_score}%
+                    </div>
                   </div>
 
-                  <span className={statusClass(evaluation.recommendation)}>
-                    {evaluation.recommendation}
-                  </span>
+                  <div className="queue-top-actions">
+                    <span className={statusClass(evaluation.recommendation)}>
+                      {evaluation.recommendation}
+                    </span>
+
+                    <WorklistMenu
+                      evaluationId={evaluation.id}
+                      onRemove={handleRemoveFromWorklist}
+                    />
+                  </div>
                 </div>
 
                 <h3>{patient?.diagnosis?.[0] || "Diagnosis unavailable"}</h3>
 
                 <p className="queue-note">{evaluation.explanation}</p>
 
-                <div className="queue-footer">
-                  <div>
-                    <div className="eyebrow">Match Score</div>
-                    <strong className="queue-score">
-                      {evaluation.match_score}%
-                    </strong>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    {isSelected && <span className="badge info">Selected</span>}
-
-                    {requiresReview ? (
-                      <span className="badge review">Review Needed</span>
-                    ) : (
-                      <span className="badge match">Ready</span>
-                    )}
-                  </div>
-
+                <div className="queue-cta-row">
                   <button
-                    className="text-btn"
                     type="button"
+                    className={`queue-cta-btn ${
+                      requiresReview
+                        ? "queue-cta-review"
+                        : "queue-cta-secondary"
+                    }`}
                     onClick={(event) => {
-                      event.stopPropagation(); // 🔥 critical
+                      event.stopPropagation();
 
                       if (requiresReview) {
                         onReviewCase(evaluation.id);
@@ -117,7 +188,7 @@ export default function TrialWorklist({
                       }
                     }}
                   >
-                    {requiresReview ? "Review Case" : "Show Evaluation Process"}
+                    {requiresReview ? "Review Case →" : "View Evaluation →"}
                   </button>
                 </div>
               </article>
