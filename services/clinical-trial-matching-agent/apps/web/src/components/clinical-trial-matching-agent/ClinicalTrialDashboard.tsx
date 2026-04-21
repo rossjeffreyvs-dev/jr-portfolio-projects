@@ -32,8 +32,9 @@ type ClinicalTrialDashboardProps = {
 };
 
 const FIRST_SCROLL_DELAY_MS = 180;
-const PANEL_PAUSE_MS = 700;
+const PANEL_PAUSE_MS = 1300;
 const SECOND_SCROLL_DELAY_MS = 120;
+const START_BANNER_DURATION_MS = 4200;
 
 export default function ClinicalTrialDashboard({
   activeTrial,
@@ -55,6 +56,9 @@ export default function ClinicalTrialDashboard({
 }: ClinicalTrialDashboardProps) {
   const [workspaceTab, setWorkspaceTab] =
     useState<WorkspaceTab>("active-trial");
+  const [evaluationStartBanner, setEvaluationStartBanner] = useState<
+    string | null
+  >(null);
 
   const evaluationSectionRef = useRef<HTMLElement | null>(null);
   const workflowSectionRef = useRef<HTMLElement | null>(null);
@@ -68,6 +72,8 @@ export default function ClinicalTrialDashboard({
     );
   }, [patients, selectedEvaluation]);
 
+  const resolvedSelectedPatient = selectedPatient || selectedWorklistPatient;
+
   function handleOpenEvaluation(evaluationId: string) {
     onSelectEvaluation(evaluationId);
     setWorkspaceTab("patient-evaluation");
@@ -76,15 +82,31 @@ export default function ClinicalTrialDashboard({
   useEffect(() => {
     if (!startedEvaluationId) {
       lastStartedEvaluationRef.current = null;
+      setEvaluationStartBanner(null);
       return;
     }
 
-    if (lastStartedEvaluationRef.current === startedEvaluationId) {
+    if (
+      !selectedEvaluation ||
+      selectedEvaluation.id !== startedEvaluationId ||
+      lastStartedEvaluationRef.current === startedEvaluationId
+    ) {
       return;
     }
 
     lastStartedEvaluationRef.current = startedEvaluationId;
     setWorkspaceTab("patient-evaluation");
+
+    const patientLabel =
+      resolvedSelectedPatient?.display_name ||
+      resolvedSelectedPatient?.id ||
+      selectedEvaluation.patient_id;
+
+    const trialLabel = activeTrial?.title || "the selected trial";
+
+    setEvaluationStartBanner(
+      `Patient ${patientLabel} selected. Running eligibility evaluation for ${trialLabel}…`,
+    );
 
     let pauseTimer: number | undefined;
     let secondScrollTimer: number | undefined;
@@ -105,12 +127,22 @@ export default function ClinicalTrialDashboard({
       }, PANEL_PAUSE_MS);
     }, FIRST_SCROLL_DELAY_MS);
 
+    const bannerTimer = window.setTimeout(() => {
+      setEvaluationStartBanner(null);
+    }, START_BANNER_DURATION_MS);
+
     return () => {
       window.clearTimeout(firstScrollTimer);
       if (pauseTimer) window.clearTimeout(pauseTimer);
       if (secondScrollTimer) window.clearTimeout(secondScrollTimer);
+      window.clearTimeout(bannerTimer);
     };
-  }, [startedEvaluationId]);
+  }, [
+    activeTrial,
+    resolvedSelectedPatient,
+    selectedEvaluation,
+    startedEvaluationId,
+  ]);
 
   return (
     <>
@@ -200,6 +232,42 @@ export default function ClinicalTrialDashboard({
         </>
       ) : (
         <>
+          {evaluationStartBanner ? (
+            <div
+              className="cardish"
+              style={{
+                marginTop: 28,
+                padding: "14px 18px",
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                background: "#edf3ff",
+                borderColor: "#c8d7fb",
+              }}
+            >
+              <div
+                aria-hidden="true"
+                style={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: 999,
+                  background: "#3158c9",
+                  flexShrink: 0,
+                }}
+              />
+              <div
+                style={{
+                  color: "var(--ink)",
+                  fontSize: 14,
+                  fontWeight: 700,
+                  lineHeight: 1.45,
+                }}
+              >
+                {evaluationStartBanner}
+              </div>
+            </div>
+          ) : null}
+
           <section
             ref={evaluationSectionRef}
             className="card"
@@ -207,7 +275,7 @@ export default function ClinicalTrialDashboard({
           >
             <PatientEvaluationRecommendationCard
               activeTrial={activeTrial}
-              selectedPatient={selectedPatient || selectedWorklistPatient}
+              selectedPatient={resolvedSelectedPatient}
               selectedEvaluation={selectedEvaluation}
               onReviewCase={onReviewCase}
             />
