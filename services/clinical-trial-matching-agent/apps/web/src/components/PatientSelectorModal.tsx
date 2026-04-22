@@ -438,9 +438,9 @@ export default function PatientSelectorModal({
                 color: "#475569",
               }}
             >
-              {/* {hasRunSemanticSearch
-                ? "Suggested ranked candidates for this trial."
-                : "Showing seeded patients mapped to the active trial. - "} */}
+              {hasRunSemanticSearch
+                ? "Scroll down to view and select suggested ranked candidates for this trial."
+                : "Showing seeded patients mapped to the active trial. - "}
             </div>
 
             <div
