@@ -80,6 +80,20 @@ function getRecommendationBadgeClass(
   return "badge info";
 }
 
+function firstNonEmpty(
+  items: Array<string | undefined | null>,
+  fallback: string,
+) {
+  for (const item of items) {
+    if (item && item.trim()) return item;
+  }
+  return fallback;
+}
+
+function joinList(items: string[] | undefined, fallback: string) {
+  return items && items.length > 0 ? items.join("; ") : fallback;
+}
+
 const FINAL_REVEAL_DELAY_MS = 140;
 const PULSE_DURATION_MS = 1800;
 
@@ -194,12 +208,71 @@ export default function PatientEvaluationRecommendationCard({
         "None",
       );
 
-  const rationale = shouldShowLiveState
-    ? "Eligibility evaluation in progress. Building recommendation from patient context, biomarkers, labs, prior therapies, and protocol criteria."
-    : getEvaluationField(
-        selectedEvaluation,
-        ["summary", "reasoning_summary", "notes", "explanation"],
-        "Supporting evidence indicates a manual review step is still required before final coordinator action.",
+  const whyThisDecision = shouldShowLiveState
+    ? "Building the recommendation from patient context, biomarkers, labs, prior therapies, and protocol criteria."
+    : firstNonEmpty(
+        [
+          selectedEvaluation.explanation,
+          getEvaluationField(
+            selectedEvaluation,
+            ["summary", "reasoning_summary", "notes"],
+            "",
+          ),
+        ],
+        "Recommendation logic is being assembled from the available patient and protocol evidence.",
+      );
+
+  const blockers =
+    (selectedEvaluation as unknown as { blockers?: string[] }).blockers || [];
+  const reviewReasons =
+    (selectedEvaluation as unknown as { review_reason?: string[] })
+      .review_reason || [];
+  const missingItems =
+    (selectedEvaluation as unknown as { missing_information?: string[] })
+      .missing_information || [];
+
+  const primaryRiskOrUncertainty = shouldShowLiveState
+    ? "Checking for exclusion criteria, review triggers, and missing source documentation."
+    : firstNonEmpty(
+        [
+          blockers[0],
+          reviewReasons[0],
+          missingItems[0],
+          selectedEvaluation.review_required
+            ? "Coordinator review is required before final action."
+            : undefined,
+        ],
+        recommendation === "Likely Match"
+          ? "No major risk factor is currently driving this recommendation."
+          : "No additional uncertainty was identified beyond the available supporting evidence.",
+      );
+
+  const whatWouldChangeThisDecision = shouldShowLiveState
+    ? "Final recommendation will update after workflow review, evidence scoring, and protocol checks complete."
+    : firstNonEmpty(
+        [
+          missingItems.length > 0
+            ? `Confirming ${joinList(
+                missingItems,
+                "required source documentation",
+              )} could change the recommendation.`
+            : undefined,
+          reviewReasons.length > 0
+            ? `Resolving ${joinList(
+                reviewReasons,
+                "the flagged review items",
+              )} could change the recommendation.`
+            : undefined,
+          blockers.length > 0
+            ? `This decision would likely change only if ${joinList(
+                blockers,
+                "the current blocker",
+              )} is resolved.`
+            : undefined,
+        ],
+        recommendation === "Likely Match"
+          ? "A conflicting exclusion, missing documentation, or new clinical concern would be most likely to change this decision."
+          : "Additional clarifying evidence or protocol review would be most likely to change this decision.",
       );
 
   const shouldShowReviewCase =
@@ -392,7 +465,93 @@ export default function PatientEvaluationRecommendationCard({
         style={{ marginTop: 18, ...finalContentStyle }}
       >
         <h3 style={{ marginTop: 0 }}>Recommendation Summary</h3>
-        <p style={{ marginTop: 8, marginBottom: 0 }}>{rationale}</p>
+
+        {shouldShowLiveState ? (
+          <div className="workflow-list" style={{ marginTop: 12 }}>
+            <div className="workflow-item">
+              <div className="workflow-dot" />
+              <div>
+                <strong className="workflow-title">Why this decision</strong>
+                <div className="workflow-detail">{whyThisDecision}</div>
+              </div>
+            </div>
+
+            <div className="workflow-item">
+              <div className="workflow-dot" />
+              <div>
+                <strong className="workflow-title">
+                  Primary risk or uncertainty
+                </strong>
+                <div className="workflow-detail">
+                  {primaryRiskOrUncertainty}
+                </div>
+              </div>
+            </div>
+
+            <div
+              className="workflow-item"
+              style={{ borderBottom: "none", paddingBottom: 0 }}
+            >
+              <div className="workflow-dot" />
+              <div>
+                <strong className="workflow-title">
+                  What would change this decision
+                </strong>
+                <div className="workflow-detail">
+                  {whatWouldChangeThisDecision}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : isFinalContentVisible ? (
+          <div className="workflow-list" style={{ marginTop: 12 }}>
+            <div className="workflow-item">
+              <div className="workflow-dot" />
+              <div>
+                <strong className="workflow-title">Why this decision</strong>
+                <div className="workflow-detail">{whyThisDecision}</div>
+              </div>
+            </div>
+
+            <div className="workflow-item">
+              <div className="workflow-dot" />
+              <div>
+                <strong className="workflow-title">
+                  Primary risk or uncertainty
+                </strong>
+                <div className="workflow-detail">
+                  {primaryRiskOrUncertainty}
+                </div>
+              </div>
+            </div>
+
+            <div
+              className="workflow-item"
+              style={{ borderBottom: "none", paddingBottom: 0 }}
+            >
+              <div className="workflow-dot" />
+              <div>
+                <strong className="workflow-title">
+                  What would change this decision
+                </strong>
+                <div className="workflow-detail">
+                  {whatWouldChangeThisDecision}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <p
+            style={{
+              marginTop: 12,
+              marginBottom: 0,
+              color: "var(--muted)",
+              fontWeight: 600,
+            }}
+          >
+            Building structured recommendation summary…
+          </p>
+        )}
       </section>
     </>
   );
