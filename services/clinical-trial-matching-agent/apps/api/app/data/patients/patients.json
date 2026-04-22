@@ -67,6 +67,63 @@
     "seeded_score": 42,
     "seeded_reason": "ECOG too high and lab values below threshold."
   },
+  {
+    "id": "patient_005",
+    "display_name": "P-005",
+    "age": 61,
+    "sex": "Female",
+    "diagnosis": ["Metastatic NSCLC"],
+    "biomarkers": ["KRAS G12C"],
+    "ecog": "0",
+    "prior_therapies": ["Docetaxel"],
+    "labs": { "hemoglobin": 12.1, "creatinine_clearance": 78 },
+    "comorbidities": [],
+    "notes": [
+      "No prior PD-1 or PD-L1 inhibitor.",
+      "Recent brain MRI documented."
+    ],
+    "eligible_trial_ids": ["trial_nsclc_001"],
+    "seeded_outcome": "Likely Match",
+    "seeded_score": 90,
+    "seeded_reason": "Excellent performance status and no disqualifying prior immunotherapy."
+  },
+  {
+    "id": "patient_006",
+    "display_name": "P-006",
+    "age": 66,
+    "sex": "Male",
+    "diagnosis": ["Metastatic NSCLC"],
+    "biomarkers": ["ROS1-negative"],
+    "ecog": "1",
+    "prior_therapies": ["Carboplatin", "Paclitaxel"],
+    "labs": { "hemoglobin": 10.8, "creatinine_clearance": 64 },
+    "comorbidities": ["Rheumatoid arthritis"],
+    "notes": [
+      "Autoimmune history treated intermittently with steroids.",
+      "Imaging completed within 21 days."
+    ],
+    "eligible_trial_ids": ["trial_nsclc_001"],
+    "seeded_outcome": "Requires Review",
+    "seeded_score": 67,
+    "seeded_reason": "Autoimmune history may require manual assessment despite otherwise acceptable profile."
+  },
+  {
+    "id": "patient_007",
+    "display_name": "P-007",
+    "age": 74,
+    "sex": "Female",
+    "diagnosis": ["Metastatic NSCLC"],
+    "biomarkers": ["PD-L1 intermediate"],
+    "ecog": "2",
+    "prior_therapies": ["Atezolizumab"],
+    "labs": { "hemoglobin": 10.1, "creatinine_clearance": 58 },
+    "comorbidities": ["Chronic kidney disease"],
+    "notes": ["Prior checkpoint inhibitor exposure.", "Ongoing fatigue."],
+    "eligible_trial_ids": ["trial_nsclc_001"],
+    "seeded_outcome": "Not Eligible",
+    "seeded_score": 46,
+    "seeded_reason": "Prior PD-L1 inhibitor therapy conflicts with key exclusion criteria."
+  },
 
   {
     "id": "patient_101",
@@ -119,6 +176,86 @@
     "seeded_score": 86,
     "seeded_reason": "Fits hormone-positive trial inclusion criteria."
   },
+  {
+    "id": "patient_104",
+    "display_name": "P-104",
+    "age": 55,
+    "sex": "Female",
+    "diagnosis": ["Metastatic Breast Cancer"],
+    "biomarkers": ["HER2-low", "ER-positive"],
+    "ecog": "0",
+    "prior_therapies": ["Capecitabine", "Letrozole"],
+    "labs": { "hemoglobin": 12.6, "creatinine_clearance": 82 },
+    "comorbidities": [],
+    "notes": [
+      "Cardiac history unremarkable.",
+      "Strong metastatic HER2-low alignment."
+    ],
+    "eligible_trial_ids": ["trial_breast_001"],
+    "seeded_outcome": "Likely Match",
+    "seeded_score": 89,
+    "seeded_reason": "Direct fit for HER2-low metastatic disease with no clear exclusion concerns."
+  },
+  {
+    "id": "patient_105",
+    "display_name": "P-105",
+    "age": 63,
+    "sex": "Female",
+    "diagnosis": ["Metastatic Breast Cancer"],
+    "biomarkers": ["HER2-low", "PIK3CA mutation"],
+    "ecog": "1",
+    "prior_therapies": ["Fulvestrant", "Abemaciclib"],
+    "labs": { "hemoglobin": 11.2, "creatinine_clearance": 68 },
+    "comorbidities": ["Atrial fibrillation"],
+    "notes": [
+      "Recent cardiology follow-up.",
+      "Requires review of cardiac stability."
+    ],
+    "eligible_trial_ids": ["trial_breast_001"],
+    "seeded_outcome": "Requires Review",
+    "seeded_score": 69,
+    "seeded_reason": "Disease characteristics fit, but cardiac comorbidity may require manual review."
+  },
+  {
+    "id": "patient_106",
+    "display_name": "P-106",
+    "age": 58,
+    "sex": "Female",
+    "diagnosis": ["Metastatic Breast Cancer"],
+    "biomarkers": ["HER2 0", "ER-negative"],
+    "ecog": "1",
+    "prior_therapies": ["Sacituzumab govitecan"],
+    "labs": { "hemoglobin": 10.9, "creatinine_clearance": 74 },
+    "comorbidities": [],
+    "notes": [
+      "Pathology suggests HER2-zero disease.",
+      "Otherwise clinically stable."
+    ],
+    "eligible_trial_ids": ["trial_breast_001"],
+    "seeded_outcome": "Not Eligible",
+    "seeded_score": 44,
+    "seeded_reason": "Biomarker profile does not align with HER2-low disease requirement."
+  },
+  {
+    "id": "patient_107",
+    "display_name": "P-107",
+    "age": 49,
+    "sex": "Female",
+    "diagnosis": ["Metastatic Breast Cancer"],
+    "biomarkers": ["HER2-low", "PR-negative"],
+    "ecog": "0",
+    "prior_therapies": ["Paclitaxel", "Trastuzumab deruxtecan"],
+    "labs": { "hemoglobin": 12.0, "creatinine_clearance": 79 },
+    "comorbidities": ["Borderline left ventricular dysfunction"],
+    "notes": [
+      "Recent echo near lower acceptable limit.",
+      "Potential benefit but cardiac review advised."
+    ],
+    "eligible_trial_ids": ["trial_breast_001"],
+    "seeded_outcome": "Requires Review",
+    "seeded_score": 72,
+    "seeded_reason": "HER2-low profile is appropriate, but borderline cardiac function needs review."
+  },
 
   {
     "id": "patient_201",
@@ -170,5 +307,85 @@
     "seeded_outcome": "Not Eligible",
     "seeded_score": 39,
     "seeded_reason": "Poor ECOG and low labs exclude eligibility."
+  },
+  {
+    "id": "patient_204",
+    "display_name": "P-204",
+    "age": 64,
+    "sex": "Female",
+    "diagnosis": ["Diffuse Large B-Cell Lymphoma"],
+    "biomarkers": ["CD19-positive"],
+    "ecog": "1",
+    "prior_therapies": ["R-CHOP", "Polatuzumab"],
+    "labs": { "hemoglobin": 11.4, "platelets": 89000 },
+    "comorbidities": [],
+    "notes": [
+      "Relapsed after standard therapy.",
+      "No active infection documented."
+    ],
+    "eligible_trial_ids": ["trial_heme_001"],
+    "seeded_outcome": "Likely Match",
+    "seeded_score": 85,
+    "seeded_reason": "Relapsed disease profile and functional status align well with cell therapy study."
+  },
+  {
+    "id": "patient_205",
+    "display_name": "P-205",
+    "age": 69,
+    "sex": "Male",
+    "diagnosis": ["Mantle Cell Lymphoma"],
+    "biomarkers": ["TP53 mutation"],
+    "ecog": "1",
+    "prior_therapies": ["Bendamustine", "Rituximab", "BTK inhibitor"],
+    "labs": { "hemoglobin": 10.5, "platelets": 71000 },
+    "comorbidities": ["Recent pneumonia"],
+    "notes": [
+      "Recently treated pulmonary infection.",
+      "Needs infectious disease clearance."
+    ],
+    "eligible_trial_ids": ["trial_heme_001"],
+    "seeded_outcome": "Requires Review",
+    "seeded_score": 66,
+    "seeded_reason": "Disease status fits, but recent infection history needs manual clearance."
+  },
+  {
+    "id": "patient_206",
+    "display_name": "P-206",
+    "age": 57,
+    "sex": "Female",
+    "diagnosis": ["Relapsed AML"],
+    "biomarkers": ["NPM1 mutation"],
+    "ecog": "0",
+    "prior_therapies": ["Azacitidine", "Venetoclax"],
+    "labs": { "hemoglobin": 11.6, "platelets": 102000 },
+    "comorbidities": [],
+    "notes": [
+      "Good performance status.",
+      "Meets relapsed disease requirement."
+    ],
+    "eligible_trial_ids": ["trial_heme_001"],
+    "seeded_outcome": "Likely Match",
+    "seeded_score": 90,
+    "seeded_reason": "Strong relapsed-disease fit with favorable functional status and acceptable labs."
+  },
+  {
+    "id": "patient_207",
+    "display_name": "P-207",
+    "age": 75,
+    "sex": "Male",
+    "diagnosis": ["Relapsed Hodgkin Lymphoma"],
+    "biomarkers": ["CD30-positive"],
+    "ecog": "2",
+    "prior_therapies": ["Brentuximab vedotin", "Nivolumab"],
+    "labs": { "hemoglobin": 9.4, "platelets": 58000 },
+    "comorbidities": ["Active cellulitis"],
+    "notes": [
+      "Currently receiving antibiotics.",
+      "Functional decline over past month."
+    ],
+    "eligible_trial_ids": ["trial_heme_001"],
+    "seeded_outcome": "Not Eligible",
+    "seeded_score": 41,
+    "seeded_reason": "Active uncontrolled infection and borderline performance status are not compatible with study entry."
   }
 ]
