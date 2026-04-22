@@ -10,13 +10,38 @@ type TrialWorklistProps = {
   reviewCards: ReviewTask[];
   selectedEvaluationId?: string;
   onSelectEvaluation: (evaluationId: string) => void;
-  onRemoveEvaluation: (evaluationId: string) => void;
 };
 
 type WorklistMenuProps = {
   evaluationId: string;
   onRemove: (evaluationId: string) => void;
 };
+
+function normalizeToken(value?: string | null) {
+  return (value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_")
+    .replace(/-/g, "_");
+}
+
+function getRecommendationLabel(
+  evaluation: Evaluation,
+  requiresReview: boolean,
+): string {
+  if (requiresReview) {
+    return "Requires Review";
+  }
+
+  return evaluation.recommendation || "Evaluation Ready";
+}
+
+function getViewEvaluationButtonClassName(requiresReview: boolean) {
+  return [
+    "queue-cta-btn",
+    requiresReview ? "queue-cta-review" : "queue-cta-secondary",
+  ].join(" ");
+}
 
 function WorklistMenu({ evaluationId, onRemove }: WorklistMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -46,17 +71,16 @@ function WorklistMenu({ evaluationId, onRemove }: WorklistMenuProps) {
   }, []);
 
   return (
-    <div
-      ref={menuRef}
-      className="queue-menu"
-      onClick={(event) => event.stopPropagation()}
-    >
+    <div className="queue-menu" ref={menuRef}>
       <button
         type="button"
         className="queue-menu-trigger"
-        aria-label="Open worklist menu"
+        aria-label="Open worklist actions"
         aria-expanded={isOpen}
-        onClick={() => setIsOpen((prev) => !prev)}
+        onClick={(event) => {
+          event.stopPropagation();
+          setIsOpen((prev) => !prev);
+        }}
       >
         …
       </button>
@@ -66,7 +90,8 @@ function WorklistMenu({ evaluationId, onRemove }: WorklistMenuProps) {
           <button
             type="button"
             className="queue-menu-item queue-menu-item-danger"
-            onClick={() => {
+            onClick={(event) => {
+              event.stopPropagation();
               onRemove(evaluationId);
               setIsOpen(false);
             }}
@@ -85,26 +110,18 @@ export default function TrialWorklist({
   reviewCards,
   selectedEvaluationId,
   onSelectEvaluation,
-  onRemoveEvaluation,
 }: TrialWorklistProps) {
   function handleRemoveFromWorklist(evaluationId: string) {
-    onRemoveEvaluation(evaluationId);
+    console.log("remove from worklist", { evaluationId });
   }
 
   if (evaluations.length === 0) {
     return (
-      <div className="cardish" style={{ textAlign: "center" }}>
-        <p
-          style={{
-            margin: 0,
-            fontSize: 16,
-            fontWeight: 700,
-            color: "var(--ink)",
-          }}
-        >
+      <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-center">
+        <p className="text-base font-semibold text-slate-900">
           No evaluations yet for this trial
         </p>
-        <p style={{ marginTop: 8 }}>
+        <p className="mt-2 text-sm text-slate-600">
           Use Find Patients for Trial to open the candidate list and start a new
           evaluation.
         </p>
@@ -121,11 +138,41 @@ export default function TrialWorklist({
 
         const isSelected = evaluation.id === selectedEvaluationId;
 
-        const hasReviewTask = reviewCards.some(
-          (review) => review.patient_id === evaluation.patient_id,
-        );
+        const hasReviewTask = reviewCards.some((review) => {
+          const reviewStatus = normalizeToken(
+            (review as { status?: string }).status,
+          );
 
-        const requiresReview = evaluation.review_required || hasReviewTask;
+          return (
+            review.patient_id === evaluation.patient_id &&
+            ![
+              "approved",
+              "resolved",
+              "closed",
+              "completed",
+              "dismissed",
+            ].includes(reviewStatus)
+          );
+        });
+
+        const recommendationToken = normalizeToken(evaluation.recommendation);
+
+        const requiresReview =
+          Boolean(evaluation.review_required) ||
+          hasReviewTask ||
+          [
+            "requires_review",
+            "review_required",
+            "needs_review",
+            "manual_review",
+            "indeterminate",
+            "borderline",
+          ].includes(recommendationToken);
+
+        const recommendationLabel = getRecommendationLabel(
+          evaluation,
+          requiresReview,
+        );
 
         return (
           <article
@@ -138,29 +185,28 @@ export default function TrialWorklist({
             tabIndex={0}
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
                 onSelectEvaluation(evaluation.id);
               }
             }}
           >
             <div className="queue-top-row">
               <div className="queue-top-meta">
-                <div className="queue-patient-id">{evaluation.patient_id}</div>
-                <div className="eyebrow queue-match-inline">
-                  Match score: {evaluation.match_score}%
-                </div>
+                <p className="queue-patient-id">{evaluation.patient_id}</p>
+                <p className="queue-match-inline">
+                  MATCH SCORE: {evaluation.match_score}%
+                </p>
               </div>
 
-              <div className="queue-top-actions">
-                <span
-                  className={statusClass(
-                    requiresReview
-                      ? "Requires Review"
-                      : evaluation.recommendation,
-                  )}
-                >
-                  {requiresReview
-                    ? "Requires Review"
-                    : evaluation.recommendation}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: "12px",
+                }}
+              >
+                <span className={statusClass(recommendationLabel)}>
+                  {recommendationLabel}
                 </span>
 
                 <WorklistMenu
@@ -170,22 +216,49 @@ export default function TrialWorklist({
               </div>
             </div>
 
-            <h3>{patient?.diagnosis?.[0] || "Diagnosis unavailable"}</h3>
+            <div style={{ marginTop: 18 }}>
+              <h3
+                style={{
+                  margin: 0,
+                  fontSize: 28,
+                  lineHeight: 1.15,
+                  fontWeight: 800,
+                  color: "var(--ink)",
+                }}
+              >
+                {patient?.diagnosis?.[0] || "Diagnosis unavailable"}
+              </h3>
 
-            <p className="queue-note">{evaluation.explanation}</p>
+              <p
+                style={{
+                  marginTop: 18,
+                  marginBottom: 0,
+                  fontSize: 14,
+                  lineHeight: 1.9,
+                  color: "var(--muted)",
+                }}
+              >
+                {evaluation.explanation}
+              </p>
+            </div>
 
-            <div className="queue-cta-row">
+            <div
+              style={{
+                marginTop: "auto",
+                paddingTop: 18,
+                display: "flex",
+                justifyContent: "flex-end",
+              }}
+            >
               <button
                 type="button"
-                className={`queue-cta-btn ${
-                  isSelected ? "queue-cta-review" : "queue-cta-secondary"
-                }`}
+                className={getViewEvaluationButtonClassName(requiresReview)}
                 onClick={(event) => {
                   event.stopPropagation();
                   onSelectEvaluation(evaluation.id);
                 }}
               >
-                View Evaluation →
+                View Evaluation <span aria-hidden="true">→</span>
               </button>
             </div>
           </article>

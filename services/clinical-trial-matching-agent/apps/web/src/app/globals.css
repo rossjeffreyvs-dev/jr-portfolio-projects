@@ -380,6 +380,51 @@ th {
   background: #fcfdff;
 }
 
+.queue-card-menu {
+  position: relative;
+}
+
+.queue-card-menu-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 20;
+  min-width: 190px;
+  border: 1px solid #d9e0ef;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+  padding: 8px;
+}
+
+.queue-card-menu-item {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 12px;
+  color: #22314f;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.queue-card-menu-item:hover {
+  background: #f8fafc;
+}
+
+.queue-card-cta-review {
+  background: #d97706;
+  color: #ffffff;
+  border-color: #d97706;
+}
+
+.queue-card-cta-review:hover {
+  background: #b45309;
+  border-color: #b45309;
+}
+
 .queue-card-button {
   cursor: pointer;
 }
