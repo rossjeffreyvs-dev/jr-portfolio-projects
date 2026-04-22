@@ -1,15 +1,15 @@
 from fastapi import APIRouter, HTTPException, Query
 
-from app.models.schemas import (
+from ...models.schemas import (
     SemanticQuerySuggestionResponse,
     SemanticSearchRequest,
     SemanticSearchResponse,
 )
-from app.services.patient_semantic_search import (
+from ...services.patient_semantic_search import (
     get_semantic_query_suggestions,
     rank_patients_for_query,
 )
-from app.services.store import PATIENTS, TRIALS
+from ...services.store import PATIENTS, TRIALS
 
 router = APIRouter(prefix="/patients", tags=["patients"])
 

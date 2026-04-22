@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict, List, Optional
 
-from app.models.schemas import (
+from ..models.schemas import (
     CriterionResult,
     Evaluation,
     Patient,
@@ -10,7 +10,7 @@ from app.models.schemas import (
     StartEvaluationRequest,
     Trial,
 )
-from app.services.store import (
+from .store import (
     EVALUATIONS,
     PATIENTS,
     REVIEWS,

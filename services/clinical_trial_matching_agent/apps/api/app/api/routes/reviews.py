@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 
-from app.models.schemas import ReviewDecisionRequest
-from app.services.store import EVALUATIONS, REVIEWS
+from ...models.schemas import ReviewDecisionRequest
+from ...services.store import EVALUATIONS, REVIEWS
 
 router = APIRouter(prefix="/reviews", tags=["reviews"])
 

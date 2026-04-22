@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import evaluations, patients, reviews, trials, workflow
-from app.services.store import seed_initial_evaluations
+from .api.routes import evaluations, patients, reviews, trials, workflow
+from .services.store import seed_initial_evaluations
 
 app = FastAPI(title="Clinical Trial Matching Agent API", version="0.1.0")
 

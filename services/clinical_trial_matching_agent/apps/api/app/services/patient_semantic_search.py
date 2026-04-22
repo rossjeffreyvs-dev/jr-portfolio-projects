@@ -5,7 +5,7 @@ import re
 from collections import defaultdict
 from typing import Dict, Iterable, List
 
-from app.models.schemas import (
+from ..models.schemas import (
     Patient,
     SemanticQuerySuggestion,
     SemanticSearchHighlights,

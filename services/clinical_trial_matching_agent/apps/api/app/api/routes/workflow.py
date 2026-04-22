@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
-from app.services.store import EVALUATIONS
+from ...services.store import EVALUATIONS
 
 router = APIRouter(prefix="/workflow", tags=["workflow"])
 

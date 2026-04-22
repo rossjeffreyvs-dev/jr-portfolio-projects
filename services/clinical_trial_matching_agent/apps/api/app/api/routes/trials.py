@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
-from app.services import store
-from app.services.store import PATIENTS
+from ...services import store
+from ...services.store import PATIENTS
 
 router = APIRouter(prefix="/trials", tags=["trials"])
 

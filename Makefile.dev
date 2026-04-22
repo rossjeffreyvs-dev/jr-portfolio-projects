@@ -25,7 +25,7 @@ SEM_BACKEND_PORT := 5002
 SEM_FRONTEND_PORT := 5174
 SEM_DOCKER_IMAGE := semantic-patient-search-local
 
-TRIAL_DIR := services/clinical-trial-matching-agent
+TRIAL_DIR := services/clinical_trial_matching_agent
 TRIAL_API_DIR := $(TRIAL_DIR)/apps/api
 TRIAL_WEB_DIR := $(TRIAL_DIR)/apps/web
 TRIAL_API_REQUIREMENTS := $(TRIAL_API_DIR)/requirements.txt
@@ -65,6 +65,7 @@ help:
 	@echo "  make -f $(MAKEFILE_NAME) trial-frontend   - run Clinical Trial frontend locally on port $(TRIAL_FRONTEND_PORT)"
 	@echo "  make -f $(MAKEFILE_NAME) trial            - run Clinical Trial backend + frontend together"
 	@echo "  make -f $(MAKEFILE_NAME) trial-smoke      - quick local health checks for Clinical Trial endpoints"
+	@echo "  make -f $(MAKEFILE_NAME) trial-stop       - kill Clinical Trial frontend/backend ports"
 	@echo "  make -f $(MAKEFILE_NAME) check            - verify key packages are installed"
 	@echo "  make -f $(MAKEFILE_NAME) clean            - remove root virtual environment"
 	@echo "  make -f $(MAKEFILE_NAME) fx-clean         - remove FX frontend node_modules/dist"
@@ -239,6 +240,10 @@ trial-smoke:
 	@curl -fsS http://127.0.0.1:$(TRIAL_FRONTEND_PORT)$(TRIAL_FRONTEND_ROUTE) > /dev/null || (echo "Frontend check failed" && exit 1)
 	@echo "Clinical Trial local smoke check passed"
 
+trial-stop:
+	@kill -9 $$(lsof -ti :$(TRIAL_BACKEND_PORT)) 2>/dev/null || true
+	@kill -9 $$(lsof -ti :$(TRIAL_FRONTEND_PORT)) 2>/dev/null || true
+
 check: $(VENV)/bin/activate
 	@echo "Python:"
 	@$(PY) --version
@@ -264,4 +269,4 @@ trial-clean:
 .PHONY: help setup install gateway resume \
 	fx-setup fx-install fx-backend fx-frontend fx fx-run fx-build fx-docker-run fx-smoke fx-clean \
 	semantic-setup semantic-install semantic-backend semantic-frontend semantic semantic-run semantic-build semantic-docker-run semantic-smoke semantic-clean \
-	thermo trial-setup trial-install trial-backend trial-frontend trial-wait trial trial-smoke trial-clean check clean
+	thermo trial-setup trial-install trial-backend trial-frontend trial-wait trial trial-smoke trial-stop trial-clean check clean

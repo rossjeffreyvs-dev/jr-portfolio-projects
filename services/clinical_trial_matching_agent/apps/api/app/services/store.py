@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List
 
-from app.models.schemas import Evaluation, Patient, ReviewTask, Trial, WorkflowEvent
+from ..models.schemas import Evaluation, Patient, ReviewTask, Trial, WorkflowEvent
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 DATA_DIR = BASE_DIR / "data"
@@ -239,7 +239,7 @@ def list_evaluations(*, trial_id: str | None = None) -> List[Evaluation]:
 
 
 def seed_initial_evaluations() -> None:
-    from app.services.evaluation_service import create_evaluation_for_patient
+    from .evaluation_service import create_evaluation_for_patient
 
     if EVALUATIONS:
       return

@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, Query, status
 
-from app.models.schemas import StartEvaluationRequest
-from app.services.evaluation_service import start_evaluation
-from app.services.store import (
+from ...models.schemas import StartEvaluationRequest
+from ...services.evaluation_service import start_evaluation
+from ...services.store import (
     EVALUATIONS,
     REVIEWS,
     list_evaluations,
