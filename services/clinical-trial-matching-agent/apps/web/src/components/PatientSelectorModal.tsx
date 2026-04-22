@@ -142,12 +142,7 @@ export default function PatientSelectorModal({
       return;
     }
 
-    setSelectedPatientId((current) => {
-      if (current && patients.some((patient) => patient.id === current)) {
-        return current;
-      }
-      return patients[0].id;
-    });
+    setSelectedPatientId(patients[0].id);
   }, [isOpen, patients]);
 
   const selectedPatient = useMemo(
@@ -183,7 +178,7 @@ export default function PatientSelectorModal({
           boxShadow: "0 24px 64px rgba(15, 23, 42, 0.24)",
           overflow: "hidden",
           display: "grid",
-          gridTemplateColumns: "1.25fr 0.95fr",
+          gridTemplateColumns: "1.42fr 0.88fr",
           position: "relative",
         }}
       >
@@ -212,7 +207,7 @@ export default function PatientSelectorModal({
           style={{
             borderRight: "1px solid #e2e8f0",
             background: "#f8fafc",
-            padding: 28,
+            padding: 14,
             overflow: "hidden",
             display: "flex",
             flexDirection: "column",
@@ -232,7 +227,7 @@ export default function PatientSelectorModal({
               Select Patient
             </div>
 
-            <h2
+            {/* <h2
               style={{
                 marginTop: 10,
                 marginBottom: 0,
@@ -242,7 +237,7 @@ export default function PatientSelectorModal({
               }}
             >
               Ranked patient candidates
-            </h2>
+            </h2> */}
 
             {trialTitle ? (
               <p
@@ -253,14 +248,14 @@ export default function PatientSelectorModal({
                   color: "#475569",
                 }}
               >
-                Review candidate fit for {trialTitle}
+                Review candidate fit for '{trialTitle}'.
               </p>
             ) : null}
           </div>
 
           <div
             style={{
-              marginTop: 18,
+              marginTop: 12,
               border: "1px solid #e2e8f0",
               borderRadius: 24,
               background: "#ffffff",
@@ -283,8 +278,8 @@ export default function PatientSelectorModal({
               placeholder="Describe the type of patient you want to find for this trial."
               style={{
                 width: "100%",
-                minHeight: 72,
-                height: 72,
+                minHeight: 82,
+                height: 82,
                 marginTop: 10,
                 border: "1px solid #dbe3f0",
                 borderRadius: 18,
@@ -297,6 +292,20 @@ export default function PatientSelectorModal({
                 outline: "none",
               }}
             />
+
+            {/* {hasRunSemanticSearch && semanticQuery.trim().length > 0 ? (
+              <div
+                style={{
+                  marginTop: 12,
+                  fontSize: 13,
+                  lineHeight: 1.55,
+                  color: "#64748b",
+                }}
+              >
+                Loaded initial search for this trial. You can edit query, choose
+                a suggested search, or reset to patient list.
+              </div>
+            ) : null} */}
 
             <div
               style={{
@@ -330,7 +339,7 @@ export default function PatientSelectorModal({
                   : "Run Semantic Search"}
               </button>
 
-              <button
+              {/* <button
                 type="button"
                 onClick={onResetPatientSearch}
                 disabled={isSemanticSearchLoading || isLoading}
@@ -350,7 +359,7 @@ export default function PatientSelectorModal({
                 }}
               >
                 Reset to Trial Patient List
-              </button>
+              </button> */}
             </div>
 
             {semanticSearchError ? (
@@ -367,7 +376,7 @@ export default function PatientSelectorModal({
             ) : null}
 
             {semanticSuggestions.length > 0 ? (
-              <div style={{ marginTop: 14 }}>
+              <div style={{ marginTop: 20 }}>
                 <div
                   style={{
                     fontSize: 11,
@@ -398,10 +407,11 @@ export default function PatientSelectorModal({
                         borderRadius: 999,
                         background: "#eff6ff",
                         color: "#1d4ed8",
-                        padding: "8px 12px",
+                        padding: "8px 14px",
                         fontSize: 13,
                         fontWeight: 700,
                         cursor: "pointer",
+                        whiteSpace: "nowrap",
                       }}
                     >
                       {suggestion.label}
@@ -428,9 +438,9 @@ export default function PatientSelectorModal({
                 color: "#475569",
               }}
             >
-              {hasRunSemanticSearch
-                ? "Showing ranked semantic matches for the active trial."
-                : "Showing seeded patients mapped to the active trial."}
+              {/* {hasRunSemanticSearch
+                ? "Suggested ranked candidates for this trial."
+                : "Showing seeded patients mapped to the active trial. - "} */}
             </div>
 
             <div
@@ -439,7 +449,7 @@ export default function PatientSelectorModal({
                 borderRadius: 999,
                 background: "#ffffff",
                 padding: "8px 14px",
-                fontSize: 14,
+                fontSize: 12,
                 fontWeight: 700,
                 color: "#334155",
                 flexShrink: 0,
@@ -451,7 +461,7 @@ export default function PatientSelectorModal({
 
           <div
             style={{
-              marginTop: 12,
+              marginTop: 3,
               flex: 1,
               minHeight: 0,
               overflowY: "auto",
@@ -528,7 +538,7 @@ export default function PatientSelectorModal({
                             }}
                           >
                             {patient.isSemanticResult &&
-                            patient.semanticRank ? (
+                            patient.semanticRank != null ? (
                               <span
                                 style={{
                                   border: "1px solid #e2e8f0",

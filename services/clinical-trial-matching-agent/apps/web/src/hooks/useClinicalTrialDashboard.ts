@@ -77,6 +77,36 @@ function mapPatientsToModalRows(patients: Patient[]): ModalPatient[] {
   }));
 }
 
+function normalizeSemanticResults(
+  results: SemanticSearchResult[],
+): SemanticSearchResult[] {
+  return [...results].sort((left, right) => {
+    const leftRank =
+      typeof left.rank === "number" && Number.isFinite(left.rank)
+        ? left.rank
+        : Number.POSITIVE_INFINITY;
+    const rightRank =
+      typeof right.rank === "number" && Number.isFinite(right.rank)
+        ? right.rank
+        : Number.POSITIVE_INFINITY;
+
+    if (leftRank !== rightRank) {
+      return leftRank - rightRank;
+    }
+
+    const leftScore =
+      typeof left.score === "number" && Number.isFinite(left.score)
+        ? left.score
+        : -1;
+    const rightScore =
+      typeof right.score === "number" && Number.isFinite(right.score)
+        ? right.score
+        : -1;
+
+    return rightScore - leftScore;
+  });
+}
+
 function mapSemanticResultsToModalRows(
   results: SemanticSearchResult[],
 ): ModalPatient[] {
@@ -126,6 +156,31 @@ function updateReviewTask(
     reviewer_decision: decision,
     reviewer_note: note.trim() || null,
   };
+}
+
+function getFallbackSemanticQuery(trial?: Trial): string {
+  if (!trial) return "";
+
+  const title = trial.title.toLowerCase();
+
+  if (title.includes("breast")) {
+    return "HER2-low metastatic breast cancer patient appropriate for targeted therapy";
+  }
+
+  if (title.includes("lung")) {
+    return "lung cancer immunotherapy candidate with metastatic disease";
+  }
+
+  if (
+    title.includes("heme") ||
+    title.includes("hematologic") ||
+    title.includes("lymphoma") ||
+    title.includes("leukemia")
+  ) {
+    return "hematologic malignancy patient with prior systemic treatment";
+  }
+
+  return "eligible candidate for trial";
 }
 
 export function useClinicalTrialDashboard() {
@@ -317,43 +372,6 @@ export function useClinicalTrialDashboard() {
     setSemanticSuggestions(response.items || []);
   }, []);
 
-  const handleOpenPatientModal = useCallback(async () => {
-    if (!activeTrial || isStartingEvaluation) {
-      if (!activeTrial) {
-        setError("No active trial is available. Select a trial first.");
-      }
-      return;
-    }
-
-    setError(null);
-    setPatientModalError(null);
-    setTrialPatients([]);
-    resetSemanticState();
-    setIsPatientModalOpen(true);
-    setIsLoadingTrialPatients(true);
-
-    try {
-      const [patientResponse, suggestionsResponse] = await Promise.all([
-        getPatientsForTrial(activeTrial.id),
-        getSemanticQuerySuggestions(activeTrial.id),
-      ]);
-
-      setTrialPatients(patientResponse.items || []);
-      setSemanticSuggestions(suggestionsResponse.items || []);
-    } catch (err) {
-      const message =
-        err instanceof Error
-          ? err.message
-          : "Unable to load patients for this trial.";
-      setError(message);
-      setPatientModalError(message);
-      setTrialPatients([]);
-      setSemanticSuggestions([]);
-    } finally {
-      setIsLoadingTrialPatients(false);
-    }
-  }, [activeTrial, isStartingEvaluation, resetSemanticState]);
-
   const handleRunSemanticSearch = useCallback(
     async (nextQuery?: string) => {
       if (!activeTrial) return;
@@ -377,20 +395,82 @@ export function useClinicalTrialDashboard() {
           top_k: 10,
         });
 
+        const normalizedResults = normalizeSemanticResults(
+          response.items || [],
+        );
+
         setSemanticQuery(resolvedQuery);
-        setSemanticResults(response.items || []);
+        setSemanticResults(normalizedResults);
         setSemanticSuggestions(response.suggestions || []);
         setHasRunSemanticSearch(true);
+
+        return normalizedResults;
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Unable to run semantic search.";
         setSemanticSearchError(message);
+        return undefined;
       } finally {
         setIsSemanticSearchLoading(false);
       }
     },
     [activeTrial, semanticQuery],
   );
+
+  const handleOpenPatientModal = useCallback(async () => {
+    if (!activeTrial || isStartingEvaluation) {
+      if (!activeTrial) {
+        setError("No active trial is available. Select a trial first.");
+      }
+      return;
+    }
+
+    setError(null);
+    setPatientModalError(null);
+    setTrialPatients([]);
+    resetSemanticState();
+    setIsPatientModalOpen(true);
+    setIsLoadingTrialPatients(true);
+
+    try {
+      const [patientResponse, suggestionsResponse] = await Promise.all([
+        getPatientsForTrial(activeTrial.id),
+        getSemanticQuerySuggestions(activeTrial.id),
+      ]);
+
+      const nextTrialPatients = patientResponse.items || [];
+      const nextSuggestions = suggestionsResponse.items || [];
+      const defaultQuery =
+        nextSuggestions[0]?.query?.trim() ||
+        getFallbackSemanticQuery(activeTrial);
+
+      setTrialPatients(nextTrialPatients);
+      setSemanticSuggestions(nextSuggestions);
+
+      if (defaultQuery.length >= 3) {
+        setSemanticQuery(defaultQuery);
+        await handleRunSemanticSearch(defaultQuery);
+      } else {
+        setSemanticQuery(defaultQuery);
+      }
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Unable to load patients for this trial.";
+      setError(message);
+      setPatientModalError(message);
+      setTrialPatients([]);
+      setSemanticSuggestions([]);
+    } finally {
+      setIsLoadingTrialPatients(false);
+    }
+  }, [
+    activeTrial,
+    handleRunSemanticSearch,
+    isStartingEvaluation,
+    resetSemanticState,
+  ]);
 
   const handleSelectSemanticSuggestion = useCallback(
     async (suggestion: SemanticQuerySuggestion) => {
