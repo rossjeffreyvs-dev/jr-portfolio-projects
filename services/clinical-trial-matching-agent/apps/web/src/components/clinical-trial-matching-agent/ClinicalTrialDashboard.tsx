@@ -47,6 +47,10 @@ const RETURN_TO_RECOMMENDATION_DELAY_MS = 180;
 const RECOMMENDATION_REVEAL_DELAY_MS = 900;
 const BANNER_CLEAR_DELAY_MS = 2200;
 
+const TRANSMIT_TYPE_INTERVAL_MS = 34;
+const TRANSMIT_POST_DELAY_MS = 1800;
+const TRANSMIT_FADE_DURATION_MS = 450;
+
 export default function ClinicalTrialDashboard({
   activeTrial,
   selectedPatient,
@@ -83,11 +87,19 @@ export default function ClinicalTrialDashboard({
     number | undefined
   >(undefined);
 
+  const [typedTransmitMessage, setTypedTransmitMessage] = useState("");
+  const [transmitState, setTransmitState] = useState<
+    "idle" | "transmitting" | "transmitted"
+  >("idle");
+  const [isTransmitMessageFading, setIsTransmitMessageFading] = useState(false);
+
   const tabAnchorRef = useRef<HTMLDivElement | null>(null);
   const evaluationSectionRef = useRef<HTMLElement | null>(null);
   const workflowSectionRef = useRef<HTMLElement | null>(null);
   const lastPlaybackKeyRef = useRef<number | null>(null);
   const timersRef = useRef<number[]>([]);
+  const transmitTimerRef = useRef<number | null>(null);
+  const transmitFadeTimerRef = useRef<number | null>(null);
 
   const selectedWorklistPatient = useMemo(() => {
     if (!selectedEvaluation) return undefined;
@@ -102,6 +114,20 @@ export default function ClinicalTrialDashboard({
   function clearTimers() {
     timersRef.current.forEach((timer) => window.clearTimeout(timer));
     timersRef.current = [];
+  }
+
+  function clearTransmitTimer() {
+    if (transmitTimerRef.current) {
+      window.clearTimeout(transmitTimerRef.current);
+      transmitTimerRef.current = null;
+    }
+  }
+
+  function clearTransmitFadeTimer() {
+    if (transmitFadeTimerRef.current) {
+      window.clearTimeout(transmitFadeTimerRef.current);
+      transmitFadeTimerRef.current = null;
+    }
   }
 
   function schedule(callback: () => void, delayMs: number) {
@@ -121,9 +147,78 @@ export default function ClinicalTrialDashboard({
     setVisibleAuditCount(undefined);
   }
 
+  function handleTransmitPatients() {
+    if (transmitState === "transmitting") return;
+
+    clearTransmitTimer();
+    clearTransmitFadeTimer();
+
+    if (evaluations.length === 0) {
+      setTypedTransmitMessage(
+        "No patients are currently queued for transmission.",
+      );
+      setIsTransmitMessageFading(false);
+
+      transmitFadeTimerRef.current = window.setTimeout(() => {
+        setIsTransmitMessageFading(true);
+      }, 1400);
+
+      transmitTimerRef.current = window.setTimeout(() => {
+        setTypedTransmitMessage("");
+        setIsTransmitMessageFading(false);
+        transmitTimerRef.current = null;
+      }, 1400 + TRANSMIT_FADE_DURATION_MS);
+
+      return;
+    }
+
+    const fullText =
+      "Selected patients are being transmitted to the external clinical trial dataset for future research.";
+
+    setTypedTransmitMessage("");
+    setIsTransmitMessageFading(false);
+    setTransmitState("transmitting");
+
+    let elapsed = 0;
+
+    for (let index = 0; index < fullText.length; index += 1) {
+      elapsed += TRANSMIT_TYPE_INTERVAL_MS;
+
+      const timer = window.setTimeout(() => {
+        setTypedTransmitMessage(fullText.slice(0, index + 1));
+      }, elapsed);
+
+      timersRef.current.push(timer);
+    }
+
+    transmitFadeTimerRef.current = window.setTimeout(() => {
+      setIsTransmitMessageFading(true);
+    }, elapsed + TRANSMIT_POST_DELAY_MS);
+
+    transmitTimerRef.current = window.setTimeout(
+      () => {
+        setTypedTransmitMessage("");
+        setIsTransmitMessageFading(false);
+        setTransmitState("transmitted");
+        transmitTimerRef.current = null;
+      },
+      elapsed + TRANSMIT_POST_DELAY_MS + TRANSMIT_FADE_DURATION_MS,
+    );
+  }
+
+  function getTransmitLabel() {
+    if (transmitState === "transmitting") return "Transmitting";
+    if (transmitState === "transmitted") return "Transmitted";
+    return "Transmit Patients to Trial";
+  }
+
+  const isTransmitDisabled = transmitState === "transmitting";
+
   useEffect(() => {
     return () => {
       clearTimers();
+      clearTransmitTimer();
+      clearTransmitFadeTimer();
     };
   }, []);
 
@@ -311,20 +406,96 @@ export default function ClinicalTrialDashboard({
           <section className="card" style={{ marginTop: 28 }}>
             <span className="section-label">Trial Worklist</span>
 
-            <h2 style={{ marginTop: 16, marginBottom: 12 }}>
-              Queued evaluations for the active trial
-              {activeTrial?.title && (
-                <span style={{ color: "var(--muted)", fontWeight: 500 }}>
-                  {" "}
-                  — {activeTrial.title}
-                </span>
-              )}
-            </h2>
+            <div
+              style={{
+                marginTop: 16,
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                gap: 16,
+                flexWrap: "wrap",
+              }}
+            >
+              <div style={{ flex: "1 1 560px" }}>
+                <h2 style={{ marginTop: 0, marginBottom: 12 }}>
+                  Queued evaluations for the active trial
+                  {activeTrial?.title && (
+                    <span style={{ color: "var(--muted)", fontWeight: 500 }}>
+                      {" "}
+                      — {activeTrial.title}
+                    </span>
+                  )}
+                </h2>
 
-            <p style={{ marginTop: 0 }}>
-              Select a case to inspect details, or use the action button to
-              review flagged evaluations.
-            </p>
+                <p style={{ marginTop: 0, marginBottom: 0 }}>
+                  Select a case to inspect details, or use the action button to
+                  review flagged evaluations.
+                </p>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <button
+                  type="button"
+                  onClick={handleTransmitPatients}
+                  disabled={isTransmitDisabled}
+                  style={{
+                    border: "1px solid #cbd5e1",
+                    background:
+                      transmitState === "transmitted"
+                        ? "#dcfce7"
+                        : transmitState === "transmitting"
+                          ? "#eff6ff"
+                          : "#ffffff",
+                    color:
+                      transmitState === "transmitted" ? "#166534" : "#1e3a8a",
+                    borderRadius: 999,
+                    padding: "12px 18px",
+                    fontSize: 14,
+                    fontWeight: 700,
+                    cursor: isTransmitDisabled ? "not-allowed" : "pointer",
+                    whiteSpace: "nowrap",
+                    boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04)",
+                    opacity: isTransmitDisabled ? 0.85 : 1,
+                    transition:
+                      "background-color 200ms ease, color 200ms ease, opacity 200ms ease",
+                  }}
+                >
+                  {getTransmitLabel()}
+                </button>
+              </div>
+            </div>
+
+            {typedTransmitMessage ? (
+              <div
+                style={{
+                  marginTop: 18,
+                  border: "1px solid #bfdbfe",
+                  background: "#eff6ff",
+                  color: "#1e3a8a",
+                  borderRadius: 18,
+                  padding: "14px 16px",
+                  fontSize: 14,
+                  lineHeight: 1.5,
+                  fontWeight: 600,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  opacity: isTransmitMessageFading ? 0 : 1,
+                  transition: `opacity ${TRANSMIT_FADE_DURATION_MS}ms ease`,
+                }}
+              >
+                <div
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: 999,
+                    background: "#3158c9",
+                    flexShrink: 0,
+                  }}
+                />
+                {typedTransmitMessage}
+              </div>
+            ) : null}
 
             <div style={{ marginTop: 28 }}>
               <TrialWorklist

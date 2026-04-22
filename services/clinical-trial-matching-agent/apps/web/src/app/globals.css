@@ -54,9 +54,41 @@ button:disabled {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 28px;
+  padding: 3px 28px;
   border-bottom: 1px solid var(--border);
   background: rgba(255, 255, 255, 0.55);
+}
+
+.tabNav {
+  margin-top: 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.tabButton {
+  border: 1px solid var(--line-strong);
+  background: #fff;
+  color: var(--muted);
+  padding: 16px 22px;
+  border-radius: 18px;
+  cursor: pointer;
+  font-weight: 700;
+  transition:
+    background 160ms ease,
+    color 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.tabButton:hover {
+  transform: translateY(-1px);
+}
+
+.tabButton.active {
+  background: linear-gradient(180deg, #12224c 0%, #0e1a38 100%);
+  border-color: #16295a;
+  color: #fff;
 }
 
 .brand {
@@ -101,12 +133,12 @@ button:disabled {
 
 .hero {
   text-align: center;
-  padding: 6px 0 18px;
+  padding: 3px 0 12px;
 }
 
 .hero h1 {
   margin: 0;
-  font-size: clamp(32px, 3.8vw, 48px);
+  font-size: clamp(20px, 3.8vw, 36px);
   line-height: 1.02;
   letter-spacing: -0.02em;
 }
@@ -841,7 +873,7 @@ th {
   .site-header {
     flex-direction: column;
     gap: 14px;
-    padding: 14px 18px;
+    padding: 3px 18px;
   }
 
   .top-nav {

@@ -5,8 +5,12 @@ import ChangeTrialModal from "@/components/clinical-trial-matching-agent/ChangeT
 import ClinicalTrialDashboard from "@/components/clinical-trial-matching-agent/ClinicalTrialDashboard";
 import ReviewCasePanel from "@/components/clinical-trial-matching-agent/ReviewCasePanel";
 import { useClinicalTrialDashboard } from "@/hooks/useClinicalTrialDashboard";
+import { useState } from "react";
+
+type ActiveTab = "description" | "demo";
 
 export default function ClinicalTrialProjectPage() {
+  const [activeTab, setActiveTab] = useState<ActiveTab>("description");
   const {
     isLoading,
     trials,
@@ -57,21 +61,59 @@ export default function ClinicalTrialProjectPage() {
     handleResetPatientSearch,
   } = useClinicalTrialDashboard();
 
-  if (isLoading) {
-    return (
-      <div className="page-shell">
-        <main className="container">
-          <section className="hero">
-            <h1>Multi-Agent Clinical Trial Matching System</h1>
-            <p>Loading dashboard data…</p>
-          </section>
-        </main>
-      </div>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <div className="page-shell">
+  //       <header className="site-header">
+  //         <a href="https://www.jeffrey-ross.me/projects">
+  //           <div className="brand">
+  //             <div className="brand-mark">JR</div>
+  //             <div>Projects</div>
+  //           </div>
+  //         </a>
+
+  //         <nav className="top-nav">
+  //           <a href="https://www.jeffrey-ross.me">Home</a>
+  //           <a href="https://www.jeffrey-ross.me/projects" className="active">
+  //             Projects
+  //           </a>
+  //           <a href="https://www.jeffrey-ross.me/blog">Blog</a>
+  //           <a href="https://www.jeffrey-ross.me/about">About</a>
+  //           <a href="https://www.jeffrey-ross.me/contact">Contact</a>
+  //         </nav>
+  //       </header>
+
+  //       <main className="container">
+  //         <section className="hero">
+  //           <h1>Multi-Agent Clinical Trial Matching System</h1>
+  //           <p>Loading dashboard data…</p>
+  //         </section>
+  //       </main>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="page-shell">
+      <header className="site-header">
+        <a href="https://www.jeffrey-ross.me/projects">
+          <div className="brand">
+            <div className="brand-mark">JR</div>
+            <div>Projects</div>
+          </div>
+        </a>
+
+        <nav className="top-nav">
+          <a href="https://www.jeffrey-ross.me">Home</a>
+          <a href="https://www.jeffrey-ross.me/projects" className="active">
+            Projects
+          </a>
+          <a href="https://www.jeffrey-ross.me/blog">Blog</a>
+          <a href="https://www.jeffrey-ross.me/about">About</a>
+          <a href="https://www.jeffrey-ross.me/contact">Contact</a>
+        </nav>
+      </header>
+
       <main className="container">
         <section className="hero">
           <h1>Multi-Agent Clinical Trial Matching System</h1>
@@ -79,6 +121,23 @@ export default function ClinicalTrialProjectPage() {
             Evaluate patient eligibility against clinical trial criteria using a
             simulated agent workflow.
           </p>
+
+          <div className="tabNav" role="tablist">
+            <button
+              type="button"
+              className={`tabButton ${activeTab === "description" ? "active" : ""}`}
+              onClick={() => setActiveTab("description")}
+            >
+              Project Description
+            </button>
+            <button
+              type="button"
+              className={`tabButton ${activeTab === "demo" ? "active" : ""}`}
+              onClick={() => setActiveTab("demo")}
+            >
+              Demo
+            </button>
+          </div>
         </section>
 
         <ClinicalTrialDashboard
