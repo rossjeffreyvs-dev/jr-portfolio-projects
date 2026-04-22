@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import type { Evaluation, Patient, Trial } from "@/lib/api";
 
 type PatientEvaluationRecommendationCardProps = {
@@ -79,6 +80,9 @@ function getRecommendationBadgeClass(
   return "badge info";
 }
 
+const FINAL_REVEAL_DELAY_MS = 140;
+const PULSE_DURATION_MS = 1800;
+
 export default function PatientEvaluationRecommendationCard({
   activeTrial,
   selectedPatient,
@@ -87,6 +91,33 @@ export default function PatientEvaluationRecommendationCard({
   isEvaluationInProgress = false,
   showFinalRecommendation = true,
 }: PatientEvaluationRecommendationCardProps) {
+  const [isFinalContentVisible, setIsFinalContentVisible] = useState(
+    showFinalRecommendation,
+  );
+  const [shouldPulseStatus, setShouldPulseStatus] = useState(false);
+
+  useEffect(() => {
+    if (!showFinalRecommendation) {
+      setIsFinalContentVisible(false);
+      setShouldPulseStatus(false);
+      return;
+    }
+
+    const revealTimer = window.setTimeout(() => {
+      setIsFinalContentVisible(true);
+      setShouldPulseStatus(true);
+    }, FINAL_REVEAL_DELAY_MS);
+
+    const pulseTimer = window.setTimeout(() => {
+      setShouldPulseStatus(false);
+    }, FINAL_REVEAL_DELAY_MS + PULSE_DURATION_MS);
+
+    return () => {
+      window.clearTimeout(revealTimer);
+      window.clearTimeout(pulseTimer);
+    };
+  }, [showFinalRecommendation, selectedEvaluation?.id]);
+
   if (!selectedEvaluation || !selectedPatient) {
     return (
       <>
@@ -173,8 +204,31 @@ export default function PatientEvaluationRecommendationCard({
 
   const shouldShowReviewCase =
     !shouldShowLiveState &&
+    isFinalContentVisible &&
     (Boolean(selectedEvaluation.review_required) ||
       recommendation === "Requires Review");
+
+  const finalContentStyle = {
+    opacity: shouldShowLiveState ? 1 : isFinalContentVisible ? 1 : 0,
+    transform: shouldShowLiveState
+      ? "translateY(0)"
+      : isFinalContentVisible
+        ? "translateY(0)"
+        : "translateY(6px)",
+    transition: "opacity 420ms ease, transform 420ms ease",
+  } as const;
+
+  const statusBadgeStyle = shouldPulseStatus
+    ? {
+        transform: "scale(1.04)",
+        boxShadow: "0 0 0 8px rgba(49, 88, 201, 0.08)",
+        transition: "transform 500ms ease, box-shadow 500ms ease",
+      }
+    : {
+        transform: "scale(1)",
+        boxShadow: "0 0 0 0 rgba(49, 88, 201, 0)",
+        transition: "transform 500ms ease, box-shadow 500ms ease",
+      };
 
   return (
     <>
@@ -219,6 +273,7 @@ export default function PatientEvaluationRecommendationCard({
               selectedEvaluation.review_required,
               shouldShowLiveState,
             )}
+            style={statusBadgeStyle}
           >
             {recommendation}
           </span>
@@ -228,6 +283,7 @@ export default function PatientEvaluationRecommendationCard({
               type="button"
               className="primary-btn small"
               onClick={() => onReviewCase?.(selectedEvaluation.id)}
+              style={finalContentStyle}
             >
               Review Case
             </button>
@@ -236,7 +292,7 @@ export default function PatientEvaluationRecommendationCard({
       </div>
 
       <div className="dashboard-grid" style={{ marginTop: 16 }}>
-        <section className="cardish col-4">
+        <section className="cardish col-4" style={finalContentStyle}>
           <h3 style={{ marginTop: 0 }}>Selected Evaluation</h3>
 
           <div className="meta-list">
@@ -262,7 +318,7 @@ export default function PatientEvaluationRecommendationCard({
           </div>
         </section>
 
-        <section className="cardish col-4">
+        <section className="cardish col-4" style={finalContentStyle}>
           <h3 style={{ marginTop: 0 }}>Recommendation</h3>
 
           <div className="meta-list">
@@ -299,7 +355,7 @@ export default function PatientEvaluationRecommendationCard({
           </div>
         </section>
 
-        <section className="cardish col-4">
+        <section className="cardish col-4" style={finalContentStyle}>
           <h3 style={{ marginTop: 0 }}>Supporting Context</h3>
 
           <div className="meta-list">
@@ -331,7 +387,10 @@ export default function PatientEvaluationRecommendationCard({
         </section>
       </div>
 
-      <section className="cardish" style={{ marginTop: 18 }}>
+      <section
+        className="cardish"
+        style={{ marginTop: 18, ...finalContentStyle }}
+      >
         <h3 style={{ marginTop: 0 }}>Recommendation Summary</h3>
         <p style={{ marginTop: 8, marginBottom: 0 }}>{rationale}</p>
       </section>
