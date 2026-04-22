@@ -22,6 +22,7 @@ export default function ClinicalTrialProjectPage() {
     isLoadingTrialPatients,
     isStartingEvaluation,
     isChangingTrial,
+    isResettingDemo,
     isPatientModalOpen,
     isChangeTrialModalOpen,
     modalPatients,
@@ -36,6 +37,7 @@ export default function ClinicalTrialProjectPage() {
     handleOpenChangeTrialModal,
     handleSelectTrial,
     handleReplayWorkflow,
+    handleResetDemo,
     handleClosePatientModal,
     handleCloseChangeTrialModal,
     handleStartEvaluationFromModal,
@@ -120,11 +122,13 @@ export default function ClinicalTrialProjectPage() {
           error={error}
           isLoadingTrialPatients={isLoadingTrialPatients}
           isChangingTrial={isChangingTrial}
+          isResettingDemo={isResettingDemo}
           startedEvaluationId={startedEvaluationId}
           playbackSequenceKey={playbackSequenceKey}
           onOpenPatientModal={handleOpenPatientModal}
           onChangeTrial={handleOpenChangeTrialModal}
           onReplayWorkflow={handleReplayWorkflow}
+          onResetDemo={handleResetDemo}
           onSelectEvaluation={setSelectedEvaluationId}
           onReviewCase={handleOpenReview}
           onRemoveEvaluation={handleRemoveEvaluation}
