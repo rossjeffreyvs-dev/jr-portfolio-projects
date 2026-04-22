@@ -10,7 +10,7 @@ function readTrialValue(
   trial: Trial | undefined,
   keys: string[],
   fallback = "—",
-) {
+): string {
   if (!trial) return fallback;
 
   const record = trial as unknown as Record<string, unknown>;
@@ -30,6 +30,51 @@ function readTrialValue(
   }
 
   return fallback;
+}
+
+function readTrialList(trial: Trial | undefined, keys: string[]): string[] {
+  if (!trial) return [];
+
+  const record = trial as unknown as Record<string, unknown>;
+
+  for (const key of keys) {
+    const value = record[key];
+
+    if (Array.isArray(value)) {
+      return value.map((item) => String(item).trim()).filter(Boolean);
+    }
+
+    if (typeof value === "string" && value.trim().length > 0) {
+      return [value.trim()];
+    }
+  }
+
+  return [];
+}
+
+function renderValue(value: string | string[]) {
+  if (Array.isArray(value)) {
+    if (!value.length) {
+      return <span>—</span>;
+    }
+
+    return (
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "0.35rem",
+          alignItems: "flex-start",
+        }}
+      >
+        {value.map((item) => (
+          <span key={item}>• {item}</span>
+        ))}
+      </div>
+    );
+  }
+
+  return <span>{value}</span>;
 }
 
 export default function TrialSummaryCard({
@@ -53,23 +98,31 @@ export default function TrialSummaryCard({
     "indication",
   ]);
   const phase = readTrialValue(activeTrial, ["phase"]);
-  const status = readTrialValue(activeTrial, ["status"], "active");
-  const keyInclusion = readTrialValue(activeTrial, [
+  const status = readTrialValue(
+    activeTrial,
+    ["protocol_status", "status"],
+    "active",
+  );
+
+  const keyInclusion = readTrialList(activeTrial, [
     "key_inclusion",
     "keyInclusion",
     "inclusion_summary",
   ]);
-  const performance = readTrialValue(activeTrial, [
+
+  const performance = readTrialList(activeTrial, [
     "performance",
     "performance_requirement",
     "performance_status_requirement",
   ]);
-  const imagingContext = readTrialValue(activeTrial, [
+
+  const imagingContext = readTrialList(activeTrial, [
     "imaging_context",
     "imaging_requirements",
     "disease_context",
   ]);
-  const exclusions = readTrialValue(activeTrial, [
+
+  const exclusions = readTrialList(activeTrial, [
     "exclusions",
     "key_exclusion",
     "keyExclusion",
@@ -80,42 +133,42 @@ export default function TrialSummaryCard({
     <div className="meta-list">
       <div className="meta-item">
         <strong>Title</strong>
-        <span>{title}</span>
+        {renderValue(title)}
       </div>
 
       <div className="meta-item">
         <strong>Disease Area</strong>
-        <span>{diseaseArea}</span>
+        {renderValue(diseaseArea)}
       </div>
 
       <div className="meta-item">
         <strong>Phase</strong>
-        <span>{phase}</span>
+        {renderValue(phase)}
       </div>
 
       <div className="meta-item">
         <strong>Status</strong>
-        <span>{status}</span>
+        {renderValue(status)}
       </div>
 
       <div className="meta-item">
         <strong>Key Inclusion</strong>
-        <span>{keyInclusion}</span>
+        {renderValue(keyInclusion)}
       </div>
 
       <div className="meta-item">
         <strong>Performance</strong>
-        <span>{performance}</span>
+        {renderValue(performance)}
       </div>
 
       <div className="meta-item">
         <strong>Imaging / Disease Context</strong>
-        <span>{imagingContext}</span>
+        {renderValue(imagingContext)}
       </div>
 
       <div className="meta-item">
         <strong>Exclusions</strong>
-        <span>{exclusions}</span>
+        {renderValue(exclusions)}
       </div>
     </div>
   );

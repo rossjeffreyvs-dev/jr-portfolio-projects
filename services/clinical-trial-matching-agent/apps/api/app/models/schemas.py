@@ -36,6 +36,11 @@ class Trial(BaseModel):
     inclusion_criteria: List[TrialCriterion]
     exclusion_criteria: List[TrialCriterion]
 
+    key_inclusion: List[str] = Field(default_factory=list)
+    performance: List[str] = Field(default_factory=list)
+    imaging_context: List[str] = Field(default_factory=list)
+    exclusions: List[str] = Field(default_factory=list)
+
 
 class Patient(BaseModel):
     id: str
@@ -43,13 +48,13 @@ class Patient(BaseModel):
     age: int
     sex: str
     diagnosis: List[str]
-    biomarkers: List[str] = []
+    biomarkers: List[str] = Field(default_factory=list)
     ecog: Optional[str] = None
-    prior_therapies: List[str] = []
-    labs: Dict[str, str | float | int] = {}
-    comorbidities: List[str] = []
-    notes: List[str] = []
-    eligible_trial_ids: List[str] = []
+    prior_therapies: List[str] = Field(default_factory=list)
+    labs: Dict[str, str | float | int] = Field(default_factory=dict)
+    comorbidities: List[str] = Field(default_factory=list)
+    notes: List[str] = Field(default_factory=list)
+    eligible_trial_ids: List[str] = Field(default_factory=list)
     seeded_outcome: StatusType
     seeded_score: int
     seeded_reason: str
@@ -61,7 +66,6 @@ class Patient(BaseModel):
             return value
 
         normalized = value.strip().lower()
-
         aliases = {
             "review required": "Requires Review",
             "requires review": "Requires Review",
@@ -69,7 +73,6 @@ class Patient(BaseModel):
             "not eligible": "Not Eligible",
             "in progress": "In Progress",
         }
-
         return aliases.get(normalized, value)
 
 
@@ -98,10 +101,12 @@ class Evaluation(BaseModel):
     match_score: int
     recommendation: StatusType
     confidence: Literal["high", "moderate", "low"]
-    blockers: List[str] = []
-    missing_information: List[str] = []
+    blockers: List[str] = Field(default_factory=list)
+    missing_information: List[str] = Field(default_factory=list)
     review_required: bool = False
-    review_reason: List[str] = []
+    review_reason: List[str] = Field(default_factory=list)
+    exclusion_hits: List[str] = Field(default_factory=list)
+    matched_inclusion: List[str] = Field(default_factory=list)
     workflow_status: Literal["Completed", "Awaiting Human Review", "In Progress"]
     explanation: str
     criterion_results: List[CriterionResult]

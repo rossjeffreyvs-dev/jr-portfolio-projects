@@ -32,7 +32,6 @@ def reset_evaluations_demo_data():
 @router.delete("/{evaluation_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_evaluation(evaluation_id: str):
     evaluation = EVALUATIONS.get(evaluation_id)
-
     if not evaluation:
         raise HTTPException(status_code=404, detail="Evaluation not found")
 
@@ -52,7 +51,6 @@ def delete_evaluation(evaluation_id: str):
 @router.get("/{evaluation_id}")
 def get_evaluation(evaluation_id: str):
     evaluation = EVALUATIONS.get(evaluation_id)
-
     if not evaluation:
         raise HTTPException(status_code=404, detail="Evaluation not found")
 
@@ -62,7 +60,6 @@ def get_evaluation(evaluation_id: str):
 @router.get("/{evaluation_id}/results")
 def get_evaluation_results(evaluation_id: str):
     evaluation = EVALUATIONS.get(evaluation_id)
-
     if not evaluation:
         raise HTTPException(status_code=404, detail="Evaluation not found")
 
@@ -73,6 +70,10 @@ def get_evaluation_results(evaluation_id: str):
         "confidence": evaluation.confidence,
         "blockers": evaluation.blockers,
         "missing_information": evaluation.missing_information,
+        "review_required": evaluation.review_required,
+        "review_reason": evaluation.review_reason,
+        "matched_inclusion": evaluation.matched_inclusion,
+        "exclusion_hits": evaluation.exclusion_hits,
         "explanation": evaluation.explanation,
         "criterion_results": [
             item.model_dump() for item in evaluation.criterion_results

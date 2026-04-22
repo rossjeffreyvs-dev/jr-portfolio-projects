@@ -6,14 +6,61 @@
     "phase": "II",
     "indication": "Metastatic non-small cell lung cancer",
     "protocol_status": "active",
+    "key_inclusion": [
+      "Histologically confirmed metastatic NSCLC",
+      "ECOG performance status of 0 or 1",
+      "Documented CNS metastasis status within 28 days"
+    ],
+    "performance": [
+      "Patients should be fit enough for systemic immunotherapy and study follow-up",
+      "Primary endpoint focuses on response and disease control in metastatic NSCLC"
+    ],
+    "imaging_context": [
+      "Recent CNS imaging or documented brain metastasis assessment is required",
+      "Disease burden should be documented with current restaging imaging before enrollment"
+    ],
+    "exclusions": [
+      "Prior PD-1 or PD-L1 inhibitor therapy",
+      "Uncontrolled autoimmune disease requiring systemic therapy"
+    ],
     "inclusion_criteria": [
-      {"id": "INC_001", "type": "inclusion", "category": "Diagnosis", "text": "Histologically confirmed metastatic NSCLC", "required": true},
-      {"id": "INC_002", "type": "inclusion", "category": "Performance Status", "text": "ECOG performance status of 0 or 1", "required": true},
-      {"id": "INC_003", "type": "inclusion", "category": "Imaging", "text": "Documented CNS metastasis status within 28 days", "required": true}
+      {
+        "id": "INC_001",
+        "type": "inclusion",
+        "category": "Diagnosis",
+        "text": "Histologically confirmed metastatic NSCLC",
+        "required": true
+      },
+      {
+        "id": "INC_002",
+        "type": "inclusion",
+        "category": "Performance Status",
+        "text": "ECOG performance status of 0 or 1",
+        "required": true
+      },
+      {
+        "id": "INC_003",
+        "type": "inclusion",
+        "category": "Imaging",
+        "text": "Documented CNS metastasis status within 28 days",
+        "required": true
+      }
     ],
     "exclusion_criteria": [
-      {"id": "EXC_001", "type": "exclusion", "category": "Prior Therapy", "text": "No prior PD-1 or PD-L1 inhibitor therapy", "required": true},
-      {"id": "EXC_002", "type": "exclusion", "category": "Autoimmune", "text": "No uncontrolled autoimmune disease requiring systemic therapy", "required": true}
+      {
+        "id": "EXC_001",
+        "type": "exclusion",
+        "category": "Prior Therapy",
+        "text": "No prior PD-1 or PD-L1 inhibitor therapy",
+        "required": true
+      },
+      {
+        "id": "EXC_002",
+        "type": "exclusion",
+        "category": "Autoimmune",
+        "text": "No uncontrolled autoimmune disease requiring systemic therapy",
+        "required": true
+      }
     ]
   },
   {
@@ -23,12 +70,47 @@
     "phase": "Ib/II",
     "indication": "HER2-low metastatic breast cancer",
     "protocol_status": "parsed",
+    "key_inclusion": [
+      "Metastatic breast cancer with HER2-low disease",
+      "Age 18 years or older",
+      "Performance status appropriate for targeted therapy"
+    ],
+    "performance": [
+      "Patients should be clinically stable enough for combination targeted therapy",
+      "Primary study focus includes safety and antitumor activity"
+    ],
+    "imaging_context": [
+      "Current metastatic disease documentation should be available",
+      "Baseline measurable disease by RECIST 1.1 is preferred for response assessment"
+    ],
+    "exclusions": [
+      "Uncontrolled cardiac disease",
+      "Reduced left ventricular ejection fraction or other major cardiac safety concern"
+    ],
     "inclusion_criteria": [
-      {"id": "INC_101", "type": "inclusion", "category": "Diagnosis", "text": "Metastatic breast cancer with HER2-low disease", "required": true},
-      {"id": "INC_102", "type": "inclusion", "category": "Age", "text": "Age 18 years or older", "required": true}
+      {
+        "id": "INC_101",
+        "type": "inclusion",
+        "category": "Diagnosis",
+        "text": "Metastatic breast cancer with HER2-low disease",
+        "required": true
+      },
+      {
+        "id": "INC_102",
+        "type": "inclusion",
+        "category": "Age",
+        "text": "Age 18 years or older",
+        "required": true
+      }
     ],
     "exclusion_criteria": [
-      {"id": "EXC_101", "type": "exclusion", "category": "Cardiac", "text": "No uncontrolled cardiac disease", "required": true}
+      {
+        "id": "EXC_101",
+        "type": "exclusion",
+        "category": "Cardiac",
+        "text": "No uncontrolled cardiac disease",
+        "required": true
+      }
     ]
   },
   {
@@ -38,11 +120,36 @@
     "phase": "I",
     "indication": "Relapsed or refractory hematologic malignancy",
     "protocol_status": "parsed",
+    "key_inclusion": [
+      "Relapsed or refractory disease after standard therapy",
+      "Clinical status appropriate for intensive cell therapy evaluation"
+    ],
+    "performance": [
+      "Patients should be stable enough for cell therapy workup and monitoring",
+      "Early-phase study emphasizes feasibility and safety"
+    ],
+    "imaging_context": [
+      "Disease status should be documented with current marrow, blood, or imaging assessment as applicable",
+      "Active disease context should be clearly described before treatment planning"
+    ],
+    "exclusions": ["Active uncontrolled infection"],
     "inclusion_criteria": [
-      {"id": "INC_201", "type": "inclusion", "category": "Disease Status", "text": "Relapsed or refractory disease after standard therapy", "required": true}
+      {
+        "id": "INC_201",
+        "type": "inclusion",
+        "category": "Disease Status",
+        "text": "Relapsed or refractory disease after standard therapy",
+        "required": true
+      }
     ],
     "exclusion_criteria": [
-      {"id": "EXC_201", "type": "exclusion", "category": "Infection", "text": "No active uncontrolled infection", "required": true}
+      {
+        "id": "EXC_201",
+        "type": "exclusion",
+        "category": "Infection",
+        "text": "No active uncontrolled infection",
+        "required": true
+      }
     ]
   }
 ]
