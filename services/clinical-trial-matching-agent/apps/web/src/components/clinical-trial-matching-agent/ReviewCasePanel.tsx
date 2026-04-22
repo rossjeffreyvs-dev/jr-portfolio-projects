@@ -139,6 +139,7 @@ export default function ReviewCasePanel({
             gridTemplateColumns: "1.15fr 0.85fr",
             gap: 24,
             padding: 24,
+            alignItems: "start",
           }}
         >
           <div style={{ display: "grid", gap: 24 }}>
@@ -368,7 +369,13 @@ export default function ReviewCasePanel({
             </div>
           </div>
 
-          <div style={{ display: "grid", gap: 24 }}>
+          <div
+            style={{
+              display: "grid",
+              gap: 16,
+              alignContent: "start",
+            }}
+          >
             <div
               style={{
                 border: "1px solid #e2e8f0",
