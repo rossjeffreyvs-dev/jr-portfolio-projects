@@ -22,11 +22,13 @@ type ClinicalTrialDashboardProps = {
   error?: string | null;
   isLoadingTrialPatients: boolean;
   isChangingTrial: boolean;
+  isResettingDemo: boolean;
   startedEvaluationId?: string | null;
   playbackSequenceKey: number;
   onOpenPatientModal: () => void;
   onChangeTrial: () => void;
   onReplayWorkflow: () => void;
+  onResetDemo: () => void;
   onSelectEvaluation: (evaluationId: string) => void;
   onReviewCase: (evaluationId: string) => void;
   onRemoveEvaluation: (evaluationId: string) => void;
@@ -55,11 +57,13 @@ export default function ClinicalTrialDashboard({
   error,
   isLoadingTrialPatients,
   isChangingTrial,
+  isResettingDemo,
   startedEvaluationId,
   playbackSequenceKey,
   onOpenPatientModal,
   onChangeTrial,
   onReplayWorkflow,
+  onResetDemo,
   onSelectEvaluation,
   onReviewCase,
   onRemoveEvaluation,
@@ -261,10 +265,12 @@ export default function ClinicalTrialDashboard({
         error={error}
         isLoadingTrialPatients={isLoadingTrialPatients}
         isChangingTrial={isChangingTrial}
+        isResettingDemo={isResettingDemo}
         hasSelectedEvaluation={Boolean(selectedEvaluation)}
         onOpenPatientModal={onOpenPatientModal}
         onChangeTrial={onChangeTrial}
         onReplayWorkflow={onReplayWorkflow}
+        onResetDemo={onResetDemo}
       />
 
       <div ref={tabAnchorRef} />
@@ -421,9 +427,9 @@ export default function ClinicalTrialDashboard({
           <section className="card" style={{ marginTop: 28 }}>
             <span className="section-label">Criteria Match Table</span>
 
-            {/* <h2 style={{ marginTop: 16, marginBottom: 20 }}>
+            <h2 style={{ marginTop: 16, marginBottom: 20 }}>
               Criterion-by-criterion evaluation
-            </h2> */}
+            </h2>
 
             <CriteriaMatchTable
               selectedEvaluation={selectedEvaluation}

@@ -4,47 +4,43 @@ type DashboardControlsProps = {
   error?: string | null;
   isLoadingTrialPatients: boolean;
   isChangingTrial: boolean;
+  isResettingDemo: boolean;
   hasSelectedEvaluation: boolean;
   onOpenPatientModal: () => void;
   onChangeTrial: () => void;
   onReplayWorkflow: () => void;
+  onResetDemo: () => void;
 };
 
 export default function DashboardControls({
   error,
   isLoadingTrialPatients,
   isChangingTrial,
+  isResettingDemo,
   hasSelectedEvaluation,
   onOpenPatientModal,
   onChangeTrial,
   onReplayWorkflow,
+  onResetDemo,
 }: DashboardControlsProps) {
   return (
-    <section className="card">
-      <span className="section-label">Simulation Controls</span>
+    <section className="card control-panel">
+      <div className="control-panel-header">
+        <span className="section-label">Simulation Controls</span>
+        <h2>Kick off new evaluations or switch context</h2>
+        <p>
+          Use the controls below to open the candidate list, create a new
+          evaluation, switch the active trial, replay the selected case, or
+          reset the seeded demo data.
+        </p>
+      </div>
 
-      <h2 style={{ marginTop: 16, marginBottom: 12 }}>
-        Kick off new evaluations or switch context
-      </h2>
-
-      <p style={{ marginTop: 0 }}>
-        Use the controls below to open the candidate list, create a new
-        evaluation, switch the active trial, or replay the selected case.
-      </p>
-
-      <div
-        style={{
-          display: "flex",
-          gap: 16,
-          flexWrap: "wrap",
-          marginTop: 24,
-        }}
-      >
+      <div className="control-actions">
         <button
           type="button"
           className="secondary-button"
+          disabled={isLoadingTrialPatients || isResettingDemo}
           onClick={onOpenPatientModal}
-          disabled={isLoadingTrialPatients}
         >
           {isLoadingTrialPatients
             ? "Loading Patients..."
@@ -54,8 +50,8 @@ export default function DashboardControls({
         <button
           type="button"
           className="secondary-button"
+          disabled={isChangingTrial || isResettingDemo}
           onClick={onChangeTrial}
-          disabled={isChangingTrial}
         >
           {isChangingTrial ? "Changing Trial..." : "Change Trial"}
         </button>
@@ -63,25 +59,23 @@ export default function DashboardControls({
         <button
           type="button"
           className="secondary-button"
+          disabled={!hasSelectedEvaluation || isResettingDemo}
           onClick={onReplayWorkflow}
-          disabled={!hasSelectedEvaluation}
         >
           Replay Evaluation
         </button>
+
+        <button
+          type="button"
+          className="secondary-button"
+          disabled={isResettingDemo}
+          onClick={onResetDemo}
+        >
+          {isResettingDemo ? "Resetting Demo..." : "Reset Demo Data"}
+        </button>
       </div>
 
-      {error ? (
-        <div
-          style={{
-            marginTop: 18,
-            color: "#b42318",
-            fontSize: 14,
-            fontWeight: 600,
-          }}
-        >
-          {error}
-        </div>
-      ) : null}
+      {error ? <div className="error-text">{error}</div> : null}
     </section>
   );
 }

@@ -9,6 +9,7 @@ import {
   getReviews,
   getTrials,
   removeEvaluation,
+  resetDemoData,
   startEvaluation,
   type Evaluation,
   type Patient,
@@ -99,6 +100,7 @@ export function useClinicalTrialDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [isStartingEvaluation, setIsStartingEvaluation] = useState(false);
   const [isChangingTrial, setIsChangingTrial] = useState(false);
+  const [isResettingDemo, setIsResettingDemo] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [patientModalError, setPatientModalError] = useState<string | null>(
     null,
@@ -251,6 +253,29 @@ export function useClinicalTrialDashboard() {
     },
     [loadDashboard, selectedEvaluationId],
   );
+
+  const handleResetDemo = useCallback(async () => {
+    try {
+      setIsResettingDemo(true);
+      setError(null);
+      setPatientModalError(null);
+      setIsPatientModalOpen(false);
+      setIsChangeTrialModalOpen(false);
+      setActiveReviewEvaluationId(null);
+      setReviewNote("");
+      setStartedEvaluationId(null);
+      setPlaybackSequenceKey(0);
+
+      await resetDemoData();
+      await loadDashboard();
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Unable to reset demo data.";
+      setError(message);
+    } finally {
+      setIsResettingDemo(false);
+    }
+  }, [loadDashboard]);
 
   const handleOpenPatientModal = useCallback(async () => {
     if (!activeTrial || isStartingEvaluation) {
@@ -490,6 +515,7 @@ export function useClinicalTrialDashboard() {
     isLoadingTrialPatients,
     isStartingEvaluation,
     isChangingTrial,
+    isResettingDemo,
     isPatientModalOpen,
     isChangeTrialModalOpen,
     modalPatients,
@@ -504,6 +530,7 @@ export function useClinicalTrialDashboard() {
     handleOpenChangeTrialModal,
     handleSelectTrial,
     handleReplayWorkflow,
+    handleResetDemo,
     handleClosePatientModal,
     handleCloseChangeTrialModal,
     handleStartEvaluationFromModal,

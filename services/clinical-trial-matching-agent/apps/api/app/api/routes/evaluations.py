@@ -2,7 +2,12 @@ from fastapi import APIRouter, HTTPException, Query, status
 
 from app.models.schemas import StartEvaluationRequest
 from app.services.evaluation_service import start_evaluation
-from app.services.store import EVALUATIONS, REVIEWS, list_evaluations
+from app.services.store import (
+    EVALUATIONS,
+    REVIEWS,
+    list_evaluations,
+    reset_demo_state,
+)
 
 router = APIRouter(prefix="/evaluations", tags=["evaluations"])
 
@@ -17,6 +22,11 @@ def list_all_evaluations(trial_id: str | None = Query(default=None)):
 def create_evaluation(payload: StartEvaluationRequest):
     evaluation = start_evaluation(payload)
     return evaluation.model_dump()
+
+
+@router.post("/reset")
+def reset_evaluations_demo_data():
+    return reset_demo_state()
 
 
 @router.delete("/{evaluation_id}", status_code=status.HTTP_204_NO_CONTENT)

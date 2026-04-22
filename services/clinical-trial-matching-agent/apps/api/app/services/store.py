@@ -9,6 +9,7 @@ from app.models.schemas import Evaluation, Patient, ReviewTask, Trial, WorkflowE
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 DATA_DIR = BASE_DIR / "data"
+DEFAULT_ACTIVE_TRIAL_ID = "trial_nsclc_001"
 
 
 def utc_now() -> str:
@@ -20,18 +21,32 @@ def _load_json(relative_path: str):
         return json.load(handle)
 
 
-TRIALS: Dict[str, Trial] = {
-    item["id"]: Trial.model_validate(item) for item in _load_json("trials/trials.json")
-}
-PATIENTS: Dict[str, Patient] = {
-    item["id"]: Patient.model_validate(item) for item in _load_json("patients/patients.json")
-}
-REVIEWS: Dict[str, ReviewTask] = {
-    item["id"]: ReviewTask.model_validate(item) for item in _load_json("reviews/reviews.json")
-}
+def _load_trials() -> Dict[str, Trial]:
+    return {
+        item["id"]: Trial.model_validate(item)
+        for item in _load_json("trials/trials.json")
+    }
 
+
+def _load_patients() -> Dict[str, Patient]:
+    return {
+        item["id"]: Patient.model_validate(item)
+        for item in _load_json("patients/patients.json")
+    }
+
+
+def _load_reviews() -> Dict[str, ReviewTask]:
+    return {
+        item["id"]: ReviewTask.model_validate(item)
+        for item in _load_json("reviews/reviews.json")
+    }
+
+
+TRIALS: Dict[str, Trial] = _load_trials()
+PATIENTS: Dict[str, Patient] = _load_patients()
+REVIEWS: Dict[str, ReviewTask] = _load_reviews()
 EVALUATIONS: Dict[str, Evaluation] = {}
-ACTIVE_TRIAL_ID: str = "trial_nsclc_001"
+ACTIVE_TRIAL_ID: str = DEFAULT_ACTIVE_TRIAL_ID
 
 
 def set_active_trial(trial_id: str) -> Trial:
@@ -227,7 +242,7 @@ def seed_initial_evaluations() -> None:
     from app.services.evaluation_service import create_evaluation_for_patient
 
     if EVALUATIONS:
-        return
+      return
 
     seeded_by_trial = {
         "trial_nsclc_001": ["patient_001", "patient_002", "patient_003", "patient_004"],
@@ -258,3 +273,30 @@ def seed_initial_evaluations() -> None:
                 "trial_id": "trial_nsclc_001",
             }
         )
+
+
+def reset_demo_state() -> dict:
+    global ACTIVE_TRIAL_ID
+
+    TRIALS.clear()
+    TRIALS.update(_load_trials())
+
+    PATIENTS.clear()
+    PATIENTS.update(_load_patients())
+
+    REVIEWS.clear()
+    REVIEWS.update(_load_reviews())
+
+    EVALUATIONS.clear()
+
+    ACTIVE_TRIAL_ID = DEFAULT_ACTIVE_TRIAL_ID
+    set_active_trial(DEFAULT_ACTIVE_TRIAL_ID)
+    seed_initial_evaluations()
+
+    return {
+        "active_trial_id": ACTIVE_TRIAL_ID,
+        "trial_count": len(TRIALS),
+        "patient_count": len(PATIENTS),
+        "evaluation_count": len(EVALUATIONS),
+        "review_count": len(REVIEWS),
+    }
