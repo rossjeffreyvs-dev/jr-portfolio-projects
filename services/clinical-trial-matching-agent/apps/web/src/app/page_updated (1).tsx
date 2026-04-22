@@ -21,12 +21,7 @@ type IconName =
   | "sparkles";
 
 type Highlight = { label: string; icon: IconName };
-type Step = {
-  step: string;
-  title: string;
-  description: string;
-  icon: IconName;
-};
+type Step = { step: string; title: string; description: string; icon: IconName };
 type ArchitectureColumn = {
   title: string;
   subtitle: string;
@@ -79,22 +74,19 @@ const DESCRIPTION_CONTENT: {
     {
       step: "1. Patient Selection",
       title: "Patient Selection",
-      description:
-        "A patient is selected from the active trial’s eligible population.",
+      description: "A patient is selected from the active trial’s eligible population.",
       icon: "users",
     },
     {
       step: "2. Eligibility Evaluation",
       title: "Eligibility Evaluation",
-      description:
-        "Agents evaluate patient data against inclusion and exclusion criteria.",
+      description: "Agents evaluate patient data against inclusion and exclusion criteria.",
       icon: "clipboard",
     },
     {
       step: "3. Recommendation",
       title: "Recommendation",
-      description:
-        "A recommendation with rationale and confidence is generated.",
+      description: "A recommendation with rationale and confidence is generated.",
       icon: "sparkles",
     },
     {
@@ -153,36 +145,31 @@ const DESCRIPTION_CONTENT: {
   workflowAgents: [
     {
       title: "Patient Context Agent",
-      description:
-        "Collects and structures patient data relevant to the active trial.",
+      description: "Collects and structures patient data relevant to the active trial.",
       tone: "green",
       icon: "users",
     },
     {
       title: "Criteria Interpretation Agent",
-      description:
-        "Parses protocol criteria and converts them into machine-usable rules.",
+      description: "Parses protocol criteria and converts them into machine-usable rules.",
       tone: "blue",
       icon: "overview",
     },
     {
       title: "Eligibility Evaluation Agent",
-      description:
-        "Evaluates patient data against each criterion and determines match status.",
+      description: "Evaluates patient data against each criterion and determines match status.",
       tone: "purple",
       icon: "target",
     },
     {
       title: "Recommendation Agent",
-      description:
-        "Generates the overall recommendation with rationale and confidence.",
+      description: "Generates the overall recommendation with rationale and confidence.",
       tone: "orange",
       icon: "sparkles",
     },
     {
       title: "Review Agent (Human)",
-      description:
-        "Makes the final decision or requests more review for ambiguous cases.",
+      description: "Makes the final decision or requests more review for ambiguous cases.",
       tone: "pink",
       icon: "users",
     },
@@ -204,14 +191,7 @@ const DESCRIPTION_CONTENT: {
 function SectionIcon({ name }: { name: IconName }) {
   return (
     <span className="description-icon" aria-hidden="true">
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.9"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
         {name === "workflow" ? (
           <>
             <path d="M12 5v4" />
@@ -454,17 +434,13 @@ export default function ClinicalTrialProjectPage() {
             <section className="description-hero card">
               <div className="description-kicker">Project Overview</div>
               <h2>{DESCRIPTION_CONTENT.introTitle}</h2>
-              <p className="description-lead">
-                {DESCRIPTION_CONTENT.introBody}
-              </p>
+              <p className="description-lead">{DESCRIPTION_CONTENT.introBody}</p>
 
               <div className="description-highlight-grid">
                 {DESCRIPTION_CONTENT.highlights.map((item) => (
                   <div key={item.label} className="description-highlight-card">
                     <SectionIcon name={item.icon} />
-                    <div className="description-highlight-label">
-                      {item.label}
-                    </div>
+                    <div className="description-highlight-label">{item.label}</div>
                   </div>
                 ))}
               </div>
@@ -506,10 +482,7 @@ export default function ClinicalTrialProjectPage() {
                       <p>{item.description}</p>
                     </div>
                     {index < DESCRIPTION_CONTENT.howItWorks.length - 1 ? (
-                      <div
-                        className="description-step-arrow"
-                        aria-hidden="true"
-                      >
+                      <div className="description-step-arrow" aria-hidden="true">
                         →
                       </div>
                     ) : null}
@@ -538,10 +511,7 @@ export default function ClinicalTrialProjectPage() {
                       </div>
                       <div className="description-architecture-items">
                         {column.items.map((item) => (
-                          <div
-                            key={item}
-                            className="description-architecture-item"
-                          >
+                          <div key={item} className="description-architecture-item">
                             {item}
                           </div>
                         ))}
@@ -550,12 +520,12 @@ export default function ClinicalTrialProjectPage() {
                   ))}
                 </div>
 
-                {/* <DiagramFrame
+                <DiagramFrame
                   title="System Architecture Diagram"
-                  src="/images/system-architecture-diagram.png"
-                  href="/images/system-architecture-diagram.png"
+                  src="/images/system-architecture-diagram.svg"
+                  href="/images/system-architecture-diagram.svg"
                   alt="System architecture diagram showing frontend, workflow services, and data layer for the clinical trial matching demo."
-                /> */}
+                />
               </div>
             </DescriptionSection>
 
@@ -567,26 +537,16 @@ export default function ClinicalTrialProjectPage() {
               <div className="description-agent-layout">
                 <div className="description-agent-flow">
                   {DESCRIPTION_CONTENT.workflowAgents.map((agent, index) => (
-                    <div
-                      key={agent.title}
-                      className="description-agent-flow-item"
-                    >
-                      <div
-                        className={`description-agent-card tone-${agent.tone}`}
-                      >
+                    <div key={agent.title} className="description-agent-flow-item">
+                      <div className={`description-agent-card tone-${agent.tone}`}>
                         <div className="description-agent-card-icon">
                           <SectionIcon name={agent.icon} />
                         </div>
-                        <div className="description-agent-title">
-                          {agent.title}
-                        </div>
+                        <div className="description-agent-title">{agent.title}</div>
                         <p>{agent.description}</p>
                       </div>
                       {index < DESCRIPTION_CONTENT.workflowAgents.length - 1 ? (
-                        <div
-                          className="description-step-arrow"
-                          aria-hidden="true"
-                        >
+                        <div className="description-step-arrow" aria-hidden="true">
                           →
                         </div>
                       ) : null}
@@ -594,12 +554,12 @@ export default function ClinicalTrialProjectPage() {
                   ))}
                 </div>
 
-                {/* <DiagramFrame
+                <DiagramFrame
                   title="Agent Workflow Diagram"
                   src="/images/agent-workflow-diagram.svg"
                   href="/images/agent-workflow-diagram.svg"
                   alt="Agent workflow diagram showing patient context, criteria interpretation, eligibility evaluation, recommendation, and human review."
-                /> */}
+                />
               </div>
             </DescriptionSection>
 

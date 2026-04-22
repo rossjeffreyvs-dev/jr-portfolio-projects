@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="760" viewBox="0 0 1600 760" fill="none">
+  <rect width="1600" height="760" rx="28" fill="#F8FAFF"/>
+  <rect x="24" y="24" width="1552" height="712" rx="24" fill="white" stroke="#D6DDEB" stroke-width="2"/>
+  <text x="64" y="88" fill="#16213F" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="800">System Architecture</text>
+  <text x="64" y="124" fill="#617091" font-family="Inter, Arial, sans-serif" font-size="20">Frontend, workflow services, and mock data layer used in the clinical trial matching demo.</text>
+
+  <rect x="64" y="172" width="320" height="500" rx="24" fill="#F6F8FE" stroke="#CDD8F6" stroke-width="2"/>
+  <text x="224" y="224" text-anchor="middle" fill="#3158C9" font-family="Inter, Arial, sans-serif" font-size="26" font-weight="800">Frontend</text>
+  <text x="224" y="252" text-anchor="middle" fill="#617091" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700">Next.js / React</text>
+  <g font-family="Inter, Arial, sans-serif" font-size="19" font-weight="700" fill="#16213F">
+    <rect x="96" y="286" width="256" height="54" rx="14" fill="white" stroke="#D6DDEB" stroke-width="2"/><text x="224" y="320" text-anchor="middle">Dashboard</text>
+    <rect x="96" y="356" width="256" height="54" rx="14" fill="white" stroke="#D6DDEB" stroke-width="2"/><text x="224" y="390" text-anchor="middle">Patient Selector</text>
+    <rect x="96" y="426" width="256" height="54" rx="14" fill="white" stroke="#D6DDEB" stroke-width="2"/><text x="224" y="460" text-anchor="middle">Evaluation Viewer</text>
+    <rect x="96" y="496" width="256" height="54" rx="14" fill="white" stroke="#D6DDEB" stroke-width="2"/><text x="224" y="530" text-anchor="middle">Workflow Activity</text>
+    <rect x="96" y="566" width="256" height="54" rx="14" fill="white" stroke="#D6DDEB" stroke-width="2"/><text x="224" y="600" text-anchor="middle">Review Panel</text>
+  </g>
+
+  <rect x="480" y="172" width="660" height="500" rx="24" fill="#FBF7FF" stroke="#DCCDF6" stroke-width="2"/>
+  <text x="810" y="224" text-anchor="middle" fill="#7A44E6" font-family="Inter, Arial, sans-serif" font-size="26" font-weight="800">Application Services</text>
+  <text x="810" y="252" text-anchor="middle" fill="#617091" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700">API + Workflow Layer</text>
+  <g font-family="Inter, Arial, sans-serif">
+    <g>
+      <rect x="518" y="286" width="280" height="94" rx="18" fill="white" stroke="#E0D5F3" stroke-width="2"/>
+      <text x="560" y="324" fill="#16213F" font-size="22" font-weight="800">Trial Service</text>
+      <text x="560" y="354" fill="#617091" font-size="16" font-weight="600">Manage trials, activation, and metadata</text>
+    </g>
+    <g>
+      <rect x="822" y="286" width="280" height="94" rx="18" fill="white" stroke="#E0D5F3" stroke-width="2"/>
+      <text x="864" y="324" fill="#16213F" font-size="22" font-weight="800">Patient Service</text>
+      <text x="864" y="354" fill="#617091" font-size="16" font-weight="600">Manage patients and trial populations</text>
+    </g>
+    <g>
+      <rect x="518" y="398" width="280" height="94" rx="18" fill="white" stroke="#E0D5F3" stroke-width="2"/>
+      <text x="560" y="436" fill="#16213F" font-size="22" font-weight="800">Evaluation Service</text>
+      <text x="560" y="466" fill="#617091" font-size="16" font-weight="600">Create and manage evaluations</text>
+    </g>
+    <g>
+      <rect x="822" y="398" width="280" height="94" rx="18" fill="white" stroke="#E0D5F3" stroke-width="2"/>
+      <text x="864" y="436" fill="#16213F" font-size="22" font-weight="800">Review Service</text>
+      <text x="864" y="466" fill="#617091" font-size="16" font-weight="600">Handle review actions and case outcomes</text>
+    </g>
+    <g>
+      <rect x="518" y="510" width="280" height="94" rx="18" fill="white" stroke="#E0D5F3" stroke-width="2"/>
+      <text x="560" y="548" fill="#16213F" font-size="22" font-weight="800">Playback Service</text>
+      <text x="560" y="578" fill="#617091" font-size="16" font-weight="600">Workflow activity and step playback</text>
+    </g>
+    <g>
+      <rect x="822" y="510" width="280" height="94" rx="18" fill="white" stroke="#E0D5F3" stroke-width="2"/>
+      <text x="864" y="548" fill="#16213F" font-size="22" font-weight="800">Demo Reset Service</text>
+      <text x="864" y="578" fill="#617091" font-size="16" font-weight="600">Reset mock state and restore demo flow</text>
+    </g>
+  </g>
+
+  <rect x="1236" y="172" width="300" height="500" rx="24" fill="#F7FCF7" stroke="#CFE7D0" stroke-width="2"/>
+  <text x="1386" y="224" text-anchor="middle" fill="#2F8D57" font-family="Inter, Arial, sans-serif" font-size="26" font-weight="800">Data Layer</text>
+  <text x="1386" y="252" text-anchor="middle" fill="#617091" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700">Mock Dataset</text>
+  <g font-family="Inter, Arial, sans-serif" font-size="19" font-weight="700" fill="#16213F">
+    <rect x="1268" y="286" width="236" height="54" rx="14" fill="white" stroke="#CFE7D0" stroke-width="2"/><text x="1386" y="320" text-anchor="middle">Trials</text>
+    <rect x="1268" y="356" width="236" height="54" rx="14" fill="white" stroke="#CFE7D0" stroke-width="2"/><text x="1386" y="390" text-anchor="middle">Patients</text>
+    <rect x="1268" y="426" width="236" height="54" rx="14" fill="white" stroke="#CFE7D0" stroke-width="2"/><text x="1386" y="460" text-anchor="middle">Evaluations</text>
+    <rect x="1268" y="496" width="236" height="54" rx="14" fill="white" stroke="#CFE7D0" stroke-width="2"/><text x="1386" y="530" text-anchor="middle">Criteria Evidence</text>
+    <rect x="1268" y="566" width="236" height="54" rx="14" fill="white" stroke="#CFE7D0" stroke-width="2"/><text x="1386" y="600" text-anchor="middle">Reviews & Workflow Steps</text>
+  </g>
+
+  <text x="432" y="440" text-anchor="middle" fill="#16213F" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="700">↔</text>
+  <text x="1188" y="440" text-anchor="middle" fill="#16213F" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="700">↔</text>
+</svg>

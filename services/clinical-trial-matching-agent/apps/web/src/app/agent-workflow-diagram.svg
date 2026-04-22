@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="520" viewBox="0 0 1600 520" fill="none">
+  <rect width="1600" height="520" rx="28" fill="#F8FAFF"/>
+  <rect x="24" y="24" width="1552" height="472" rx="24" fill="white" stroke="#D6DDEB" stroke-width="2"/>
+  <text x="64" y="88" fill="#16213F" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="800">Agent Workflow</text>
+  <text x="64" y="124" fill="#617091" font-family="Inter, Arial, sans-serif" font-size="20">Simulated multi-agent chain used to assess patient eligibility and route review decisions.</text>
+
+  <g font-family="Inter, Arial, sans-serif">
+    <rect x="64" y="188" width="246" height="236" rx="22" fill="#F4FBF4" stroke="#CFE7D0" stroke-width="2"/>
+    <text x="187" y="232" text-anchor="middle" fill="#2F8D57" font-size="22" font-weight="800">Patient Context Agent</text>
+    <text x="187" y="298" text-anchor="middle" fill="#16213F" font-size="18" font-weight="700">Collects and structures</text>
+    <text x="187" y="326" text-anchor="middle" fill="#16213F" font-size="18" font-weight="700">trial-relevant patient data</text>
+
+    <rect x="360" y="188" width="246" height="236" rx="22" fill="#F4F8FF" stroke="#CDD8F6" stroke-width="2"/>
+    <text x="483" y="232" text-anchor="middle" fill="#3158C9" font-size="22" font-weight="800">Criteria Interpretation</text>
+    <text x="483" y="260" text-anchor="middle" fill="#3158C9" font-size="22" font-weight="800">Agent</text>
+    <text x="483" y="298" text-anchor="middle" fill="#16213F" font-size="18" font-weight="700">Parses protocol criteria</text>
+    <text x="483" y="326" text-anchor="middle" fill="#16213F" font-size="18" font-weight="700">into machine-usable rules</text>
+
+    <rect x="656" y="188" width="246" height="236" rx="22" fill="#FBF7FF" stroke="#E0D5F3" stroke-width="2"/>
+    <text x="779" y="232" text-anchor="middle" fill="#7A44E6" font-size="22" font-weight="800">Eligibility Evaluation</text>
+    <text x="779" y="260" text-anchor="middle" fill="#7A44E6" font-size="22" font-weight="800">Agent</text>
+    <text x="779" y="298" text-anchor="middle" fill="#16213F" font-size="18" font-weight="700">Evaluates patient data</text>
+    <text x="779" y="326" text-anchor="middle" fill="#16213F" font-size="18" font-weight="700">against each criterion</text>
+
+    <rect x="952" y="188" width="246" height="236" rx="22" fill="#FFF8F1" stroke="#F4D6AE" stroke-width="2"/>
+    <text x="1075" y="232" text-anchor="middle" fill="#E67E22" font-size="22" font-weight="800">Recommendation Agent</text>
+    <text x="1075" y="298" text-anchor="middle" fill="#16213F" font-size="18" font-weight="700">Generates overall</text>
+    <text x="1075" y="326" text-anchor="middle" fill="#16213F" font-size="18" font-weight="700">recommendation and rationale</text>
+
+    <rect x="1248" y="188" width="288" height="236" rx="22" fill="#FFF5F8" stroke="#F0CAD8" stroke-width="2"/>
+    <text x="1392" y="232" text-anchor="middle" fill="#E25583" font-size="22" font-weight="800">Review Agent (Human)</text>
+    <text x="1392" y="298" text-anchor="middle" fill="#16213F" font-size="18" font-weight="700">Makes final decision</text>
+    <text x="1392" y="326" text-anchor="middle" fill="#16213F" font-size="18" font-weight="700">or requests more review</text>
+  </g>
+
+  <g fill="#16213F" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="700">
+    <text x="326" y="322">→</text>
+    <text x="622" y="322">→</text>
+    <text x="918" y="322">→</text>
+    <text x="1214" y="322">→</text>
+  </g>
+</svg>
