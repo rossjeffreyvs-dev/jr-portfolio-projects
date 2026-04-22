@@ -110,6 +110,7 @@ export function useClinicalTrialDashboard() {
   const [startedEvaluationId, setStartedEvaluationId] = useState<string | null>(
     null,
   );
+  const [playbackSequenceKey, setPlaybackSequenceKey] = useState(0);
 
   const loadDashboard = useCallback(async (preferredEvaluationId?: string) => {
     setError(null);
@@ -294,6 +295,7 @@ export function useClinicalTrialDashboard() {
         setIsPatientModalOpen(false);
         setTrialPatients([]);
         setStartedEvaluationId(evaluation.id);
+        setPlaybackSequenceKey((prev) => prev + 1);
         await loadDashboard(evaluation.id);
       } catch (err) {
         const message =
@@ -360,10 +362,13 @@ export function useClinicalTrialDashboard() {
   );
 
   const handleReplayWorkflow = useCallback(() => {
-    if (selectedEvaluation) {
-      setStartedEvaluationId(selectedEvaluation.id);
-      setSelectedEvaluationId(selectedEvaluation.id);
-    }
+    if (!selectedEvaluation) return;
+
+    setActiveReviewEvaluationId(null);
+    setReviewNote("");
+    setStartedEvaluationId(selectedEvaluation.id);
+    setSelectedEvaluationId(selectedEvaluation.id);
+    setPlaybackSequenceKey((prev) => prev + 1);
   }, [selectedEvaluation]);
 
   const handleClosePatientModal = useCallback(() => {
@@ -492,6 +497,7 @@ export function useClinicalTrialDashboard() {
     activeReviewPatient,
     reviewNote,
     startedEvaluationId,
+    playbackSequenceKey,
     setReviewNote,
     setSelectedEvaluationId,
     handleOpenPatientModal,

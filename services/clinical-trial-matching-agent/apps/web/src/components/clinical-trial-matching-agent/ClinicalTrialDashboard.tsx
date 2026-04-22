@@ -23,6 +23,7 @@ type ClinicalTrialDashboardProps = {
   isLoadingTrialPatients: boolean;
   isChangingTrial: boolean;
   startedEvaluationId?: string | null;
+  playbackSequenceKey: number;
   onOpenPatientModal: () => void;
   onChangeTrial: () => void;
   onReplayWorkflow: () => void;
@@ -55,6 +56,7 @@ export default function ClinicalTrialDashboard({
   isLoadingTrialPatients,
   isChangingTrial,
   startedEvaluationId,
+  playbackSequenceKey,
   onOpenPatientModal,
   onChangeTrial,
   onReplayWorkflow,
@@ -80,7 +82,7 @@ export default function ClinicalTrialDashboard({
   const tabAnchorRef = useRef<HTMLDivElement | null>(null);
   const evaluationSectionRef = useRef<HTMLElement | null>(null);
   const workflowSectionRef = useRef<HTMLElement | null>(null);
-  const lastStartedEvaluationRef = useRef<string | null>(null);
+  const lastPlaybackKeyRef = useRef<number | null>(null);
   const timersRef = useRef<number[]>([]);
 
   const selectedWorklistPatient = useMemo(() => {
@@ -122,8 +124,8 @@ export default function ClinicalTrialDashboard({
   }, []);
 
   useEffect(() => {
-    if (!startedEvaluationId) {
-      lastStartedEvaluationRef.current = null;
+    if (!startedEvaluationId || playbackSequenceKey === 0) {
+      lastPlaybackKeyRef.current = null;
       setTypedBannerText("");
       setIsPlaybackActive(false);
       setShowFinalRecommendation(true);
@@ -137,12 +139,12 @@ export default function ClinicalTrialDashboard({
     if (
       !selectedEvaluation ||
       selectedEvaluation.id !== startedEvaluationId ||
-      lastStartedEvaluationRef.current === startedEvaluationId
+      lastPlaybackKeyRef.current === playbackSequenceKey
     ) {
       return;
     }
 
-    lastStartedEvaluationRef.current = startedEvaluationId;
+    lastPlaybackKeyRef.current = playbackSequenceKey;
     clearTimers();
 
     const workflowEvents = selectedEvaluation.workflow_events || [];
@@ -247,6 +249,7 @@ export default function ClinicalTrialDashboard({
     }, elapsedMs);
   }, [
     activeTrial,
+    playbackSequenceKey,
     resolvedSelectedPatient,
     selectedEvaluation,
     startedEvaluationId,
@@ -304,7 +307,12 @@ export default function ClinicalTrialDashboard({
 
             <h2 style={{ marginTop: 16, marginBottom: 12 }}>
               Queued evaluations for the active trial
-              {activeTrial?.title ? ` — '${activeTrial.title}'` : ""}
+              {activeTrial?.title && (
+                <span style={{ color: "var(--muted)", fontWeight: 500 }}>
+                  {" "}
+                  — {activeTrial.title}
+                </span>
+              )}
             </h2>
 
             <p style={{ marginTop: 0 }}>

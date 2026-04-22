@@ -29,6 +29,7 @@ export default function ClinicalTrialProjectPage() {
     activeReviewPatient,
     reviewNote,
     startedEvaluationId,
+    playbackSequenceKey,
     setReviewNote,
     setSelectedEvaluationId,
     handleOpenPatientModal,
@@ -120,6 +121,7 @@ export default function ClinicalTrialProjectPage() {
           isLoadingTrialPatients={isLoadingTrialPatients}
           isChangingTrial={isChangingTrial}
           startedEvaluationId={startedEvaluationId}
+          playbackSequenceKey={playbackSequenceKey}
           onOpenPatientModal={handleOpenPatientModal}
           onChangeTrial={handleOpenChangeTrialModal}
           onReplayWorkflow={handleReplayWorkflow}
