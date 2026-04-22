@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+
 import type { Evaluation, Patient, ReviewTask } from "@/lib/api";
 import { statusClass } from "./dashboardUtils";
 
@@ -10,6 +11,7 @@ type TrialWorklistProps = {
   reviewCards: ReviewTask[];
   selectedEvaluationId?: string;
   onSelectEvaluation: (evaluationId: string) => void;
+  onRemoveEvaluation: (evaluationId: string) => void;
 };
 
 type WorklistMenuProps = {
@@ -110,9 +112,10 @@ export default function TrialWorklist({
   reviewCards,
   selectedEvaluationId,
   onSelectEvaluation,
+  onRemoveEvaluation,
 }: TrialWorklistProps) {
   function handleRemoveFromWorklist(evaluationId: string) {
-    console.log("remove from worklist", { evaluationId });
+    onRemoveEvaluation(evaluationId);
   }
 
   if (evaluations.length === 0) {
@@ -192,7 +195,11 @@ export default function TrialWorklist({
           >
             <div className="queue-top-row">
               <div className="queue-top-meta">
-                <p className="queue-patient-id">{evaluation.patient_id}</p>
+                <p className="queue-patient-id">
+                  {patient?.display_name ||
+                    patient?.id ||
+                    evaluation.patient_id}
+                </p>
                 <p className="queue-match-inline">
                   MATCH SCORE: {evaluation.match_score}%
                 </p>
