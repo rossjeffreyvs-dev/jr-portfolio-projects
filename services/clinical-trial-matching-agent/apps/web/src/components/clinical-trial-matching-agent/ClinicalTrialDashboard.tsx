@@ -421,9 +421,9 @@ export default function ClinicalTrialDashboard({
           <section className="card" style={{ marginTop: 28 }}>
             <span className="section-label">Criteria Match Table</span>
 
-            <h2 style={{ marginTop: 16, marginBottom: 20 }}>
+            {/* <h2 style={{ marginTop: 16, marginBottom: 20 }}>
               Criterion-by-criterion evaluation
-            </h2>
+            </h2> */}
 
             <CriteriaMatchTable
               selectedEvaluation={selectedEvaluation}

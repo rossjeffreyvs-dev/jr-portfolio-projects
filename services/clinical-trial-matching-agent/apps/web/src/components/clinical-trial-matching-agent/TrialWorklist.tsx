@@ -61,7 +61,7 @@ function WorklistMenu({ evaluationId, onRemove }: WorklistMenuProps) {
         …
       </button>
 
-      {isOpen && (
+      {isOpen ? (
         <div className="queue-menu-popover">
           <button
             type="button"
@@ -74,7 +74,7 @@ function WorklistMenu({ evaluationId, onRemove }: WorklistMenuProps) {
             Remove from Worklist
           </button>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
@@ -151,8 +151,16 @@ export default function TrialWorklist({
               </div>
 
               <div className="queue-top-actions">
-                <span className={statusClass(evaluation.recommendation)}>
-                  {evaluation.recommendation}
+                <span
+                  className={statusClass(
+                    requiresReview
+                      ? "Requires Review"
+                      : evaluation.recommendation,
+                  )}
+                >
+                  {requiresReview
+                    ? "Requires Review"
+                    : evaluation.recommendation}
                 </span>
 
                 <WorklistMenu
@@ -170,7 +178,7 @@ export default function TrialWorklist({
               <button
                 type="button"
                 className={`queue-cta-btn ${
-                  requiresReview ? "queue-cta-review" : "queue-cta-secondary"
+                  isSelected ? "queue-cta-review" : "queue-cta-secondary"
                 }`}
                 onClick={(event) => {
                   event.stopPropagation();
