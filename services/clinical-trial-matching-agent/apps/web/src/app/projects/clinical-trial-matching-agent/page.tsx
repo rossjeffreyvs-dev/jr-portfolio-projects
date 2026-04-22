@@ -31,7 +31,13 @@ export default function ClinicalTrialProjectPage() {
     reviewNote,
     startedEvaluationId,
     playbackSequenceKey,
+    semanticQuery,
+    semanticSuggestions,
+    isSemanticSearchLoading,
+    semanticSearchError,
+    hasRunSemanticSearch,
     setReviewNote,
+    setSemanticQuery,
     setSelectedEvaluationId,
     handleOpenPatientModal,
     handleOpenChangeTrialModal,
@@ -46,32 +52,18 @@ export default function ClinicalTrialProjectPage() {
     handleApproveReview,
     handleRejectReview,
     handleRemoveEvaluation,
+    handleRunSemanticSearch,
+    handleSelectSemanticSuggestion,
+    handleResetPatientSearch,
   } = useClinicalTrialDashboard();
 
   if (isLoading) {
     return (
       <div className="page-shell">
-        <header className="site-header">
-          <div className="brand">
-            <div className="brand-mark">JR</div>
-            <div>Projects</div>
-          </div>
-
-          <nav className="top-nav">
-            <a href="#">Home</a>
-            <a href="#" className="active">
-              Projects
-            </a>
-            <a href="#">Blog</a>
-            <a href="#">About</a>
-            <a href="#">Contact</a>
-          </nav>
-        </header>
-
         <main className="container">
           <section className="hero">
             <h1>Multi-Agent Clinical Trial Matching System</h1>
-            <p>Loading dashboard data from the local API…</p>
+            <p>Loading dashboard data…</p>
           </section>
         </main>
       </div>
@@ -80,36 +72,13 @@ export default function ClinicalTrialProjectPage() {
 
   return (
     <div className="page-shell">
-      <header className="site-header">
-        <div className="brand">
-          <div className="brand-mark">JR</div>
-          <div>Projects</div>
-        </div>
-
-        <nav className="top-nav">
-          <a href="#">Home</a>
-          <a href="#" className="active">
-            Projects
-          </a>
-          <a href="#">Blog</a>
-          <a href="#">About</a>
-          <a href="#">Contact</a>
-        </nav>
-      </header>
-
       <main className="container">
         <section className="hero">
           <h1>Multi-Agent Clinical Trial Matching System</h1>
           <p>
             Evaluate patient eligibility against clinical trial criteria using a
-            simulated agent workflow spanning patient context building,
-            matching, explanation, and human review.
+            simulated agent workflow.
           </p>
-
-          <div className="tab-row">
-            <button className="tab-btn">Project Description</button>
-            <button className="tab-btn active">Demo</button>
-          </div>
         </section>
 
         <ClinicalTrialDashboard
@@ -140,13 +109,19 @@ export default function ClinicalTrialProjectPage() {
           trialTitle={activeTrial?.title}
           isLoading={isLoadingTrialPatients}
           isStartingEvaluation={isStartingEvaluation}
-          patientActionLabel={
-            isStartingEvaluation
-              ? "Loading patient + trial context..."
-              : "Initializing evaluation..."
-          }
           onClose={handleClosePatientModal}
           onStartEvaluation={handleStartEvaluationFromModal}
+          semanticQuery={semanticQuery}
+          onSemanticQueryChange={setSemanticQuery}
+          onRunSemanticSearch={() => void handleRunSemanticSearch()}
+          onResetPatientSearch={() => void handleResetPatientSearch()}
+          semanticSuggestions={semanticSuggestions}
+          onSelectSemanticSuggestion={(suggestion) =>
+            void handleSelectSemanticSuggestion(suggestion)
+          }
+          isSemanticSearchLoading={isSemanticSearchLoading}
+          semanticSearchError={semanticSearchError}
+          hasRunSemanticSearch={hasRunSemanticSearch}
         />
 
         <ChangeTrialModal
@@ -160,8 +135,8 @@ export default function ClinicalTrialProjectPage() {
 
         <ReviewCasePanel
           isOpen={Boolean(activeReviewEvaluation)}
-          evaluation={activeReviewEvaluation || undefined}
-          patient={activeReviewPatient || undefined}
+          evaluation={activeReviewEvaluation}
+          patient={activeReviewPatient}
           reviewNote={reviewNote}
           onReviewNoteChange={setReviewNote}
           onApprove={handleApproveReview}

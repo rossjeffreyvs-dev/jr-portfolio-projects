@@ -5,7 +5,6 @@ from typing import Dict, List, Literal, Optional
 from pydantic import BaseModel, Field, field_validator
 
 StatusType = Literal["Likely Match", "Not Eligible", "Requires Review", "In Progress"]
-
 WorkflowStage = Literal[
     "patient_selected",
     "event_published",
@@ -35,7 +34,6 @@ class Trial(BaseModel):
     protocol_status: Literal["parsed", "active", "inactive"]
     inclusion_criteria: List[TrialCriterion]
     exclusion_criteria: List[TrialCriterion]
-
     key_inclusion: List[str] = Field(default_factory=list)
     performance: List[str] = Field(default_factory=list)
     imaging_context: List[str] = Field(default_factory=list)
@@ -135,3 +133,61 @@ class ReviewTask(BaseModel):
 class ReviewDecisionRequest(BaseModel):
     decision: Literal["approve", "reject", "needs_more_data", "escalate"]
     note: str = Field(min_length=1)
+
+
+SemanticSuggestionCategory = Literal[
+    "disease",
+    "biomarker",
+    "treatment_history",
+    "comorbidity",
+    "lab_pattern",
+    "general",
+]
+
+
+class SemanticQuerySuggestion(BaseModel):
+    id: str
+    label: str
+    query: str
+    category: SemanticSuggestionCategory
+
+
+class SemanticSearchRequest(BaseModel):
+    trial_id: str
+    query: str = Field(min_length=3)
+    top_k: int = Field(default=10, ge=1, le=25)
+    include_nontrial_matches: bool = False
+
+
+class SemanticSearchHighlights(BaseModel):
+    diagnosis: List[str] = Field(default_factory=list)
+    biomarkers: List[str] = Field(default_factory=list)
+    prior_therapies: List[str] = Field(default_factory=list)
+    comorbidities: List[str] = Field(default_factory=list)
+    notes: List[str] = Field(default_factory=list)
+    labs: List[str] = Field(default_factory=list)
+
+
+class SemanticSearchResult(BaseModel):
+    patient_id: str
+    score: int = Field(ge=0, le=100)
+    similarity: float
+    rank: int
+    explanation: str
+    matched_terms: List[str] = Field(default_factory=list)
+    highlights: SemanticSearchHighlights
+    patient: Patient
+
+
+class SemanticQuerySuggestionResponse(BaseModel):
+    trial_id: str
+    items: List[SemanticQuerySuggestion]
+
+
+class SemanticSearchResponse(BaseModel):
+    trial_id: str
+    query: str
+    strategy: Literal["token_weighted_demo_semantic"]
+    total_candidates: int
+    items: List[SemanticSearchResult]
+    suggestions: List[SemanticQuerySuggestion] = Field(default_factory=list)

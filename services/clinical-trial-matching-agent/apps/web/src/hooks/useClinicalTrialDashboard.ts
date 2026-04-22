@@ -7,22 +7,25 @@ import {
   getPatients,
   getPatientsForTrial,
   getReviews,
+  getSemanticQuerySuggestions,
   getTrials,
   removeEvaluation,
   resetDemoData,
+  semanticSearchPatients,
   startEvaluation,
   type Evaluation,
   type Patient,
   type ReviewTask,
+  type SemanticQuerySuggestion,
+  type SemanticSearchResult,
   type Trial,
-  type WorkflowEvent,
 } from "@/lib/api";
 import {
   dedupeEvaluationsByPatient,
   sortPatientsForTrial,
 } from "@/components/clinical-trial-matching-agent/dashboardUtils";
 
-type ModalPatient = {
+export type ModalPatient = {
   id: string;
   name: string;
   age: number | null;
@@ -36,15 +39,19 @@ type ModalPatient = {
     | "unlikely_match"
     | null;
   summary: string;
+  semanticExplanation?: string | null;
+  semanticMatchedTerms?: string[];
+  semanticRank?: number | null;
+  isSemanticResult?: boolean;
 };
 
 function mapPatientOutcome(
   outcome: Patient["seeded_outcome"],
 ): ModalPatient["outcome"] {
   if (outcome === "Likely Match") return "likely_match";
-  if (outcome === "Possible Match") return "possible_match";
   if (outcome === "Requires Review") return "review";
   if (outcome === "Not Eligible") return "unlikely_match";
+  if (outcome === "Possible Match") return "possible_match";
   return null;
 }
 
@@ -63,26 +70,61 @@ function mapPatientsToModalRows(patients: Patient[]): ModalPatient[] {
     summary: patient.notes.length
       ? patient.notes.join(" ")
       : patient.seeded_reason || "No summary available.",
+    semanticExplanation: null,
+    semanticMatchedTerms: [],
+    semanticRank: null,
+    isSemanticResult: false,
   }));
 }
 
-function buildHumanReviewEvent(
-  decision: "approved" | "rejected",
-  note?: string,
-): WorkflowEvent {
+function mapSemanticResultsToModalRows(
+  results: SemanticSearchResult[],
+): ModalPatient[] {
+  return results.map((item) => ({
+    id: item.patient.id,
+    name: item.patient.display_name,
+    age: item.patient.age ?? null,
+    sex: item.patient.sex ?? null,
+    diagnosis: item.patient.diagnosis.length
+      ? item.patient.diagnosis.join(", ")
+      : "—",
+    score: typeof item.score === "number" ? item.score / 100 : null,
+    outcome: mapPatientOutcome(item.patient.seeded_outcome),
+    summary: item.patient.seeded_reason || "No summary available.",
+    semanticExplanation: item.explanation,
+    semanticMatchedTerms: item.matched_terms || [],
+    semanticRank: item.rank ?? null,
+    isSemanticResult: true,
+  }));
+}
+
+function updateEvaluationRecommendation(
+  evaluation: Evaluation,
+  decision: "approve" | "reject",
+  note: string,
+): Evaluation {
+  const approved = decision === "approve";
+
   return {
-    stage: "human_review",
-    label: "Human Review",
-    status: "complete",
-    detail:
-      decision === "approved"
-        ? note?.trim()
-          ? `Approved by reviewer.\nNote: ${note.trim()}`
-          : "Approved by reviewer."
-        : note?.trim()
-          ? `Rejected by reviewer.\nNote: ${note.trim()}`
-          : "Rejected by reviewer.",
-    timestamp: new Date().toISOString(),
+    ...evaluation,
+    recommendation: approved ? "Approved" : "Rejected",
+    workflow_status: "Completed",
+    review_required: false,
+    reviewer_action: note.trim() || (approved ? "Approved" : "Rejected"),
+    review_reason: approved ? [] : evaluation.review_reason,
+  };
+}
+
+function updateReviewTask(
+  review: ReviewTask,
+  decision: "approve" | "reject",
+  note: string,
+): ReviewTask {
+  return {
+    ...review,
+    review_status: "Resolved",
+    reviewer_decision: decision,
+    reviewer_note: note.trim() || null,
   };
 }
 
@@ -93,15 +135,12 @@ export function useClinicalTrialDashboard() {
   const [reviews, setReviews] = useState<ReviewTask[]>([]);
   const [activeTrialId, setActiveTrialId] = useState("");
   const [selectedEvaluationId, setSelectedEvaluationId] = useState("");
-  const [activeReviewEvaluationId, setActiveReviewEvaluationId] = useState<
-    string | null
-  >(null);
-  const [reviewNote, setReviewNote] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isStartingEvaluation, setIsStartingEvaluation] = useState(false);
   const [isChangingTrial, setIsChangingTrial] = useState(false);
   const [isResettingDemo, setIsResettingDemo] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
   const [patientModalError, setPatientModalError] = useState<string | null>(
     null,
   );
@@ -109,6 +148,25 @@ export function useClinicalTrialDashboard() {
   const [isChangeTrialModalOpen, setIsChangeTrialModalOpen] = useState(false);
   const [trialPatients, setTrialPatients] = useState<Patient[]>([]);
   const [isLoadingTrialPatients, setIsLoadingTrialPatients] = useState(false);
+
+  const [semanticQuery, setSemanticQuery] = useState("");
+  const [semanticSuggestions, setSemanticSuggestions] = useState<
+    SemanticQuerySuggestion[]
+  >([]);
+  const [semanticResults, setSemanticResults] = useState<
+    SemanticSearchResult[]
+  >([]);
+  const [isSemanticSearchLoading, setIsSemanticSearchLoading] = useState(false);
+  const [semanticSearchError, setSemanticSearchError] = useState<string | null>(
+    null,
+  );
+  const [hasRunSemanticSearch, setHasRunSemanticSearch] = useState(false);
+
+  const [activeReviewEvaluationId, setActiveReviewEvaluationId] = useState<
+    string | null
+  >(null);
+  const [reviewNote, setReviewNote] = useState("");
+
   const [startedEvaluationId, setStartedEvaluationId] = useState<string | null>(
     null,
   );
@@ -150,6 +208,14 @@ export function useClinicalTrialDashboard() {
       "";
 
     setSelectedEvaluationId(nextSelected);
+
+    return {
+      trials: nextTrials,
+      activeTrialId: resolvedActiveTrialId,
+      evaluations: uniqueEvaluations,
+      reviews: reviewResponse.items || [],
+      patients: patientResponse.items || [],
+    };
   }, []);
 
   useEffect(() => {
@@ -197,6 +263,18 @@ export function useClinicalTrialDashboard() {
     [reviews, activeTrialId],
   );
 
+  const activeReviewEvaluation = useMemo(() => {
+    if (!activeReviewEvaluationId) return undefined;
+    return evaluations.find((item) => item.id === activeReviewEvaluationId);
+  }, [activeReviewEvaluationId, evaluations]);
+
+  const activeReviewPatient = useMemo(() => {
+    if (!activeReviewEvaluation) return undefined;
+    return patients.find(
+      (patient) => patient.id === activeReviewEvaluation.patient_id,
+    );
+  }, [activeReviewEvaluation, patients]);
+
   const queuedPatientIds = useMemo(
     () => new Set(evaluations.map((evaluation) => evaluation.patient_id)),
     [evaluations],
@@ -210,72 +288,34 @@ export function useClinicalTrialDashboard() {
     [trialPatients, queuedPatientIds],
   );
 
-  const modalPatients = useMemo(
+  const fallbackModalPatients = useMemo(
     () => mapPatientsToModalRows(availableTrialPatients),
     [availableTrialPatients],
   );
 
-  const activeReviewEvaluation = useMemo(
-    () =>
-      evaluations.find(
-        (evaluation) => evaluation.id === activeReviewEvaluationId,
-      ) || null,
-    [evaluations, activeReviewEvaluationId],
+  const semanticModalPatients = useMemo(
+    () => mapSemanticResultsToModalRows(semanticResults),
+    [semanticResults],
   );
 
-  const activeReviewPatient = useMemo(() => {
-    if (!activeReviewEvaluation) return null;
-
-    return (
-      patients.find(
-        (patient) => patient.id === activeReviewEvaluation.patient_id,
-      ) || null
-    );
-  }, [patients, activeReviewEvaluation]);
-
-  const handleRemoveEvaluation = useCallback(
-    async (evaluationId: string) => {
-      try {
-        setError(null);
-        await removeEvaluation(evaluationId);
-
-        const removingSelected = selectedEvaluationId === evaluationId;
-        await loadDashboard(
-          removingSelected ? undefined : selectedEvaluationId,
-        );
-      } catch (err) {
-        const message =
-          err instanceof Error
-            ? err.message
-            : "Unable to remove evaluation from worklist.";
-        setError(message);
-      }
-    },
-    [loadDashboard, selectedEvaluationId],
-  );
-
-  const handleResetDemo = useCallback(async () => {
-    try {
-      setIsResettingDemo(true);
-      setError(null);
-      setPatientModalError(null);
-      setIsPatientModalOpen(false);
-      setIsChangeTrialModalOpen(false);
-      setActiveReviewEvaluationId(null);
-      setReviewNote("");
-      setStartedEvaluationId(null);
-      setPlaybackSequenceKey(0);
-
-      await resetDemoData();
-      await loadDashboard();
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Unable to reset demo data.";
-      setError(message);
-    } finally {
-      setIsResettingDemo(false);
+  const modalPatients = useMemo(() => {
+    if (hasRunSemanticSearch) {
+      return semanticModalPatients;
     }
-  }, [loadDashboard]);
+    return fallbackModalPatients;
+  }, [fallbackModalPatients, hasRunSemanticSearch, semanticModalPatients]);
+
+  const resetSemanticState = useCallback(() => {
+    setSemanticQuery("");
+    setSemanticResults([]);
+    setSemanticSearchError(null);
+    setHasRunSemanticSearch(false);
+  }, []);
+
+  const loadSemanticSuggestions = useCallback(async (trialId: string) => {
+    const response = await getSemanticQuerySuggestions(trialId);
+    setSemanticSuggestions(response.items || []);
+  }, []);
 
   const handleOpenPatientModal = useCallback(async () => {
     if (!activeTrial || isStartingEvaluation) {
@@ -288,12 +328,18 @@ export function useClinicalTrialDashboard() {
     setError(null);
     setPatientModalError(null);
     setTrialPatients([]);
+    resetSemanticState();
     setIsPatientModalOpen(true);
     setIsLoadingTrialPatients(true);
 
     try {
-      const response = await getPatientsForTrial(activeTrial.id);
-      setTrialPatients(response.items || []);
+      const [patientResponse, suggestionsResponse] = await Promise.all([
+        getPatientsForTrial(activeTrial.id),
+        getSemanticQuerySuggestions(activeTrial.id),
+      ]);
+
+      setTrialPatients(patientResponse.items || []);
+      setSemanticSuggestions(suggestionsResponse.items || []);
     } catch (err) {
       const message =
         err instanceof Error
@@ -302,10 +348,77 @@ export function useClinicalTrialDashboard() {
       setError(message);
       setPatientModalError(message);
       setTrialPatients([]);
+      setSemanticSuggestions([]);
     } finally {
       setIsLoadingTrialPatients(false);
     }
-  }, [activeTrial, isStartingEvaluation]);
+  }, [activeTrial, isStartingEvaluation, resetSemanticState]);
+
+  const handleRunSemanticSearch = useCallback(
+    async (nextQuery?: string) => {
+      if (!activeTrial) return;
+
+      const resolvedQuery = (nextQuery ?? semanticQuery).trim();
+      setSemanticSearchError(null);
+
+      if (resolvedQuery.length < 3) {
+        setSemanticSearchError(
+          "Enter at least 3 characters to run semantic search.",
+        );
+        return;
+      }
+
+      setIsSemanticSearchLoading(true);
+
+      try {
+        const response = await semanticSearchPatients({
+          trial_id: activeTrial.id,
+          query: resolvedQuery,
+          top_k: 10,
+        });
+
+        setSemanticQuery(resolvedQuery);
+        setSemanticResults(response.items || []);
+        setSemanticSuggestions(response.suggestions || []);
+        setHasRunSemanticSearch(true);
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Unable to run semantic search.";
+        setSemanticSearchError(message);
+      } finally {
+        setIsSemanticSearchLoading(false);
+      }
+    },
+    [activeTrial, semanticQuery],
+  );
+
+  const handleSelectSemanticSuggestion = useCallback(
+    async (suggestion: SemanticQuerySuggestion) => {
+      setSemanticQuery(suggestion.query);
+      await handleRunSemanticSearch(suggestion.query);
+    },
+    [handleRunSemanticSearch],
+  );
+
+  const handleResetPatientSearch = useCallback(async () => {
+    resetSemanticState();
+
+    if (!activeTrial) return;
+
+    try {
+      const [patientResponse, suggestionsResponse] = await Promise.all([
+        getPatientsForTrial(activeTrial.id),
+        getSemanticQuerySuggestions(activeTrial.id),
+      ]);
+
+      setTrialPatients(patientResponse.items || []);
+      setSemanticSuggestions(suggestionsResponse.items || []);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Unable to reset patient list.";
+      setSemanticSearchError(message);
+    }
+  }, [activeTrial, resetSemanticState]);
 
   const handleSelectPatient = useCallback(
     async (patient: Patient) => {
@@ -319,9 +432,13 @@ export function useClinicalTrialDashboard() {
         const evaluation = await startEvaluation(patient.id, activeTrial.id);
         setIsPatientModalOpen(false);
         setTrialPatients([]);
-        setStartedEvaluationId(evaluation.id);
-        setPlaybackSequenceKey((prev) => prev + 1);
+        resetSemanticState();
+
         await loadDashboard(evaluation.id);
+
+        setSelectedEvaluationId(evaluation.id);
+        setStartedEvaluationId(evaluation.id);
+        setPlaybackSequenceKey((current) => current + 1);
       } catch (err) {
         const message =
           err instanceof Error
@@ -333,19 +450,26 @@ export function useClinicalTrialDashboard() {
         setIsStartingEvaluation(false);
       }
     },
-    [activeTrial, isStartingEvaluation, loadDashboard],
+    [activeTrial, isStartingEvaluation, loadDashboard, resetSemanticState],
   );
 
   const handleStartEvaluationFromModal = useCallback(
     (patient: { id: string }) => {
-      const fullPatient = availableTrialPatients.find(
-        (item) => item.id === patient.id,
-      );
+      const sourcePatients = hasRunSemanticSearch
+        ? semanticResults.map((item) => item.patient)
+        : availableTrialPatients;
+
+      const fullPatient = sourcePatients.find((item) => item.id === patient.id);
       if (!fullPatient) return;
 
       void handleSelectPatient(fullPatient);
     },
-    [availableTrialPatients, handleSelectPatient],
+    [
+      availableTrialPatients,
+      handleSelectPatient,
+      hasRunSemanticSearch,
+      semanticResults,
+    ],
   );
 
   const handleOpenChangeTrialModal = useCallback(() => {
@@ -370,10 +494,10 @@ export function useClinicalTrialDashboard() {
 
       try {
         await activateTrial(trialId);
-        setActiveReviewEvaluationId(null);
-        setReviewNote("");
-        setStartedEvaluationId(null);
         setIsChangeTrialModalOpen(false);
+        resetSemanticState();
+        setStartedEvaluationId(null);
+        setPlaybackSequenceKey(0);
         await loadDashboard();
       } catch (err) {
         const message =
@@ -383,122 +507,144 @@ export function useClinicalTrialDashboard() {
         setIsChangingTrial(false);
       }
     },
-    [activeTrialId, isChangingTrial, loadDashboard],
+    [activeTrialId, isChangingTrial, loadDashboard, resetSemanticState],
   );
 
   const handleReplayWorkflow = useCallback(() => {
     if (!selectedEvaluation) return;
 
-    setActiveReviewEvaluationId(null);
-    setReviewNote("");
     setStartedEvaluationId(selectedEvaluation.id);
-    setSelectedEvaluationId(selectedEvaluation.id);
-    setPlaybackSequenceKey((prev) => prev + 1);
+    setPlaybackSequenceKey((current) => current + 1);
   }, [selectedEvaluation]);
 
-  const handleClosePatientModal = useCallback(() => {
-    setIsPatientModalOpen(false);
-    setIsLoadingTrialPatients(false);
-    setPatientModalError(null);
-    setTrialPatients([]);
-  }, []);
+  const handleResetDemo = useCallback(async () => {
+    setIsResettingDemo(true);
+    setError(null);
 
-  const handleOpenReview = useCallback((evaluationId: string) => {
-    setActiveReviewEvaluationId(evaluationId);
-    setReviewNote("");
-    setSelectedEvaluationId(evaluationId);
-  }, []);
+    try {
+      await resetDemoData();
+      setIsPatientModalOpen(false);
+      setIsChangeTrialModalOpen(false);
+      setActiveReviewEvaluationId(null);
+      setReviewNote("");
+      setStartedEvaluationId(null);
+      setPlaybackSequenceKey(0);
+      resetSemanticState();
+      await loadDashboard();
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Unable to reset demo data.";
+      setError(message);
+    } finally {
+      setIsResettingDemo(false);
+    }
+  }, [loadDashboard, resetSemanticState]);
+
+  const handleOpenReview = useCallback(
+    (evaluationId: string) => {
+      const evaluation = evaluations.find((item) => item.id === evaluationId);
+      setActiveReviewEvaluationId(evaluationId);
+      setReviewNote(evaluation?.reviewer_action || "");
+    },
+    [evaluations],
+  );
 
   const handleCloseReview = useCallback(() => {
     setActiveReviewEvaluationId(null);
     setReviewNote("");
   }, []);
 
+  const applyReviewDecision = useCallback(
+    (decision: "approve" | "reject") => {
+      if (!activeReviewEvaluation) return;
+
+      const nextEvaluation = updateEvaluationRecommendation(
+        activeReviewEvaluation,
+        decision,
+        reviewNote,
+      );
+
+      setEvaluations((current) =>
+        dedupeEvaluationsByPatient(
+          current.map((item) =>
+            item.id === activeReviewEvaluation.id ? nextEvaluation : item,
+          ),
+        ),
+      );
+
+      setReviews((current) =>
+        current.map((review) =>
+          review.evaluation_id === activeReviewEvaluation.id
+            ? updateReviewTask(review, decision, reviewNote)
+            : review,
+        ),
+      );
+
+      if (selectedEvaluationId === activeReviewEvaluation.id) {
+        setSelectedEvaluationId(nextEvaluation.id);
+      }
+
+      handleCloseReview();
+    },
+    [
+      activeReviewEvaluation,
+      handleCloseReview,
+      reviewNote,
+      selectedEvaluationId,
+    ],
+  );
+
   const handleApproveReview = useCallback(() => {
-    if (!activeReviewEvaluation) return;
-
-    const note = reviewNote.trim();
-    const reviewEvent = buildHumanReviewEvent("approved", note);
-
-    setEvaluations((prev) =>
-      prev.map((evaluation) =>
-        evaluation.id === activeReviewEvaluation.id
-          ? {
-              ...evaluation,
-              recommendation: "Approved" as Evaluation["recommendation"],
-              review_required: false,
-              explanation: note
-                ? `${evaluation.explanation} Reviewer note: ${note}`
-                : evaluation.explanation,
-              workflow_events: [
-                ...(evaluation.workflow_events || []),
-                reviewEvent,
-              ] as WorkflowEvent[],
-            }
-          : evaluation,
-      ),
-    );
-
-    setReviews((prev) =>
-      prev.map((review) =>
-        review.patient_id === activeReviewEvaluation.patient_id &&
-        review.trial_id === activeTrialId &&
-        review.review_status !== "Resolved"
-          ? {
-              ...review,
-              review_status: "Resolved",
-            }
-          : review,
-      ),
-    );
-
-    setSelectedEvaluationId(activeReviewEvaluation.id);
-    setActiveReviewEvaluationId(null);
-    setReviewNote("");
-  }, [activeReviewEvaluation, reviewNote, activeTrialId]);
+    applyReviewDecision("approve");
+  }, [applyReviewDecision]);
 
   const handleRejectReview = useCallback(() => {
-    if (!activeReviewEvaluation) return;
+    applyReviewDecision("reject");
+  }, [applyReviewDecision]);
 
-    const note = reviewNote.trim();
-    const reviewEvent = buildHumanReviewEvent("rejected", note);
+  const handleRemoveEvaluation = useCallback(
+    async (evaluationId: string) => {
+      setError(null);
 
-    setEvaluations((prev) =>
-      prev.map((evaluation) =>
-        evaluation.id === activeReviewEvaluation.id
-          ? {
-              ...evaluation,
-              recommendation: "Rejected" as Evaluation["recommendation"],
-              review_required: false,
-              explanation: note
-                ? `${evaluation.explanation} Reviewer note: ${note}`
-                : evaluation.explanation,
-              workflow_events: [
-                ...(evaluation.workflow_events || []),
-                reviewEvent,
-              ] as WorkflowEvent[],
-            }
-          : evaluation,
-      ),
-    );
+      try {
+        await removeEvaluation(evaluationId);
 
-    setReviews((prev) =>
-      prev.map((review) =>
-        review.patient_id === activeReviewEvaluation.patient_id &&
-        review.trial_id === activeTrialId &&
-        review.review_status !== "Resolved"
-          ? {
-              ...review,
-              review_status: "Resolved",
-            }
-          : review,
-      ),
-    );
+        setEvaluations((current) => {
+          const remaining = current.filter((item) => item.id !== evaluationId);
+          const deduped = dedupeEvaluationsByPatient(remaining);
 
-    setSelectedEvaluationId(activeReviewEvaluation.id);
-    setActiveReviewEvaluationId(null);
-    setReviewNote("");
-  }, [activeReviewEvaluation, reviewNote, activeTrialId]);
+          if (selectedEvaluationId === evaluationId) {
+            setSelectedEvaluationId(deduped[0]?.id || "");
+          }
+
+          return deduped;
+        });
+
+        setReviews((current) =>
+          current.filter((review) => review.evaluation_id !== evaluationId),
+        );
+
+        if (activeReviewEvaluationId === evaluationId) {
+          handleCloseReview();
+        }
+      } catch (err) {
+        const message =
+          err instanceof Error
+            ? err.message
+            : "Unable to remove evaluation from worklist.";
+        setError(message);
+      }
+    },
+    [activeReviewEvaluationId, handleCloseReview, selectedEvaluationId],
+  );
+
+  const handleClosePatientModal = useCallback(() => {
+    setIsPatientModalOpen(false);
+    setIsLoadingTrialPatients(false);
+    setPatientModalError(null);
+    setTrialPatients([]);
+    resetSemanticState();
+  }, [resetSemanticState]);
 
   return {
     isLoading,
@@ -524,8 +670,17 @@ export function useClinicalTrialDashboard() {
     reviewNote,
     startedEvaluationId,
     playbackSequenceKey,
+
+    semanticQuery,
+    semanticSuggestions,
+    isSemanticSearchLoading,
+    semanticSearchError,
+    hasRunSemanticSearch,
+
     setReviewNote,
+    setSemanticQuery,
     setSelectedEvaluationId,
+
     handleOpenPatientModal,
     handleOpenChangeTrialModal,
     handleSelectTrial,
@@ -539,5 +694,10 @@ export function useClinicalTrialDashboard() {
     handleApproveReview,
     handleRejectReview,
     handleRemoveEvaluation,
+
+    handleRunSemanticSearch,
+    handleSelectSemanticSuggestion,
+    handleResetPatientSearch,
+    loadSemanticSuggestions,
   };
 }

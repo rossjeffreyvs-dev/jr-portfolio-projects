@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
+import type { SemanticQuerySuggestion } from "@/lib/api";
 
 type MatchOutcome =
   | "likely_match"
@@ -19,6 +21,10 @@ export type TrialPatient = {
   score?: number | null;
   outcome?: MatchOutcome;
   summary?: string | null;
+  semanticExplanation?: string | null;
+  semanticMatchedTerms?: string[];
+  semanticRank?: number | null;
+  isSemanticResult?: boolean;
 };
 
 type PatientSelectorModalProps = {
@@ -30,6 +36,18 @@ type PatientSelectorModalProps = {
   patientActionLabel?: string;
   onClose: () => void;
   onStartEvaluation: (patient: TrialPatient) => void;
+
+  semanticQuery: string;
+  onSemanticQueryChange: (value: string) => void;
+  onRunSemanticSearch: () => void;
+  onResetPatientSearch: () => void;
+
+  semanticSuggestions: SemanticQuerySuggestion[];
+  onSelectSemanticSuggestion: (suggestion: SemanticQuerySuggestion) => void;
+
+  isSemanticSearchLoading?: boolean;
+  semanticSearchError?: string | null;
+  hasRunSemanticSearch?: boolean;
 };
 
 function formatOutcomeLabel(outcome?: MatchOutcome) {
@@ -47,24 +65,39 @@ function formatOutcomeLabel(outcome?: MatchOutcome) {
   }
 }
 
-function outcomeColor(outcome?: MatchOutcome) {
-  switch (outcome) {
-    case "likely_match":
-      return "#15803d";
-    case "possible_match":
-      return "#0369a1";
-    case "review":
-      return "#b45309";
-    case "unlikely_match":
-      return "#b91c1c";
-    default:
-      return "#64748b";
-  }
-}
-
 function formatScore(score?: number | null) {
   if (score == null || Number.isNaN(score)) return "—";
   return `${Math.round(score * 100)}%`;
+}
+
+function outcomePillStyle(outcome?: MatchOutcome): React.CSSProperties {
+  switch (outcome) {
+    case "likely_match":
+      return {
+        background: "#dcfce7",
+        color: "#166534",
+      };
+    case "possible_match":
+      return {
+        background: "#dbeafe",
+        color: "#1d4ed8",
+      };
+    case "review":
+      return {
+        background: "#fef3c7",
+        color: "#b45309",
+      };
+    case "unlikely_match":
+      return {
+        background: "#fee2e2",
+        color: "#b91c1c",
+      };
+    default:
+      return {
+        background: "#e2e8f0",
+        color: "#475569",
+      };
+  }
 }
 
 export default function PatientSelectorModal({
@@ -76,25 +109,28 @@ export default function PatientSelectorModal({
   patientActionLabel = "Starting Evaluation...",
   onClose,
   onStartEvaluation,
+  semanticQuery,
+  onSemanticQueryChange,
+  onRunSemanticSearch,
+  onResetPatientSearch,
+  semanticSuggestions,
+  onSelectSemanticSuggestion,
+  isSemanticSearchLoading = false,
+  semanticSearchError = null,
+  hasRunSemanticSearch = false,
 }: PatientSelectorModalProps) {
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(
     null,
   );
-  const [hoveredPatientId, setHoveredPatientId] = useState<string | null>(null);
-  const [hoveredActionId, setHoveredActionId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
 
-    const bodyOverflow = document.body.style.overflow;
-    const htmlOverflow = document.documentElement.style.overflow;
-
+    const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    document.documentElement.style.overflow = "hidden";
 
     return () => {
-      document.body.style.overflow = bodyOverflow;
-      document.documentElement.style.overflow = htmlOverflow;
+      document.body.style.overflow = previousOverflow;
     };
   }, [isOpen]);
 
@@ -120,82 +156,89 @@ export default function PatientSelectorModal({
   );
 
   if (!isOpen) return null;
+  if (typeof document === "undefined") return null;
 
-  return (
+  return createPortal(
     <div
+      onClick={onClose}
       style={{
         position: "fixed",
         inset: 0,
         zIndex: 99999,
-        background: "rgba(15, 23, 42, 0.30)",
-        backdropFilter: "blur(2px)",
+        background: "rgba(15, 23, 42, 0.45)",
         display: "flex",
-        alignItems: "flex-start",
+        alignItems: "center",
         justifyContent: "center",
-        padding: "24px 18px",
+        padding: 24,
       }}
     >
       <div
+        onClick={(event) => event.stopPropagation()}
         style={{
-          position: "relative",
-          width: "100%",
-          maxWidth: "1500px",
-          maxHeight: "92vh",
+          width: "min(1280px, 96vw)",
+          height: "min(860px, 92vh)",
+          background: "#ffffff",
+          border: "1px solid #dbe3f0",
+          borderRadius: 28,
+          boxShadow: "0 24px 64px rgba(15, 23, 42, 0.24)",
           overflow: "hidden",
-          borderRadius: "36px",
-          border: "1px solid #cfd7e6",
-          background: "#f8fafc",
-          boxShadow: "0 30px 80px rgba(15,23,42,0.18)",
+          display: "grid",
+          gridTemplateColumns: "1.25fr 0.95fr",
+          position: "relative",
         }}
       >
         <button
           type="button"
           onClick={onClose}
-          aria-label="Close modal"
           style={{
             position: "absolute",
-            right: "28px",
-            top: "28px",
-            width: "44px",
-            height: "44px",
-            borderRadius: "999px",
-            border: "1px solid #d7deeb",
-            background: "#ffffff",
-            color: "#64748b",
-            fontSize: "24px",
-            cursor: "pointer",
+            top: 20,
+            right: 20,
             zIndex: 2,
+            border: "1px solid #cbd5e1",
+            background: "#ffffff",
+            color: "#334155",
+            borderRadius: 999,
+            padding: "8px 14px",
+            fontSize: 14,
+            fontWeight: 700,
+            cursor: "pointer",
           }}
         >
-          ×
+          Close
         </button>
 
-        <div style={{ padding: "32px 32px 24px 32px" }}>
-          <div
-            style={{
-              display: "inline-flex",
-              borderRadius: "999px",
-              background: "#dfe7f7",
-              padding: "14px 28px",
-              fontSize: "14px",
-              fontWeight: 800,
-              textTransform: "uppercase",
-              letterSpacing: "0.14em",
-              color: "#3558c8",
-            }}
-          >
-            Select patient
-          </div>
+        <section
+          style={{
+            borderRight: "1px solid #e2e8f0",
+            background: "#f8fafc",
+            padding: 28,
+            overflow: "hidden",
+            display: "flex",
+            flexDirection: "column",
+            minHeight: 0,
+          }}
+        >
+          <div>
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: "0.18em",
+                textTransform: "uppercase",
+                color: "#64748b",
+              }}
+            >
+              Select Patient
+            </div>
 
-          <div style={{ marginTop: "18px", paddingRight: "64px" }}>
             <h2
               style={{
-                margin: 0,
-                fontSize: "44px",
-                lineHeight: 1.05,
-                fontWeight: 700,
-                letterSpacing: "-0.04em",
-                color: "#1b2957",
+                marginTop: 10,
+                marginBottom: 0,
+                fontSize: 28,
+                lineHeight: 1.2,
+                color: "#0f172a",
               }}
             >
               Ranked patient candidates
@@ -204,11 +247,10 @@ export default function PatientSelectorModal({
             {trialTitle ? (
               <p
                 style={{
-                  marginTop: "10px",
+                  marginTop: 8,
                   marginBottom: 0,
-                  fontSize: "16px",
-                  lineHeight: 1.5,
-                  color: "#64748b",
+                  fontSize: 14,
+                  color: "#475569",
                 }}
               >
                 Review candidate fit for {trialTitle}
@@ -218,278 +260,635 @@ export default function PatientSelectorModal({
 
           <div
             style={{
-              marginTop: "18px",
-              overflow: "hidden",
-              borderRadius: "32px",
-              border: "1px solid #d5ddea",
+              marginTop: 18,
+              border: "1px solid #e2e8f0",
+              borderRadius: 24,
               background: "#ffffff",
+              padding: 18,
             }}
           >
             <div
               style={{
-                maxHeight: "380px",
-                overflowY: "auto",
+                fontSize: 14,
+                fontWeight: 700,
+                color: "#0f172a",
               }}
             >
-              <table
+              Semantic query
+            </div>
+
+            <textarea
+              value={semanticQuery}
+              onChange={(event) => onSemanticQueryChange(event.target.value)}
+              placeholder="Describe the type of patient you want to find for this trial."
+              style={{
+                width: "100%",
+                minHeight: 72,
+                height: 72,
+                marginTop: 10,
+                border: "1px solid #dbe3f0",
+                borderRadius: 18,
+                background: "#ffffff",
+                padding: 14,
+                fontSize: 15,
+                lineHeight: 1.45,
+                color: "#0f172a",
+                resize: "none",
+                outline: "none",
+              }}
+            />
+
+            <div
+              style={{
+                marginTop: 12,
+                display: "flex",
+                gap: 12,
+                flexWrap: "wrap",
+              }}
+            >
+              <button
+                type="button"
+                onClick={onRunSemanticSearch}
+                disabled={isSemanticSearchLoading || isLoading}
                 style={{
-                  width: "100%",
-                  borderCollapse: "separate",
-                  borderSpacing: 0,
-                  background: "#ffffff",
+                  border: "none",
+                  borderRadius: 999,
+                  background: "#0f172a",
+                  color: "#ffffff",
+                  padding: "11px 18px",
+                  fontSize: 14,
+                  fontWeight: 700,
+                  cursor:
+                    isSemanticSearchLoading || isLoading
+                      ? "not-allowed"
+                      : "pointer",
+                  opacity: isSemanticSearchLoading || isLoading ? 0.65 : 1,
                 }}
               >
-                <thead
+                {isSemanticSearchLoading
+                  ? "Running Search..."
+                  : "Run Semantic Search"}
+              </button>
+
+              <button
+                type="button"
+                onClick={onResetPatientSearch}
+                disabled={isSemanticSearchLoading || isLoading}
+                style={{
+                  border: "1px solid #cbd5e1",
+                  borderRadius: 999,
+                  background: "#ffffff",
+                  color: "#334155",
+                  padding: "11px 18px",
+                  fontSize: 14,
+                  fontWeight: 700,
+                  cursor:
+                    isSemanticSearchLoading || isLoading
+                      ? "not-allowed"
+                      : "pointer",
+                  opacity: isSemanticSearchLoading || isLoading ? 0.65 : 1,
+                }}
+              >
+                Reset to Trial Patient List
+              </button>
+            </div>
+
+            {semanticSearchError ? (
+              <div
+                style={{
+                  marginTop: 10,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: "#dc2626",
+                }}
+              >
+                {semanticSearchError}
+              </div>
+            ) : null}
+
+            {semanticSuggestions.length > 0 ? (
+              <div style={{ marginTop: 14 }}>
+                <div
                   style={{
-                    position: "sticky",
-                    top: 0,
-                    zIndex: 2,
-                    background: "#edf3ff",
-                    boxShadow: "0 1px 0 #dce3ef",
+                    fontSize: 11,
+                    fontWeight: 700,
+                    letterSpacing: "0.14em",
+                    textTransform: "uppercase",
+                    color: "#64748b",
                   }}
                 >
-                  <tr>
-                    {[
-                      "Patient",
-                      "Demographics",
-                      "Diagnosis",
-                      "Match",
-                      "Score",
-                      "Summary",
-                      "Action",
-                    ].map((label) => (
-                      <th
-                        key={label}
-                        style={{
-                          borderBottom: "1px solid #dce3ef",
-                          padding: "18px 20px",
-                          textAlign: "left",
-                          fontSize: "14px",
-                          fontWeight: 800,
-                          textTransform: "uppercase",
-                          letterSpacing: "0.14em",
-                          color: "#5a6b93",
-                          background: "#edf3ff",
-                        }}
-                      >
-                        {label}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
+                  Suggested searches
+                </div>
 
-                <tbody style={{ background: "#ffffff" }}>
-                  {isLoading ? (
-                    <tr>
-                      <td
-                        colSpan={7}
-                        style={{
-                          padding: "36px 24px",
-                          textAlign: "center",
-                          fontSize: "16px",
-                          color: "#64748b",
-                          background: "#ffffff",
-                        }}
-                      >
-                        Loading patient candidates...
-                      </td>
-                    </tr>
-                  ) : patients.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={7}
-                        style={{
-                          padding: "36px 24px",
-                          textAlign: "center",
-                          fontSize: "16px",
-                          color: "#64748b",
-                          background: "#ffffff",
-                        }}
-                      >
-                        No candidate patients found for this trial.
-                      </td>
-                    </tr>
-                  ) : (
-                    patients.map((patient) => {
-                      const isHovered = hoveredPatientId === patient.id;
-                      const isActionHovered = hoveredActionId === patient.id;
-                      const isSelected = selectedPatientId === patient.id;
-                      const rowBackground = isSelected
-                        ? "#f7faff"
-                        : isHovered
-                          ? "#f8fbff"
-                          : "#ffffff";
+                <div
+                  style={{
+                    marginTop: 8,
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 8,
+                  }}
+                >
+                  {semanticSuggestions.map((suggestion) => (
+                    <button
+                      key={suggestion.id}
+                      type="button"
+                      onClick={() => onSelectSemanticSuggestion(suggestion)}
+                      style={{
+                        border: "1px solid #bfdbfe",
+                        borderRadius: 999,
+                        background: "#eff6ff",
+                        color: "#1d4ed8",
+                        padding: "8px 12px",
+                        fontSize: 13,
+                        fontWeight: 700,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {suggestion.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </div>
 
-                      return (
-                        <tr
-                          key={patient.id}
-                          onClick={() => setSelectedPatientId(patient.id)}
-                          onMouseEnter={() => setHoveredPatientId(patient.id)}
-                          onMouseLeave={() => setHoveredPatientId(null)}
-                          style={{
-                            cursor: "pointer",
-                            background: rowBackground,
-                            boxShadow: isSelected
-                              ? "inset 4px 0 0 #3558c8"
-                              : "none",
-                            transition:
-                              "background 160ms ease, box-shadow 160ms ease",
-                          }}
-                        >
-                          <td
+          <div
+            style={{
+              marginTop: 14,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+            }}
+          >
+            <div
+              style={{
+                fontSize: 14,
+                fontWeight: 500,
+                color: "#475569",
+              }}
+            >
+              {hasRunSemanticSearch
+                ? "Showing ranked semantic matches for the active trial."
+                : "Showing seeded patients mapped to the active trial."}
+            </div>
+
+            <div
+              style={{
+                border: "1px solid #e2e8f0",
+                borderRadius: 999,
+                background: "#ffffff",
+                padding: "8px 14px",
+                fontSize: 14,
+                fontWeight: 700,
+                color: "#334155",
+                flexShrink: 0,
+              }}
+            >
+              {patients.length} result{patients.length === 1 ? "" : "s"}
+            </div>
+          </div>
+
+          <div
+            style={{
+              marginTop: 12,
+              flex: 1,
+              minHeight: 0,
+              overflowY: "auto",
+              paddingRight: 6,
+            }}
+          >
+            {isLoading ? (
+              <div
+                style={{
+                  border: "1px solid #e2e8f0",
+                  borderRadius: 20,
+                  background: "#ffffff",
+                  padding: 20,
+                  fontSize: 14,
+                  color: "#475569",
+                }}
+              >
+                Loading patient candidates...
+              </div>
+            ) : patients.length === 0 ? (
+              <div
+                style={{
+                  border: "1px dashed #cbd5e1",
+                  borderRadius: 20,
+                  background: "#ffffff",
+                  padding: 20,
+                  fontSize: 14,
+                  color: "#475569",
+                }}
+              >
+                {hasRunSemanticSearch
+                  ? "No semantic matches found. Try a suggested search or reset to the default trial patient list."
+                  : "No seeded patients are currently available for the active trial."}
+              </div>
+            ) : (
+              <div style={{ display: "grid", gap: 12 }}>
+                {patients.map((patient) => {
+                  const isSelected = selectedPatientId === patient.id;
+
+                  return (
+                    <button
+                      key={patient.id}
+                      type="button"
+                      onClick={() => setSelectedPatientId(patient.id)}
+                      style={{
+                        width: "100%",
+                        border: isSelected
+                          ? "1px solid #0f172a"
+                          : "1px solid #e2e8f0",
+                        borderRadius: 22,
+                        background: "#ffffff",
+                        padding: 16,
+                        textAlign: "left",
+                        cursor: "pointer",
+                        boxShadow: isSelected
+                          ? "0 8px 24px rgba(15, 23, 42, 0.08)"
+                          : "none",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "flex-start",
+                          gap: 16,
+                        }}
+                      >
+                        <div>
+                          <div
                             style={{
-                              borderBottom: "1px solid #e3e9f3",
-                              padding: "18px 20px",
-                              verticalAlign: "top",
-                              color: "#475569",
-                              fontSize: "15px",
-                              lineHeight: 1.45,
-                              background: rowBackground,
+                              display: "flex",
+                              gap: 8,
+                              flexWrap: "wrap",
                             }}
                           >
-                            <div
+                            {patient.isSemanticResult &&
+                            patient.semanticRank ? (
+                              <span
+                                style={{
+                                  border: "1px solid #e2e8f0",
+                                  borderRadius: 999,
+                                  background: "#f8fafc",
+                                  padding: "5px 10px",
+                                  fontSize: 11,
+                                  fontWeight: 700,
+                                  letterSpacing: "0.12em",
+                                  textTransform: "uppercase",
+                                  color: "#64748b",
+                                }}
+                              >
+                                Rank #{patient.semanticRank}
+                              </span>
+                            ) : null}
+
+                            <span
                               style={{
-                                fontWeight: isSelected ? 800 : 700,
-                                color: isSelected ? "#1d3570" : "#263868",
+                                ...outcomePillStyle(patient.outcome),
+                                borderRadius: 999,
+                                padding: "6px 10px",
+                                fontSize: 11,
+                                fontWeight: 700,
+                                letterSpacing: "0.12em",
+                                textTransform: "uppercase",
                               }}
                             >
-                              {patient.name}
-                            </div>
-                            {/* <div style={{ marginTop: "2px", color: "#64748b" }}>
-                              {patient.id}
-                            </div> */}
-                          </td>
+                              {formatOutcomeLabel(patient.outcome)}
+                            </span>
+                          </div>
 
-                          <td
+                          <div
                             style={{
-                              borderBottom: "1px solid #e3e9f3",
-                              padding: "18px 20px",
-                              verticalAlign: "top",
-                              color: "#64748b",
-                              fontSize: "15px",
-                              lineHeight: 1.45,
-                              background: rowBackground,
+                              marginTop: 10,
+                              fontSize: 18,
+                              fontWeight: 700,
+                              color: "#0f172a",
                             }}
                           >
-                            {patient.age != null ? `${patient.age} yrs` : "—"}
-                            {patient.sex ? ` • ${patient.sex}` : ""}
-                          </td>
+                            {patient.name}
+                          </div>
 
-                          <td
+                          <div
                             style={{
-                              borderBottom: "1px solid #e3e9f3",
-                              padding: "18px 20px",
-                              verticalAlign: "top",
-                              color: "#64748b",
-                              fontSize: "15px",
-                              lineHeight: 1.45,
-                              background: rowBackground,
+                              marginTop: 4,
+                              fontSize: 14,
+                              color: "#475569",
                             }}
                           >
-                            {patient.diagnosis || "—"}
-                          </td>
+                            {patient.diagnosis || "Diagnosis unavailable"}
+                          </div>
+                        </div>
 
-                          <td
+                        <div
+                          style={{
+                            border: "1px solid #e2e8f0",
+                            borderRadius: 18,
+                            background: "#f8fafc",
+                            padding: "10px 12px",
+                            textAlign: "right",
+                            minWidth: 102,
+                            flexShrink: 0,
+                          }}
+                        >
+                          <div
                             style={{
-                              borderBottom: "1px solid #e3e9f3",
-                              padding: "18px 20px",
-                              verticalAlign: "top",
-                              fontSize: "15px",
-                              lineHeight: 1.45,
-                              color: outcomeColor(patient.outcome),
-                              fontWeight: 600,
-                              background: rowBackground,
+                              fontSize: 11,
+                              fontWeight: 700,
+                              letterSpacing: "0.12em",
+                              textTransform: "uppercase",
+                              color: "#64748b",
                             }}
                           >
-                            {formatOutcomeLabel(patient.outcome)}
-                          </td>
-
-                          <td
+                            Match Score
+                          </div>
+                          <div
                             style={{
-                              borderBottom: "1px solid #e3e9f3",
-                              padding: "18px 20px",
-                              verticalAlign: "top",
-                              color: "#64748b",
-                              fontSize: "15px",
-                              lineHeight: 1.45,
-                              background: rowBackground,
+                              marginTop: 2,
+                              fontSize: 18,
+                              fontWeight: 700,
+                              color: "#0f172a",
                             }}
                           >
                             {formatScore(patient.score)}
-                          </td>
+                          </div>
+                        </div>
+                      </div>
 
-                          <td
-                            style={{
-                              borderBottom: "1px solid #e3e9f3",
-                              padding: "18px 20px",
-                              verticalAlign: "top",
-                              color: "#64748b",
-                              fontSize: "15px",
-                              lineHeight: 1.45,
-                              maxWidth: "420px",
-                              background: rowBackground,
-                            }}
-                          >
-                            {patient.summary || "—"}
-                          </td>
+                      <div
+                        style={{
+                          marginTop: 12,
+                          fontSize: 14,
+                          lineHeight: 1.6,
+                          color: "#334155",
+                        }}
+                      >
+                        {patient.semanticExplanation ||
+                          patient.summary ||
+                          "No summary available."}
+                      </div>
 
-                          <td
-                            style={{
-                              borderBottom: "1px solid #e3e9f3",
-                              padding: "18px 20px",
-                              verticalAlign: "top",
-                              background: rowBackground,
-                            }}
-                          >
-                            <button
-                              type="button"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                setSelectedPatientId(patient.id);
-                                onStartEvaluation(patient);
-                              }}
-                              onMouseEnter={() =>
-                                setHoveredActionId(patient.id)
-                              }
-                              onMouseLeave={() => setHoveredActionId(null)}
-                              disabled={isStartingEvaluation}
+                      {patient.semanticMatchedTerms?.length ? (
+                        <div
+                          style={{
+                            marginTop: 10,
+                            display: "flex",
+                            gap: 8,
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          {patient.semanticMatchedTerms.map((term) => (
+                            <span
+                              key={`${patient.id}-${term}`}
                               style={{
-                                borderRadius: "999px",
-                                border: "1px solid #cad4e4",
-                                background: isActionHovered
-                                  ? "#f3f7ff"
-                                  : "#ffffff",
-                                padding: "8px 14px",
-                                fontSize: "13px",
-                                fontWeight: 600,
-                                color: "#1f2a44",
-                                cursor: isStartingEvaluation
-                                  ? "default"
-                                  : "pointer",
-                                opacity: isStartingEvaluation ? 0.6 : 1,
-                                whiteSpace: "nowrap",
-                                boxShadow: isActionHovered
-                                  ? "0 1px 2px rgba(15,23,42,0.06)"
-                                  : "none",
-                                transition:
-                                  "background 160ms ease, box-shadow 160ms ease, border-color 160ms ease",
+                                border: "1px solid #e2e8f0",
+                                borderRadius: 999,
+                                background: "#f8fafc",
+                                padding: "6px 10px",
+                                fontSize: 12,
+                                color: "#334155",
                               }}
                             >
-                              {isStartingEvaluation && isSelected
-                                ? patientActionLabel
-                                : "Start Evaluation"}
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
+                              {term}
+                            </span>
+                          ))}
+                        </div>
+                      ) : null}
+
+                      <div
+                        style={{
+                          marginTop: 10,
+                          fontSize: 12,
+                          fontWeight: 600,
+                          letterSpacing: "0.1em",
+                          textTransform: "uppercase",
+                          color: "#64748b",
+                        }}
+                      >
+                        {patient.age != null || patient.sex
+                          ? `Age ${patient.age ?? "—"} • ${patient.sex ?? "—"}`
+                          : "Demographics unavailable"}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
-        </div>
+        </section>
+
+        <aside
+          style={{
+            background: "#ffffff",
+            padding: 28,
+            overflowY: "auto",
+          }}
+        >
+          <div
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: "0.18em",
+              textTransform: "uppercase",
+              color: "#64748b",
+            }}
+          >
+            Selected Patient
+          </div>
+
+          {selectedPatient ? (
+            <div style={{ marginTop: 20 }}>
+              <div
+                style={{
+                  border: "1px solid #e2e8f0",
+                  borderRadius: 24,
+                  background: "#f8fafc",
+                  padding: 22,
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: 16,
+                    alignItems: "flex-start",
+                  }}
+                >
+                  <div>
+                    <div
+                      style={{
+                        fontSize: 28,
+                        fontWeight: 700,
+                        color: "#0f172a",
+                        lineHeight: 1.2,
+                      }}
+                    >
+                      {selectedPatient.name}
+                    </div>
+                    <div
+                      style={{
+                        marginTop: 8,
+                        fontSize: 14,
+                        color: "#475569",
+                      }}
+                    >
+                      {selectedPatient.diagnosis || "Diagnosis unavailable"}
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      border: "1px solid #e2e8f0",
+                      borderRadius: 999,
+                      background: "#ffffff",
+                      padding: "8px 14px",
+                      fontSize: 14,
+                      fontWeight: 700,
+                      color: "#334155",
+                    }}
+                  >
+                    {formatScore(selectedPatient.score)}
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 18,
+                    display: "grid",
+                    gap: 10,
+                    fontSize: 14,
+                    color: "#334155",
+                  }}
+                >
+                  <div>
+                    <strong>Age / Sex:</strong> {selectedPatient.age ?? "—"} /{" "}
+                    {selectedPatient.sex ?? "—"}
+                  </div>
+                  <div>
+                    <strong>Status:</strong>{" "}
+                    {formatOutcomeLabel(selectedPatient.outcome)}
+                  </div>
+                  <div>
+                    <strong>Summary:</strong>{" "}
+                    {selectedPatient.summary || "No summary available."}
+                  </div>
+                </div>
+
+                {selectedPatient.semanticExplanation ? (
+                  <div
+                    style={{
+                      marginTop: 18,
+                      border: "1px solid #bfdbfe",
+                      borderRadius: 18,
+                      background: "#eff6ff",
+                      padding: 16,
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 700,
+                        letterSpacing: "0.12em",
+                        textTransform: "uppercase",
+                        color: "#1d4ed8",
+                      }}
+                    >
+                      Why this patient ranked
+                    </div>
+                    <div
+                      style={{
+                        marginTop: 8,
+                        fontSize: 14,
+                        lineHeight: 1.7,
+                        color: "#334155",
+                      }}
+                    >
+                      {selectedPatient.semanticExplanation}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+
+              <div
+                style={{
+                  marginTop: 20,
+                  border: "1px solid #e2e8f0",
+                  borderRadius: 24,
+                  background: "#ffffff",
+                  padding: 22,
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                    color: "#64748b",
+                  }}
+                >
+                  Next Action
+                </div>
+
+                <p
+                  style={{
+                    marginTop: 10,
+                    marginBottom: 0,
+                    fontSize: 14,
+                    lineHeight: 1.7,
+                    color: "#475569",
+                  }}
+                >
+                  Start a new eligibility evaluation for this patient within the
+                  active trial workflow.
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() => onStartEvaluation(selectedPatient)}
+                  disabled={isStartingEvaluation}
+                  style={{
+                    marginTop: 18,
+                    width: "100%",
+                    border: "none",
+                    borderRadius: 999,
+                    background: "#0f172a",
+                    color: "#ffffff",
+                    padding: "14px 16px",
+                    fontSize: 14,
+                    fontWeight: 700,
+                    cursor: isStartingEvaluation ? "not-allowed" : "pointer",
+                    opacity: isStartingEvaluation ? 0.65 : 1,
+                  }}
+                >
+                  {isStartingEvaluation
+                    ? patientActionLabel
+                    : "Start Evaluation"}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div
+              style={{
+                marginTop: 20,
+                border: "1px dashed #cbd5e1",
+                borderRadius: 24,
+                background: "#f8fafc",
+                padding: 20,
+                fontSize: 14,
+                color: "#475569",
+              }}
+            >
+              Select a patient from the ranked list to review fit and launch a
+              new evaluation.
+            </div>
+          )}
+        </aside>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
