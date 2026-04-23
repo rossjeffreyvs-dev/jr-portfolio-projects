@@ -32,10 +32,11 @@ FROM python:3.10-slim
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONPATH=/app
+ENV NEXT_TELEMETRY_DISABLED=1
 
 WORKDIR /app
 
-# install node runtime for Next standalone server
+# Install Node.js runtime for Next standalone server
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     ca-certificates \
@@ -49,35 +50,41 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/*
 
-# python deps
+# Install root Python deps
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip \
  && pip install --no-cache-dir -r requirements.txt \
  && pip install --no-cache-dir uvicorn gunicorn asgiref
 
+# Install service-specific Python deps
 COPY services/fx_insights/backend/requirements.txt fx.txt
 COPY services/semantic_patient_search/backend/requirements.txt sem.txt
 
 RUN pip install --no-cache-dir -r fx.txt \
  && pip install --no-cache-dir -r sem.txt
 
-# copy app source
+# Install clinical API Python deps if present
+# This path is based on the current clinical app layout you've been deploying.
+COPY services/clinical_trial_matching_agent/apps/api/requirements.txt clinical_api.txt
+RUN pip install --no-cache-dir -r clinical_api.txt
+
+# Copy app source
 COPY gateway ./gateway
 COPY services ./services
 
-# copy static builds for existing apps
+# Copy built static frontends for existing apps
 COPY --from=fx_builder /build/services/fx_insights/frontend/dist \
   ./services/fx_insights/backend/static
 
 COPY --from=semantic_builder /build/services/semantic_patient_search/frontend/dist \
   ./services/semantic_patient_search/backend/static
 
-# clinical standalone build
+# Copy Clinical standalone build
 COPY --from=clinical_builder \
   /build/services/clinical_trial_matching_agent/apps/web/.next/standalone \
   /app/clinical-web
 
-# IMPORTANT: these destinations must be at the standalone root
+# IMPORTANT: these must live at the standalone root for Next to serve _next assets
 COPY --from=clinical_builder \
   /build/services/clinical_trial_matching_agent/apps/web/.next/static \
   /app/clinical-web/.next/static
