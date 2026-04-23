@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
-from gateway.host_router import get_app_for_host
+from gateway.host_router import get_app_for_request
 from starlette.types import Scope, Receive, Send
 import httpx
 import logging
@@ -21,7 +21,6 @@ class HostDispatcher:
 
         path = scope.get("path", "")
 
-        # Health check
         if path == "/health":
             response = JSONResponse({"status": "ok"})
             await response(scope, receive, send)
@@ -32,14 +31,12 @@ class HostDispatcher:
 
         logger.info(f"Incoming request host={host} path={path}")
 
-        target = get_app_for_host(host)
+        target = get_app_for_request(host, path)
 
-        # ASGI app
         if callable(target):
             await target(scope, receive, send)
             return
 
-        # Proxy app
         if isinstance(target, str):
             await self.proxy_request(scope, receive, send, target)
             return
@@ -55,7 +52,6 @@ class HostDispatcher:
     ):
         timeout = httpx.Timeout(120.0, connect=10.0)
 
-        # Read request body
         body = b""
         more_body = True
         while more_body:
@@ -64,14 +60,11 @@ class HostDispatcher:
             more_body = message.get("more_body", False)
 
         path = scope["path"]
-
-        # 🔥 SIMPLE: NO REWRITES
         url = f"{target_url}{path}"
 
         if scope.get("query_string"):
             url += f"?{scope['query_string'].decode()}"
 
-        # Forward headers cleanly
         forward_headers = {
             k.decode(): v.decode()
             for k, v in scope["headers"]
@@ -87,7 +80,6 @@ class HostDispatcher:
                     content=body,
                 )
 
-            # 🔥 IMPORTANT: remove only problematic headers
             response_headers = [
                 (k.encode(), v.encode())
                 for k, v in response.headers.items()
@@ -135,7 +127,6 @@ class HostDispatcher:
             )
 
 
-# Fallback app
 fallback_app = FastAPI()
 
 
@@ -155,5 +146,4 @@ async def unknown_host(path: str):
     )
 
 
-# Export ASGI app
 app = HostDispatcher(fallback_app)
