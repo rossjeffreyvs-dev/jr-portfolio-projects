@@ -1,6 +1,14 @@
+# -------------------------
+# Git
+# -------------------------
 .git
 .gitignore
+
+# -------------------------
+# Python
+# -------------------------
 __pycache__/
+**/__pycache__/
 *.py[cod]
 *.pyo
 *.pyd
@@ -10,25 +18,56 @@ venv/
 env/
 ENV/
 
+# -------------------------
+# Node / Frontend
+# -------------------------
 node_modules/
 **/node_modules/
 
+# Next.js build output
+.next
+**/.next
+
+# Vite / other builds
 dist/
 build/
+**/dist
+**/build
 
+# -------------------------
+# Environment / Secrets
+# -------------------------
 .env
 .env.*
+api_keys.env
 
+# -------------------------
+# Logs
+# -------------------------
 *.log
 logs/
+**/*.log
 
+# -------------------------
+# IDE / OS
+# -------------------------
 .vscode/
 .idea/
-
 .DS_Store
+
+# -------------------------
+# AWS / Deployment
+# -------------------------
 .aws/
 .aws-sam/
 
+# Generated deployment files
 lightsail.json
 lightsail.*.json
-api_keys.env
+
+# -------------------------
+# Misc
+# -------------------------
+coverage/
+.tmp/
+temp/

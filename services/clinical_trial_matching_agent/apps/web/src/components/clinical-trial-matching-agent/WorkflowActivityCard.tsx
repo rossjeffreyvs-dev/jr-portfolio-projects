@@ -68,7 +68,7 @@ export default function WorkflowActivityCard({
 
       <div className="workflow-list">
         {visibleEvents.map((item: WorkflowEvent, index: number) => {
-          const timestamp = formatTimestamp(item.timestamp);
+          const timestamp = formatTimestamp(item.timestamp ?? undefined);
 
           return (
             <div className="workflow-item" key={`${item.stage}-${index}`}>

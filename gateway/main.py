@@ -19,40 +19,59 @@ class HostDispatcher:
             await self.default_app(scope, receive, send)
             return
 
+        path = scope.get("path", "")
+
+        # Health check
+        if path == "/health":
+            response = JSONResponse({"status": "ok"})
+            await response(scope, receive, send)
+            return
+
         headers = dict(scope["headers"])
         host = headers.get(b"host", b"").decode().split(":")[0]
 
-        logger.info(f"Incoming request host={host} path={scope.get('path', '')}")
+        logger.info(f"Incoming request host={host} path={path}")
 
         target = get_app_for_host(host)
 
-        # Case 1: ASGI app
+        # ASGI app
         if callable(target):
             await target(scope, receive, send)
             return
 
-        # Case 2: HTTP proxy target (for Flask or other HTTP services)
+        # Proxy app
         if isinstance(target, str):
             await self.proxy_request(scope, receive, send, target)
             return
 
         await self.default_app(scope, receive, send)
 
-    async def proxy_request(self, scope: Scope, receive: Receive, send: Send, target_url: str):
+    async def proxy_request(
+        self,
+        scope: Scope,
+        receive: Receive,
+        send: Send,
+        target_url: str,
+    ):
         timeout = httpx.Timeout(120.0, connect=10.0)
 
+        # Read request body
         body = b""
         more_body = True
-
         while more_body:
             message = await receive()
             body += message.get("body", b"")
             more_body = message.get("more_body", False)
 
-        url = f"{target_url}{scope['path']}"
+        path = scope["path"]
+
+        # 🔥 SIMPLE: NO REWRITES
+        url = f"{target_url}{path}"
+
         if scope.get("query_string"):
             url += f"?{scope['query_string'].decode()}"
 
+        # Forward headers cleanly
         forward_headers = {
             k.decode(): v.decode()
             for k, v in scope["headers"]
@@ -68,22 +87,30 @@ class HostDispatcher:
                     content=body,
                 )
 
+            # 🔥 IMPORTANT: remove only problematic headers
             response_headers = [
                 (k.encode(), v.encode())
                 for k, v in response.headers.items()
-                if k.lower() != "transfer-encoding"
+                if k.lower() not in [
+                    "transfer-encoding",
+                    "content-length",
+                ]
             ]
 
-            await send({
-                "type": "http.response.start",
-                "status": response.status_code,
-                "headers": response_headers,
-            })
+            await send(
+                {
+                    "type": "http.response.start",
+                    "status": response.status_code,
+                    "headers": response_headers,
+                }
+            )
 
-            await send({
-                "type": "http.response.body",
-                "body": response.content,
-            })
+            await send(
+                {
+                    "type": "http.response.body",
+                    "body": response.content,
+                }
+            )
 
         except Exception as e:
             logger.exception("Proxy request failed")
@@ -92,25 +119,24 @@ class HostDispatcher:
                 content={"error": "Bad gateway", "detail": str(e)},
             ).body
 
-            await send({
-                "type": "http.response.start",
-                "status": 502,
-                "headers": [(b"content-type", b"application/json")],
-            })
+            await send(
+                {
+                    "type": "http.response.start",
+                    "status": 502,
+                    "headers": [(b"content-type", b"application/json")],
+                }
+            )
 
-            await send({
-                "type": "http.response.body",
-                "body": error_body,
-            })
+            await send(
+                {
+                    "type": "http.response.body",
+                    "body": error_body,
+                }
+            )
 
 
 # Fallback app
 fallback_app = FastAPI()
-
-
-@fallback_app.get("/health")
-def health():
-    return {"status": "ok"}
 
 
 @fallback_app.get("/")
@@ -118,7 +144,10 @@ def root():
     return {"message": "Unknown host"}
 
 
-@fallback_app.api_route("/{path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"])
+@fallback_app.api_route(
+    "/{path:path}",
+    methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
+)
 async def unknown_host(path: str):
     return JSONResponse(
         status_code=404,

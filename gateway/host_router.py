@@ -1,8 +1,6 @@
 from services.resume_job_analyzer.app import app as flask_resume_app
 from services.fx_insights.service import app as fx_app
 from services.semantic_patient_search.service import app as semantic_app
-# from services.clinical_trial_matching_agent.apps import app as trial_app
-from services.clinical_trial_matching_agent.apps.api.app.main import app as trial_app
 from asgiref.wsgi import WsgiToAsgi
 
 resume_app = WsgiToAsgi(flask_resume_app)
@@ -12,7 +10,7 @@ HOST_MAP = {
     "resume-analyzer.jeffrey-ross.me": resume_app,
     "fx-insights.jeffrey-ross.me": fx_app,
     "semantic-patient-search.jeffrey-ross.me": semantic_app,
-    "clinical-trial-patient-agent.jeffrey-ross.me": trial_app,
+    "clinical-trial-patient-agent.jeffrey-ross.me": "http://127.0.0.1:3000",
 
     # optional lightsail domain aliases
     # "jr-portfolio-projects.dtw628ha8cm94.us-west-2.cs.amazonlightsail.com": fx_app,
@@ -21,7 +19,7 @@ HOST_MAP = {
     "resume.local": resume_app,
     "fx.local": fx_app,
     "semantic.local": semantic_app,
-    "clinical-trial.local": trial_app,
+    "clinical-trial.local": "http://127.0.0.1:3000",
 }
 
 
