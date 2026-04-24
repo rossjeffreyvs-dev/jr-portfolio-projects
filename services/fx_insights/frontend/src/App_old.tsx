@@ -90,22 +90,6 @@ const App: React.FC = () => {
         // ignore URL update issues
       }
     }
-
-    window.requestAnimationFrame(() => {
-      const prefersReducedMotion = window.matchMedia(
-        "(prefers-reduced-motion: reduce)",
-      ).matches;
-
-      const target =
-        tab === "demo"
-          ? demoRef.current || tabsRef.current
-          : descriptionRef.current || tabsRef.current;
-
-      target?.scrollIntoView({
-        behavior: smooth && !prefersReducedMotion ? "smooth" : "auto",
-        block: "start",
-      });
-    });
   };
 
   const resetProgressLoop = () => {

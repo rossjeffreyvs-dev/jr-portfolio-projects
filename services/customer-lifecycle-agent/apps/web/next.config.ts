@@ -1,7 +1,7 @@
-import type { NextConfig } from "next";
+const basePath = process.env.CUSTOMER_LIFECYCLE_BASE_PATH || "";
 
-const nextConfig: NextConfig = {
-  /* config options here */
+const nextConfig = {
+  basePath,
 };
 
 export default nextConfig;

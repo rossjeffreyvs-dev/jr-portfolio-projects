@@ -34,43 +34,58 @@ TRIAL_FRONTEND_PORT := 3000
 TRIAL_FRONTEND_ROUTE := /projects/clinical-trial-matching-agent
 TRIAL_DOCKER_IMAGE := clinical-trial-matching-agent-local
 
+CUSTOMER_DIR := services/customer-lifecycle-agent
+CUSTOMER_API_DIR := $(CUSTOMER_DIR)/api
+CUSTOMER_WEB_DIR := $(CUSTOMER_DIR)/apps/web
+CUSTOMER_BACKEND_PORT := 8010
+CUSTOMER_FRONTEND_PORT := 3000
+CUSTOMER_FRONTEND_ROUTE := /projects/customer-lifecycle-agent
+
 .DEFAULT_GOAL := help
 
 help:
 	@echo "Available dev commands:"
-	@echo "  make -f $(MAKEFILE_NAME) setup            - create root venv and install root requirements"
-	@echo "  make -f $(MAKEFILE_NAME) install          - install/update root requirements"
-	@echo "  make -f $(MAKEFILE_NAME) gateway          - run FastAPI gateway on port 8080"
-	@echo "  make -f $(MAKEFILE_NAME) resume           - run Resume Analyzer directly"
-	@echo "  make -f $(MAKEFILE_NAME) fx-setup         - prepare FX local environment"
-	@echo "  make -f $(MAKEFILE_NAME) fx-install       - install FX frontend dependencies"
-	@echo "  make -f $(MAKEFILE_NAME) fx-backend       - run FX backend locally on port $(FX_BACKEND_PORT)"
-	@echo "  make -f $(MAKEFILE_NAME) fx-frontend      - run FX frontend locally on port $(FX_FRONTEND_PORT)"
-	@echo "  make -f $(MAKEFILE_NAME) fx               - setup and run FX backend + frontend together"
-	@echo "  make -f $(MAKEFILE_NAME) fx-build         - build FX Insights Docker image locally"
-	@echo "  make -f $(MAKEFILE_NAME) fx-docker-run    - run FX Insights Docker container locally"
-	@echo "  make -f $(MAKEFILE_NAME) fx-smoke         - quick local health checks for FX endpoints"
-	@echo "  make -f $(MAKEFILE_NAME) semantic-setup   - prepare Semantic Search local environment"
-	@echo "  make -f $(MAKEFILE_NAME) semantic-install - install Semantic Search frontend dependencies"
-	@echo "  make -f $(MAKEFILE_NAME) semantic-backend - run Semantic Search backend locally on port $(SEM_BACKEND_PORT)"
-	@echo "  make -f $(MAKEFILE_NAME) semantic-frontend - run Semantic Search frontend locally on port $(SEM_FRONTEND_PORT)"
-	@echo "  make -f $(MAKEFILE_NAME) semantic         - setup and run Semantic Search backend + frontend together"
-	@echo "  make -f $(MAKEFILE_NAME) semantic-build   - build Semantic Search Docker image locally"
+	@echo "  make -f $(MAKEFILE_NAME) setup              - create root venv and install root requirements"
+	@echo "  make -f $(MAKEFILE_NAME) install            - install/update root requirements"
+	@echo "  make -f $(MAKEFILE_NAME) gateway            - run FastAPI gateway on port 8080"
+	@echo "  make -f $(MAKEFILE_NAME) resume             - run Resume Analyzer directly"
+	@echo "  make -f $(MAKEFILE_NAME) fx-setup           - prepare FX local environment"
+	@echo "  make -f $(MAKEFILE_NAME) fx-install         - install FX frontend dependencies"
+	@echo "  make -f $(MAKEFILE_NAME) fx-backend         - run FX backend locally on port $(FX_BACKEND_PORT)"
+	@echo "  make -f $(MAKEFILE_NAME) fx-frontend        - run FX frontend locally on port $(FX_FRONTEND_PORT)"
+	@echo "  make -f $(MAKEFILE_NAME) fx                 - setup and run FX backend + frontend together"
+	@echo "  make -f $(MAKEFILE_NAME) fx-build           - build FX Insights Docker image locally"
+	@echo "  make -f $(MAKEFILE_NAME) fx-docker-run      - run FX Insights Docker container locally"
+	@echo "  make -f $(MAKEFILE_NAME) fx-smoke           - quick local health checks for FX endpoints"
+	@echo "  make -f $(MAKEFILE_NAME) semantic-setup     - prepare Semantic Search local environment"
+	@echo "  make -f $(MAKEFILE_NAME) semantic-install   - install Semantic Search frontend dependencies"
+	@echo "  make -f $(MAKEFILE_NAME) semantic-backend   - run Semantic Search backend locally on port $(SEM_BACKEND_PORT)"
+	@echo "  make -f $(MAKEFILE_NAME) semantic-frontend  - run Semantic Search frontend locally on port $(SEM_FRONTEND_PORT)"
+	@echo "  make -f $(MAKEFILE_NAME) semantic           - setup and run Semantic Search backend + frontend together"
+	@echo "  make -f $(MAKEFILE_NAME) semantic-build     - build Semantic Search Docker image locally"
 	@echo "  make -f $(MAKEFILE_NAME) semantic-docker-run - run Semantic Search Docker container locally"
-	@echo "  make -f $(MAKEFILE_NAME) semantic-smoke   - quick local health checks for Semantic Search endpoints"
-	@echo "  make -f $(MAKEFILE_NAME) thermo           - run Smart Thermostat directly"
-	@echo "  make -f $(MAKEFILE_NAME) trial-setup      - install Clinical Trial backend Python requirements"
-	@echo "  make -f $(MAKEFILE_NAME) trial-install    - install Clinical Trial backend + frontend dependencies"
-	@echo "  make -f $(MAKEFILE_NAME) trial-backend    - run Clinical Trial backend locally on port $(TRIAL_BACKEND_PORT)"
-	@echo "  make -f $(MAKEFILE_NAME) trial-frontend   - run Clinical Trial frontend locally on port $(TRIAL_FRONTEND_PORT)"
-	@echo "  make -f $(MAKEFILE_NAME) trial            - run Clinical Trial backend + frontend together"
-	@echo "  make -f $(MAKEFILE_NAME) trial-smoke      - quick local health checks for Clinical Trial endpoints"
-	@echo "  make -f $(MAKEFILE_NAME) trial-stop       - kill Clinical Trial frontend/backend ports"
-	@echo "  make -f $(MAKEFILE_NAME) check            - verify key packages are installed"
-	@echo "  make -f $(MAKEFILE_NAME) clean            - remove root virtual environment"
-	@echo "  make -f $(MAKEFILE_NAME) fx-clean         - remove FX frontend node_modules/dist"
-	@echo "  make -f $(MAKEFILE_NAME) semantic-clean   - remove Semantic Search frontend node_modules/dist"
-	@echo "  make -f $(MAKEFILE_NAME) trial-clean      - remove Clinical Trial frontend node_modules/.next"
+	@echo "  make -f $(MAKEFILE_NAME) semantic-smoke     - quick local health checks for Semantic Search endpoints"
+	@echo "  make -f $(MAKEFILE_NAME) thermo             - run Smart Thermostat directly"
+	@echo "  make -f $(MAKEFILE_NAME) trial-setup        - install Clinical Trial backend Python requirements"
+	@echo "  make -f $(MAKEFILE_NAME) trial-install      - install Clinical Trial backend + frontend dependencies"
+	@echo "  make -f $(MAKEFILE_NAME) trial-backend      - run Clinical Trial backend locally on port $(TRIAL_BACKEND_PORT)"
+	@echo "  make -f $(MAKEFILE_NAME) trial-frontend     - run Clinical Trial frontend locally on port $(TRIAL_FRONTEND_PORT)"
+	@echo "  make -f $(MAKEFILE_NAME) trial              - run Clinical Trial backend + frontend together"
+	@echo "  make -f $(MAKEFILE_NAME) trial-smoke        - quick local health checks for Clinical Trial endpoints"
+	@echo "  make -f $(MAKEFILE_NAME) trial-stop         - kill Clinical Trial frontend/backend ports"
+	@echo "  make -f $(MAKEFILE_NAME) customer-setup     - install Customer Lifecycle backend Python requirements"
+	@echo "  make -f $(MAKEFILE_NAME) customer-install   - install Customer Lifecycle backend + frontend dependencies"
+	@echo "  make -f $(MAKEFILE_NAME) customer-backend   - run Customer Lifecycle backend locally on port $(CUSTOMER_BACKEND_PORT)"
+	@echo "  make -f $(MAKEFILE_NAME) customer-frontend  - run Customer Lifecycle frontend locally on port $(CUSTOMER_FRONTEND_PORT)"
+	@echo "  make -f $(MAKEFILE_NAME) customer           - run Customer Lifecycle backend + frontend together"
+	@echo "  make -f $(MAKEFILE_NAME) customer-smoke     - quick local health checks for Customer Lifecycle endpoints"
+	@echo "  make -f $(MAKEFILE_NAME) customer-stop      - kill Customer Lifecycle frontend/backend ports"
+	@echo "  make -f $(MAKEFILE_NAME) check              - verify key packages are installed"
+	@echo "  make -f $(MAKEFILE_NAME) clean              - remove root virtual environment"
+	@echo "  make -f $(MAKEFILE_NAME) fx-clean           - remove FX frontend node_modules/dist"
+	@echo "  make -f $(MAKEFILE_NAME) semantic-clean     - remove Semantic Search frontend node_modules/dist"
+	@echo "  make -f $(MAKEFILE_NAME) trial-clean        - remove Clinical Trial frontend node_modules/.next"
+	@echo "  make -f $(MAKEFILE_NAME) customer-clean     - remove Customer Lifecycle frontend node_modules/.next"
 
 $(VENV)/bin/activate:
 	$(PYTHON) -m venv $(VENV)
@@ -244,6 +259,57 @@ trial-stop:
 	@kill -9 $$(lsof -ti :$(TRIAL_BACKEND_PORT)) 2>/dev/null || true
 	@kill -9 $$(lsof -ti :$(TRIAL_FRONTEND_PORT)) 2>/dev/null || true
 
+customer-setup: $(VENV)/bin/activate
+	$(PIP) install fastapi uvicorn python-dotenv
+
+customer-install: customer-setup
+	cd $(CUSTOMER_WEB_DIR) && $(NPM) install
+
+customer-backend: customer-setup
+	cd $(CUSTOMER_API_DIR) && PYTHONPATH=. $(abspath $(UVICORN)) main:app --reload --port $(CUSTOMER_BACKEND_PORT)
+
+customer-frontend:
+	cd $(CUSTOMER_WEB_DIR) && NEXT_PUBLIC_CUSTOMER_LIFECYCLE_API_BASE_URL=http://127.0.0.1:$(CUSTOMER_BACKEND_PORT) $(NPM) run dev
+
+customer-wait:
+	@echo "Waiting for customer lifecycle backend on :$(CUSTOMER_BACKEND_PORT)..."
+	@attempts=0; \
+	until curl -sf http://127.0.0.1:$(CUSTOMER_BACKEND_PORT)/health > /dev/null; do \
+		attempts=$$((attempts+1)); \
+		if [ $$attempts -ge 30 ]; then \
+			echo "Customer Lifecycle backend failed to become ready."; \
+			exit 1; \
+		fi; \
+		sleep 1; \
+	done
+	@echo "Customer Lifecycle backend is ready."
+
+customer: customer-install
+	@echo "Agentic Customer Lifecycle Platform is starting..."
+	@echo "Frontend: http://127.0.0.1:$(CUSTOMER_FRONTEND_PORT)$(CUSTOMER_FRONTEND_ROUTE)"
+	@echo "Backend:  http://127.0.0.1:$(CUSTOMER_BACKEND_PORT)"
+	@echo ""
+	@echo "Press Ctrl+C to stop both services."
+	@trap 'echo ""; echo "Stopping services..."; kill 0' EXIT INT TERM; \
+	$(MAKE) -f $(MAKEFILE_NAME) customer-backend & \
+	BACKEND_PID=$$!; \
+	$(MAKE) -f $(MAKEFILE_NAME) customer-wait; \
+	$(MAKE) -f $(MAKEFILE_NAME) customer-frontend & \
+	FRONTEND_PID=$$!; \
+	wait $$BACKEND_PID $$FRONTEND_PID
+
+customer-smoke:
+	@echo "Checking backend on http://127.0.0.1:$(CUSTOMER_BACKEND_PORT)"
+	@curl -fsS http://127.0.0.1:$(CUSTOMER_BACKEND_PORT)/health > /dev/null || (echo "Backend check failed" && exit 1)
+	@echo ""
+	@echo "Checking frontend on http://127.0.0.1:$(CUSTOMER_FRONTEND_PORT)$(CUSTOMER_FRONTEND_ROUTE)"
+	@curl -fsS http://127.0.0.1:$(CUSTOMER_FRONTEND_PORT)$(CUSTOMER_FRONTEND_ROUTE) > /dev/null || (echo "Frontend check failed" && exit 1)
+	@echo "Customer Lifecycle local smoke check passed"
+
+customer-stop:
+	@kill -9 $$(lsof -ti :$(CUSTOMER_BACKEND_PORT)) 2>/dev/null || true
+	@kill -9 $$(lsof -ti :$(CUSTOMER_FRONTEND_PORT)) 2>/dev/null || true
+
 check: $(VENV)/bin/activate
 	@echo "Python:"
 	@$(PY) --version
@@ -266,7 +332,13 @@ trial-clean:
 	rm -rf $(TRIAL_WEB_DIR)/node_modules
 	rm -rf $(TRIAL_WEB_DIR)/.next
 
+customer-clean:
+	rm -rf $(CUSTOMER_WEB_DIR)/node_modules
+	rm -rf $(CUSTOMER_WEB_DIR)/.next
+
 .PHONY: help setup install gateway resume \
 	fx-setup fx-install fx-backend fx-frontend fx fx-run fx-build fx-docker-run fx-smoke fx-clean \
 	semantic-setup semantic-install semantic-backend semantic-frontend semantic semantic-run semantic-build semantic-docker-run semantic-smoke semantic-clean \
-	thermo trial-setup trial-install trial-backend trial-frontend trial-wait trial trial-smoke trial-stop trial-clean check clean
+	thermo trial-setup trial-install trial-backend trial-frontend trial-wait trial trial-smoke trial-stop trial-clean \
+	customer-setup customer-install customer-backend customer-frontend customer-wait customer customer-smoke customer-stop customer-clean \
+	check clean

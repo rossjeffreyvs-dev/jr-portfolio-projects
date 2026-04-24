@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import CustomerLifecycleAgentPage from "./projects/customer-lifecycle-agent/page";
 
 export default function Home() {
-  redirect("/projects/customer-lifecycle-agent");
+  return <CustomerLifecycleAgentPage />;
 }
