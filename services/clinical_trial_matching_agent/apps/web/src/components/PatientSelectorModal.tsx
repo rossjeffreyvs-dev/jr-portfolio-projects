@@ -122,6 +122,17 @@ export default function PatientSelectorModal({
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(
     null,
   );
+  const [viewportWidth, setViewportWidth] = useState<number>(1280);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const updateViewport = () => setViewportWidth(window.innerWidth);
+    updateViewport();
+
+    window.addEventListener("resize", updateViewport);
+    return () => window.removeEventListener("resize", updateViewport);
+  }, []);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -142,7 +153,11 @@ export default function PatientSelectorModal({
       return;
     }
 
-    setSelectedPatientId(patients[0].id);
+    setSelectedPatientId((current) =>
+      current && patients.some((patient) => patient.id === current)
+        ? current
+        : patients[0].id,
+    );
   }, [isOpen, patients]);
 
   const selectedPatient = useMemo(
@@ -152,6 +167,14 @@ export default function PatientSelectorModal({
 
   if (!isOpen) return null;
   if (typeof document === "undefined") return null;
+
+  const isTablet = viewportWidth <= 1080;
+  const isMobile = viewportWidth <= 720;
+
+  const shellPadding = isMobile ? 12 : isTablet ? 16 : 24;
+  const cardRadius = isMobile ? 22 : 28;
+  const contentPadding = isMobile ? 16 : 22;
+  const asidePadding = isMobile ? 16 : 28;
 
   return createPortal(
     <div
@@ -164,21 +187,23 @@ export default function PatientSelectorModal({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: 24,
+        padding: shellPadding,
       }}
     >
       <div
         onClick={(event) => event.stopPropagation()}
         style={{
-          width: "min(1280px, 96vw)",
-          height: "min(860px, 92vh)",
+          width: isMobile ? "100%" : "min(1280px, 96vw)",
+          height: isMobile ? "min(94vh, 980px)" : "min(860px, 92vh)",
+          maxHeight: "94vh",
           background: "#ffffff",
           border: "1px solid #dbe3f0",
-          borderRadius: 28,
+          borderRadius: cardRadius,
           boxShadow: "0 24px 64px rgba(15, 23, 42, 0.24)",
           overflow: "hidden",
           display: "grid",
-          gridTemplateColumns: "1.42fr 0.88fr",
+          gridTemplateColumns: isTablet ? "1fr" : "1.42fr 0.88fr",
+          gridTemplateRows: isTablet ? "minmax(0, 1.2fr) minmax(0, 0.9fr)" : undefined,
           position: "relative",
         }}
       >
@@ -187,15 +212,15 @@ export default function PatientSelectorModal({
           onClick={onClose}
           style={{
             position: "absolute",
-            top: 20,
-            right: 20,
-            zIndex: 2,
+            top: isMobile ? 12 : 20,
+            right: isMobile ? 12 : 20,
+            zIndex: 3,
             border: "1px solid #cbd5e1",
             background: "#ffffff",
             color: "#334155",
             borderRadius: 999,
-            padding: "8px 14px",
-            fontSize: 14,
+            padding: isMobile ? "8px 12px" : "8px 14px",
+            fontSize: isMobile ? 13 : 14,
             fontWeight: 700,
             cursor: "pointer",
           }}
@@ -205,9 +230,10 @@ export default function PatientSelectorModal({
 
         <section
           style={{
-            borderRight: "1px solid #e2e8f0",
+            borderRight: isTablet ? "none" : "1px solid #e2e8f0",
+            borderBottom: isTablet ? "1px solid #e2e8f0" : "none",
             background: "#f8fafc",
-            padding: 14,
+            padding: contentPadding,
             overflow: "hidden",
             display: "flex",
             flexDirection: "column",
@@ -227,28 +253,18 @@ export default function PatientSelectorModal({
               Select Patient
             </div>
 
-            {/* <h2
-              style={{
-                marginTop: 10,
-                marginBottom: 0,
-                fontSize: 28,
-                lineHeight: 1.2,
-                color: "#0f172a",
-              }}
-            >
-              Ranked patient candidates
-            </h2> */}
-
             {trialTitle ? (
               <p
                 style={{
                   marginTop: 8,
                   marginBottom: 0,
-                  fontSize: 14,
+                  fontSize: isMobile ? 13 : 14,
+                  lineHeight: 1.5,
                   color: "#475569",
+                  paddingRight: isMobile ? 96 : 0,
                 }}
               >
-                Review candidate fit for '{trialTitle}'.
+                Review candidate fit for "{trialTitle}".
               </p>
             ) : null}
           </div>
@@ -257,9 +273,9 @@ export default function PatientSelectorModal({
             style={{
               marginTop: 12,
               border: "1px solid #e2e8f0",
-              borderRadius: 24,
+              borderRadius: isMobile ? 20 : 24,
               background: "#ffffff",
-              padding: 18,
+              padding: isMobile ? 16 : 18,
             }}
           >
             <div
@@ -278,34 +294,21 @@ export default function PatientSelectorModal({
               placeholder="Describe the type of patient you want to find for this trial."
               style={{
                 width: "100%",
-                minHeight: 82,
-                height: 82,
+                minHeight: isMobile ? 92 : 82,
+                height: isMobile ? 92 : 82,
                 marginTop: 10,
                 border: "1px solid #dbe3f0",
                 borderRadius: 18,
                 background: "#ffffff",
-                padding: 14,
-                fontSize: 15,
+                padding: isMobile ? 12 : 14,
+                fontSize: isMobile ? 14 : 15,
                 lineHeight: 1.45,
                 color: "#0f172a",
                 resize: "none",
                 outline: "none",
+                boxSizing: "border-box",
               }}
             />
-
-            {/* {hasRunSemanticSearch && semanticQuery.trim().length > 0 ? (
-              <div
-                style={{
-                  marginTop: 12,
-                  fontSize: 13,
-                  lineHeight: 1.55,
-                  color: "#64748b",
-                }}
-              >
-                Loaded initial search for this trial. You can edit query, choose
-                a suggested search, or reset to patient list.
-              </div>
-            ) : null} */}
 
             <div
               style={{
@@ -324,7 +327,7 @@ export default function PatientSelectorModal({
                   borderRadius: 999,
                   background: "#0f172a",
                   color: "#ffffff",
-                  padding: "11px 18px",
+                  padding: isMobile ? "11px 16px" : "11px 18px",
                   fontSize: 14,
                   fontWeight: 700,
                   cursor:
@@ -332,34 +335,13 @@ export default function PatientSelectorModal({
                       ? "not-allowed"
                       : "pointer",
                   opacity: isSemanticSearchLoading || isLoading ? 0.65 : 1,
+                  width: isMobile ? "100%" : "auto",
                 }}
               >
                 {isSemanticSearchLoading
                   ? "Running Search..."
                   : "Run Semantic Search"}
               </button>
-
-              {/* <button
-                type="button"
-                onClick={onResetPatientSearch}
-                disabled={isSemanticSearchLoading || isLoading}
-                style={{
-                  border: "1px solid #cbd5e1",
-                  borderRadius: 999,
-                  background: "#ffffff",
-                  color: "#334155",
-                  padding: "11px 18px",
-                  fontSize: 14,
-                  fontWeight: 700,
-                  cursor:
-                    isSemanticSearchLoading || isLoading
-                      ? "not-allowed"
-                      : "pointer",
-                  opacity: isSemanticSearchLoading || isLoading ? 0.65 : 1,
-                }}
-              >
-                Reset to Trial Patient List
-              </button> */}
             </div>
 
             {semanticSearchError ? (
@@ -411,7 +393,8 @@ export default function PatientSelectorModal({
                         fontSize: 13,
                         fontWeight: 700,
                         cursor: "pointer",
-                        whiteSpace: "nowrap",
+                        whiteSpace: isMobile ? "normal" : "nowrap",
+                        textAlign: "left",
                       }}
                     >
                       {suggestion.label}
@@ -426,8 +409,9 @@ export default function PatientSelectorModal({
             style={{
               marginTop: 14,
               display: "flex",
-              alignItems: "center",
+              alignItems: isMobile ? "flex-start" : "center",
               justifyContent: "space-between",
+              flexDirection: isMobile ? "column" : "row",
               gap: 12,
             }}
           >
@@ -435,12 +419,13 @@ export default function PatientSelectorModal({
               style={{
                 fontSize: 14,
                 fontWeight: 500,
+                lineHeight: 1.5,
                 color: "#475569",
               }}
             >
               {hasRunSemanticSearch
                 ? "Scroll down to view and select suggested ranked candidates for this trial."
-                : "Showing seeded patients mapped to the active trial. - "}
+                : "Showing seeded patients mapped to the active trial."}
             </div>
 
             <div
@@ -461,11 +446,11 @@ export default function PatientSelectorModal({
 
           <div
             style={{
-              marginTop: 3,
+              marginTop: 10,
               flex: 1,
               minHeight: 0,
               overflowY: "auto",
-              paddingRight: 6,
+              paddingRight: isTablet ? 0 : 6,
             }}
           >
             {isLoading ? (
@@ -513,7 +498,7 @@ export default function PatientSelectorModal({
                           : "1px solid #e2e8f0",
                         borderRadius: 22,
                         background: "#ffffff",
-                        padding: 16,
+                        padding: isMobile ? 14 : 16,
                         textAlign: "left",
                         cursor: "pointer",
                         boxShadow: isSelected
@@ -526,10 +511,11 @@ export default function PatientSelectorModal({
                           display: "flex",
                           justifyContent: "space-between",
                           alignItems: "flex-start",
-                          gap: 16,
+                          flexDirection: isMobile ? "column" : "row",
+                          gap: 12,
                         }}
                       >
-                        <div>
+                        <div style={{ minWidth: 0 }}>
                           <div
                             style={{
                               display: "flex",
@@ -574,9 +560,10 @@ export default function PatientSelectorModal({
                           <div
                             style={{
                               marginTop: 10,
-                              fontSize: 18,
+                              fontSize: isMobile ? 16 : 18,
                               fontWeight: 700,
                               color: "#0f172a",
+                              lineHeight: 1.3,
                             }}
                           >
                             {patient.name}
@@ -586,6 +573,7 @@ export default function PatientSelectorModal({
                             style={{
                               marginTop: 4,
                               fontSize: 14,
+                              lineHeight: 1.5,
                               color: "#475569",
                             }}
                           >
@@ -599,8 +587,9 @@ export default function PatientSelectorModal({
                             borderRadius: 18,
                             background: "#f8fafc",
                             padding: "10px 12px",
-                            textAlign: "right",
-                            minWidth: 102,
+                            textAlign: isMobile ? "left" : "right",
+                            minWidth: isMobile ? "auto" : 102,
+                            width: isMobile ? "100%" : "auto",
                             flexShrink: 0,
                           }}
                         >
@@ -693,8 +682,9 @@ export default function PatientSelectorModal({
         <aside
           style={{
             background: "#ffffff",
-            padding: 28,
+            padding: asidePadding,
             overflowY: "auto",
+            minHeight: 0,
           }}
         >
           <div
@@ -704,6 +694,7 @@ export default function PatientSelectorModal({
               letterSpacing: "0.18em",
               textTransform: "uppercase",
               color: "#64748b",
+              paddingRight: isMobile ? 96 : 0,
             }}
           >
             Selected Patient
@@ -716,7 +707,7 @@ export default function PatientSelectorModal({
                   border: "1px solid #e2e8f0",
                   borderRadius: 24,
                   background: "#f8fafc",
-                  padding: 22,
+                  padding: isMobile ? 16 : 22,
                 }}
               >
                 <div
@@ -725,15 +716,17 @@ export default function PatientSelectorModal({
                     justifyContent: "space-between",
                     gap: 16,
                     alignItems: "flex-start",
+                    flexDirection: isMobile ? "column" : "row",
                   }}
                 >
-                  <div>
+                  <div style={{ minWidth: 0 }}>
                     <div
                       style={{
-                        fontSize: 28,
+                        fontSize: isMobile ? 20 : 28,
                         fontWeight: 700,
                         color: "#0f172a",
-                        lineHeight: 1.2,
+                        lineHeight: 1.15,
+                        wordBreak: "break-word",
                       }}
                     >
                       {selectedPatient.name}
@@ -742,6 +735,7 @@ export default function PatientSelectorModal({
                       style={{
                         marginTop: 8,
                         fontSize: 14,
+                        lineHeight: 1.5,
                         color: "#475569",
                       }}
                     >
@@ -758,6 +752,7 @@ export default function PatientSelectorModal({
                       fontSize: 14,
                       fontWeight: 700,
                       color: "#334155",
+                      alignSelf: isMobile ? "flex-start" : "auto",
                     }}
                   >
                     {formatScore(selectedPatient.score)}
@@ -770,6 +765,7 @@ export default function PatientSelectorModal({
                     display: "grid",
                     gap: 10,
                     fontSize: 14,
+                    lineHeight: 1.6,
                     color: "#334155",
                   }}
                 >
@@ -828,7 +824,7 @@ export default function PatientSelectorModal({
                   border: "1px solid #e2e8f0",
                   borderRadius: 24,
                   background: "#ffffff",
-                  padding: 22,
+                  padding: isMobile ? 16 : 22,
                 }}
               >
                 <div
