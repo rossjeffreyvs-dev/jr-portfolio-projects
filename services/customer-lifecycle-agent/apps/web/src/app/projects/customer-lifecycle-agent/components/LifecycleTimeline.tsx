@@ -1,4 +1,4 @@
-import type { LifecycleEvent } from "./types";
+import type { LifecycleEvent } from "../types";
 
 type LifecycleTimelineProps = {
   events: LifecycleEvent[];
