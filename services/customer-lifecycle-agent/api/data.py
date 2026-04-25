@@ -1,3 +1,20 @@
+from __future__ import annotations
+
+from datetime import datetime, timezone
+from random import choice, randint
+from typing import Literal
+
+LifecycleStage = Literal[
+    "prospect",
+    "qualified",
+    "evaluated",
+    "in_review",
+    "converted",
+    "rejected",
+]
+
+VALUE_PER_CONVERTED_CUSTOMER = 18000
+
 ACCOUNTS = [
     {
         "id": "acct_plaid_001",
@@ -43,9 +60,82 @@ ACCOUNTS = [
     },
 ]
 
+PROSPECTS = [
+    {
+        "id": "prospect_101",
+        "name": "Beacon Credit Union",
+        "segment": "Regional financial institution",
+        "source": "Partner referral",
+        "stage": "qualified",
+        "fit_score": 86,
+        "estimated_value": VALUE_PER_CONVERTED_CUSTOMER,
+        "signal": "High API fit; lending use case confirmed.",
+        "next_action": "Run activation readiness evaluation",
+        "created_at": "2026-04-25T10:00:00+00:00",
+    },
+    {
+        "id": "prospect_102",
+        "name": "Atlas Pay",
+        "segment": "Payments startup",
+        "source": "Inbound demo request",
+        "stage": "evaluated",
+        "fit_score": 79,
+        "estimated_value": VALUE_PER_CONVERTED_CUSTOMER,
+        "signal": "Sandbox usage detected; production review not scheduled.",
+        "next_action": "Send production checklist",
+        "created_at": "2026-04-25T10:04:00+00:00",
+    },
+    {
+        "id": "prospect_103",
+        "name": "Cedar Mortgage",
+        "segment": "Mortgage lender",
+        "source": "Outbound target account",
+        "stage": "in_review",
+        "fit_score": 91,
+        "estimated_value": VALUE_PER_CONVERTED_CUSTOMER,
+        "signal": "Strong revenue fit; legal/security review blocking conversion.",
+        "next_action": "Escalate technical review",
+        "created_at": "2026-04-25T10:07:00+00:00",
+    },
+    {
+        "id": "prospect_104",
+        "name": "Summit Treasury",
+        "segment": "Treasury management SaaS",
+        "source": "Product-led signup",
+        "stage": "converted",
+        "fit_score": 88,
+        "estimated_value": VALUE_PER_CONVERTED_CUSTOMER,
+        "signal": "Production workflow completed.",
+        "next_action": "Expansion opportunity review",
+        "created_at": "2026-04-25T10:11:00+00:00",
+    },
+]
+
+REVIEW_QUEUE = [
+    {
+        "id": "review_201",
+        "prospect_id": "prospect_103",
+        "priority": "High",
+        "reason": [
+            "High-value account is blocked between evaluation and conversion.",
+            "Security review is incomplete despite strong product fit.",
+        ],
+        "recommended_action": "Schedule solutions review and send security packet.",
+        "status": "open",
+    }
+]
+
+
+def utc_now() -> str:
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+
 
 def get_account(account_id: str):
     return next((account for account in ACCOUNTS if account["id"] == account_id), None)
+
+
+def reset_account_state(account_id: str):
+    return True
 
 
 def build_lifecycle(account):
@@ -81,7 +171,13 @@ def build_lifecycle(account):
 
 
 def run_agents(account):
-    risk_level = "high" if account["activation_risk"] >= 70 else "medium" if account["activation_risk"] >= 40 else "low"
+    risk_level = (
+        "high"
+        if account["activation_risk"] >= 70
+        else "medium"
+        if account["activation_risk"] >= 40
+        else "low"
+    )
 
     return {
         "account_id": account["id"],
@@ -118,4 +214,187 @@ def run_agents(account):
                 "finding": f"Potential expansion opportunity estimated at ${account['revenue_opportunity']:,}.",
             },
         ],
+    }
+
+
+def build_revenue_lifecycle():
+    prospects = PROSPECTS
+    qualified = [p for p in prospects if p["stage"] in {"qualified", "evaluated", "in_review", "converted"}]
+    evaluated = [p for p in prospects if p["stage"] in {"evaluated", "in_review", "converted"}]
+    in_review = [p for p in prospects if p["stage"] == "in_review"]
+    converted = [p for p in prospects if p["stage"] == "converted"]
+
+    potential_value = len(prospects) * VALUE_PER_CONVERTED_CUSTOMER
+    realized_value = len(converted) * VALUE_PER_CONVERTED_CUSTOMER
+    leakage_value = max((len(evaluated) - len(converted)) * VALUE_PER_CONVERTED_CUSTOMER, 0)
+
+    open_reviews = [review for review in REVIEW_QUEUE if review["status"] == "open"]
+
+    if open_reviews:
+        insight_reason = "High-fit prospects are stalling in human review before conversion."
+        recommendation = "Prioritize review-blocked accounts and trigger technical/security enablement."
+        stage = "review_to_conversion"
+    else:
+        insight_reason = "Qualified prospects are available but not enough have reached evaluation."
+        recommendation = "Auto-prioritize the highest-fit prospects for activation evaluation."
+        stage = "qualification_to_evaluation"
+
+    return {
+        "customer_profile": {
+            "title": "Fintech API customer lifecycle",
+            "buyer": "Head of Product, Growth, or Developer Experience",
+            "user": "Customer success, solutions engineering, and growth teams",
+            "value_per_converted_customer": VALUE_PER_CONVERTED_CUSTOMER,
+            "target_customer_profile": {
+                "segment": "Fintech, banking, lending, payments, or SaaS platform",
+                "use_case": "API integration that must progress from sandbox setup to production usage",
+                "success_criteria": [
+                    "API keys created",
+                    "First sandbox workflow completed",
+                    "Webhook or production checklist completed",
+                    "Human review resolved",
+                ],
+                "conversion_risks": [
+                    "Incomplete technical setup",
+                    "Security or compliance blocker",
+                    "No production workflow after sandbox activity",
+                ],
+            },
+        },
+        "prospect_feed": sorted(prospects, key=lambda item: item["created_at"], reverse=True),
+        "funnel": {
+            "prospects": len(prospects),
+            "qualified": len(qualified),
+            "evaluated": len(evaluated),
+            "in_review": len(in_review),
+            "converted": len(converted),
+            "potential_value": potential_value,
+            "realized_value": realized_value,
+            "leakage_value": leakage_value,
+        },
+        "review_queue": [
+            {
+                **review,
+                "prospect": next(
+                    (prospect for prospect in prospects if prospect["id"] == review["prospect_id"]),
+                    None,
+                ),
+                "estimated_value": VALUE_PER_CONVERTED_CUSTOMER,
+            }
+            for review in open_reviews
+        ],
+        "agent_insight": {
+            "stage": stage,
+            "severity": "high" if leakage_value >= VALUE_PER_CONVERTED_CUSTOMER * 2 else "medium",
+            "reason": insight_reason,
+            "recommendation": recommendation,
+            "estimated_gain": min(leakage_value, VALUE_PER_CONVERTED_CUSTOMER * 3),
+        },
+    }
+
+
+def ingest_prospect():
+    source = choice(
+        [
+            "Product-led signup",
+            "Partner referral",
+            "Inbound demo request",
+            "Outbound target account",
+            "Developer community",
+        ]
+    )
+    segment = choice(
+        [
+            "Fintech startup",
+            "Regional bank",
+            "Lending platform",
+            "Payments company",
+            "B2B SaaS platform",
+        ]
+    )
+    stage: LifecycleStage = choice(["prospect", "qualified", "evaluated", "in_review"])
+    score = randint(48, 94)
+    prospect_number = 200 + len(PROSPECTS) + randint(1, 50)
+
+    prospect = {
+        "id": f"prospect_{prospect_number}",
+        "name": choice(
+            [
+                "BlueRiver Finance",
+                "Orbit Lending",
+                "Keystone Pay",
+                "Apex Capital",
+                "Relay Banking",
+                "BridgeFlow",
+            ]
+        ),
+        "segment": segment,
+        "source": source,
+        "stage": stage,
+        "fit_score": score,
+        "estimated_value": VALUE_PER_CONVERTED_CUSTOMER,
+        "signal": "New account activity detected and added to lifecycle funnel.",
+        "next_action": (
+            "Send activation checklist"
+            if stage in {"prospect", "qualified"}
+            else "Route to human review"
+            if stage == "in_review"
+            else "Run agent evaluation"
+        ),
+        "created_at": utc_now(),
+    }
+
+    PROSPECTS.append(prospect)
+
+    if stage == "in_review":
+        REVIEW_QUEUE.append(
+            {
+                "id": f"review_{300 + len(REVIEW_QUEUE)}",
+                "prospect_id": prospect["id"],
+                "priority": "High" if score >= 80 else "Medium",
+                "reason": [
+                    "New high-fit prospect requires human decision before conversion.",
+                    "Agent detected a blocker between evaluation and production activation.",
+                ],
+                "recommended_action": "Assign solutions engineer and confirm production readiness.",
+                "status": "open",
+            }
+        )
+
+    return {
+        "message": "Mock prospect ingested",
+        "ingested_at": utc_now(),
+        "prospect": prospect,
+    }
+
+
+def update_review(review_id: str, action: Literal["approve", "reject", "request_data"]):
+    review = next((item for item in REVIEW_QUEUE if item["id"] == review_id), None)
+
+    if not review:
+        return None
+
+    prospect = next((item for item in PROSPECTS if item["id"] == review["prospect_id"]), None)
+
+    if action == "approve" and prospect:
+        prospect["stage"] = "converted"
+        prospect["signal"] = "Human approved account for conversion."
+        prospect["next_action"] = "Begin expansion monitoring"
+        review["status"] = "resolved"
+    elif action == "reject" and prospect:
+        prospect["stage"] = "rejected"
+        prospect["signal"] = "Human rejected account due to poor timing or fit."
+        prospect["next_action"] = "Recycle into nurture campaign"
+        review["status"] = "resolved"
+    elif action == "request_data" and prospect:
+        prospect["stage"] = "in_review"
+        prospect["signal"] = "Additional technical or commercial data requested."
+        prospect["next_action"] = "Collect missing integration evidence"
+        review["status"] = "open"
+
+    return {
+        "review_id": review_id,
+        "action": action,
+        "status": review["status"],
+        "message": "Human review action captured.",
     }

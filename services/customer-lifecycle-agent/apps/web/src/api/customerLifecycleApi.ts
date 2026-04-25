@@ -2,10 +2,10 @@ import type {
   AccountsResponse,
   ActionResponse,
   AgentRun,
+  CustomerLifecycleSummary,
+  IngestProspectResponse,
   LifecycleResponse,
 } from "@/app/types";
-
-const x = 1;
 
 const API_BASE =
   process.env.NEXT_PUBLIC_CUSTOMER_LIFECYCLE_API_BASE_URL ||
@@ -28,7 +28,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     throw new Error(`API request failed: ${response.status}`);
   }
 
-  return response.json();
+  return response.json() as Promise<T>;
 }
 
 export function getAccounts() {
@@ -53,6 +53,25 @@ export function triggerIntervention(accountId: string) {
 
 export function resetAccount(accountId: string) {
   return request<ActionResponse>(`/accounts/${accountId}/reset`, {
+    method: "POST",
+  });
+}
+
+export function getCustomerLifecycleSummary() {
+  return request<CustomerLifecycleSummary>("/lifecycle");
+}
+
+export function ingestMockProspect() {
+  return request<IngestProspectResponse>("/lifecycle/ingest", {
+    method: "POST",
+  });
+}
+
+export function submitReviewAction(
+  reviewId: string,
+  action: "approve" | "reject" | "request_data",
+) {
+  return request<ActionResponse>(`/lifecycle/reviews/${reviewId}/${action}`, {
     method: "POST",
   });
 }

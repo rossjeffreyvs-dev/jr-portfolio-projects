@@ -1,7 +1,8 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from data import ACCOUNTS, get_account, build_lifecycle, run_agents
+from data import ACCOUNTS, build_lifecycle, get_account, reset_account_state, run_agents
+from routes.lifecycle import router as lifecycle_router
 
 app = FastAPI(title="Agentic Customer Lifecycle API")
 
@@ -12,6 +13,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(lifecycle_router)
 
 
 @app.get("/health")
@@ -66,6 +69,8 @@ def reset_account(account_id: str):
     account = get_account(account_id)
     if not account:
         raise HTTPException(status_code=404, detail="Account not found")
+
+    reset_account_state(account_id)
 
     return {
         "account_id": account_id,
