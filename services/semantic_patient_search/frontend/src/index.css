@@ -139,10 +139,12 @@ button {
 }
 
 .hero h1 {
-  font-size: clamp(2.4rem, 4vw, 4.15rem);
-  line-height: 1.05;
   margin: 0;
+  font-size: clamp(1.8rem, 3.4vw, 2.75rem);
+  line-height: 1.08;
+  font-weight: 800;
   letter-spacing: -0.03em;
+  color: #0f172a;
 }
 
 .heroText {
@@ -219,8 +221,12 @@ button {
 .heroCard h2,
 .panelHeaderRow h2 {
   margin: 0;
-  font-size: 1.6rem;
-  line-height: 1.2;
+  max-width: 760px;
+  color: #0f172a;
+  font-size: clamp(1.4rem, 2.2vw, 1.9rem);
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+  font-weight: 800;
 }
 
 .sectionIntro,
@@ -902,9 +908,11 @@ html {
 
 .description-hero h2 {
   margin: 0;
-  font-size: clamp(28px, 3.2vw, 48px);
-  line-height: 1.04;
-  letter-spacing: -0.035em;
+  max-width: 720px;
+  font-size: clamp(1.35rem, 2.1vw, 1.8rem);
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+  font-weight: 800;
   color: var(--ink);
 }
 
@@ -1214,9 +1222,5 @@ html {
 
   .description-hero {
     padding: 24px;
-  }
-
-  .description-hero h2 {
-    font-size: 34px;
   }
 }
