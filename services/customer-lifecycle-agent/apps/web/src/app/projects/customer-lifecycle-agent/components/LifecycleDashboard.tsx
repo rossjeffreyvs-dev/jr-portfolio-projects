@@ -8,7 +8,7 @@ import {
   triggerIntervention,
 } from "@/lib/customerLifecycleApi";
 
-import type { Account, AgentRun, JourneyStage } from "@/lib/types";
+import type { Account, AgentRun, JourneyStage } from "@/app/types";
 
 export default function LifecycleDashboard() {
   const [accounts, setAccounts] = useState<Account[]>([]);
