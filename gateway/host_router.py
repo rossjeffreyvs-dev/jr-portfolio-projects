@@ -5,7 +5,28 @@ from services.fx_insights.service import app as fx_app
 from services.semantic_patient_search.service import app as semantic_app
 
 
-resume_app = WsgiToAsgi(flask_resume_app)
+# Keep Flask resume app available as backend/API fallback.
+resume_api_app = WsgiToAsgi(flask_resume_app)
+
+
+# Resume Analyzer
+RESUME_FRONTEND_URL = "http://127.0.0.1:3002"
+
+RESUME_HOSTS = {
+    "resume-analyzer.jeffrey-ross.me",
+    "resume.local",
+    "localhost",
+    "127.0.0.1",
+}
+
+RESUME_API_PREFIXES = (
+    "/api/analyze",
+    "/api/demo",
+    "/analyze",
+    "/demo",
+    "/api/resume",
+    "/api/resume-analyzer",
+)
 
 
 # Clinical Trial Matching Agent
@@ -36,12 +57,10 @@ CUSTOMER_API_PATH_PREFIX = "/customer-lifecycle-agent/api"
 
 HOST_MAP = {
     # Production subdomains
-    "resume-analyzer.jeffrey-ross.me": resume_app,
     "fx-insights.jeffrey-ross.me": fx_app,
     "semantic-patient-search.jeffrey-ross.me": semantic_app,
 
     # Local development aliases
-    "resume.local": resume_app,
     "fx.local": fx_app,
     "semantic.local": semantic_app,
 }
@@ -61,17 +80,19 @@ def get_app_for_request(host: str, path: str):
     """
     normalized_host = normalize_host(host)
 
-    # Customer Lifecycle path-based routing.
-    #
-    # Public:
-    #   /customer-lifecycle-agent
-    #   /customer-lifecycle-agent/api
+    # Resume Analyzer subdomain/local-host routing.
     #
     # Frontend:
-    #   http://127.0.0.1:3001
+    #   http://127.0.0.1:3002
     #
-    # Backend:
-    #   http://127.0.0.1:8010
+    # Backend/API fallback:
+    #   in-process Flask app
+    if normalized_host in RESUME_HOSTS:
+        if path.startswith(RESUME_API_PREFIXES):
+            return resume_api_app
+        return RESUME_FRONTEND_URL
+
+    # Customer Lifecycle path-based routing.
     if path.startswith(CUSTOMER_API_PATH_PREFIX):
         return CUSTOMER_API_URL
 
@@ -85,7 +106,7 @@ def get_app_for_request(host: str, path: str):
         return CLINICAL_FRONTEND_URL
 
     # Existing simple host-based services.
-    return HOST_MAP.get(normalized_host, resume_app)
+    return HOST_MAP.get(normalized_host, RESUME_FRONTEND_URL)
 
 
 def get_app_for_host(host: str):

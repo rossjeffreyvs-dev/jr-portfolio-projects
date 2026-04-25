@@ -7,7 +7,7 @@ import ResumePMPlaybook from "./components/ResumePMPlaybook";
 import ResumeProjectDescription from "./components/ResumeProjectDescription";
 import StandardHeader from "./components/StandardHeader";
 
-type TabKey = "description" | "demo" | "playbook";
+export type TabKey = "description" | "demo" | "playbook";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabKey>("description");

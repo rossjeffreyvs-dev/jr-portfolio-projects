@@ -1,3 +1,12 @@
+# ---------- Build Resume Analyzer frontend ----------
+FROM node:20-bookworm-slim AS resume_builder
+WORKDIR /build/services/resume_job_analyzer/frontend
+COPY services/resume_job_analyzer/frontend/package*.json ./
+RUN npm ci
+COPY services/resume_job_analyzer/frontend/ ./
+RUN npm run build
+
+
 # ---------- Build FX frontend ----------
 FROM node:20-bookworm-slim AS fx_builder
 WORKDIR /build/services/fx_insights/frontend
@@ -59,18 +68,19 @@ RUN pip install --no-cache-dir --upgrade pip \
 # Install service-specific Python deps
 COPY services/fx_insights/backend/requirements.txt fx.txt
 COPY services/semantic_patient_search/backend/requirements.txt sem.txt
+COPY services/clinical_trial_matching_agent/apps/api/requirements.txt clinical_api.txt
 
 RUN pip install --no-cache-dir -r fx.txt \
- && pip install --no-cache-dir -r sem.txt
-
-# Install clinical API Python deps if present
-# This path is based on the current clinical app layout you've been deploying.
-COPY services/clinical_trial_matching_agent/apps/api/requirements.txt clinical_api.txt
-RUN pip install --no-cache-dir -r clinical_api.txt
+ && pip install --no-cache-dir -r sem.txt \
+ && pip install --no-cache-dir -r clinical_api.txt
 
 # Copy app source
 COPY gateway ./gateway
 COPY services ./services
+
+# Copy built Resume Analyzer frontend
+COPY --from=resume_builder /build/services/resume_job_analyzer/frontend/dist \
+  ./services/resume_job_analyzer/frontend/dist
 
 # Copy built static frontends for existing apps
 COPY --from=fx_builder /build/services/fx_insights/frontend/dist \
@@ -84,7 +94,6 @@ COPY --from=clinical_builder \
   /build/services/clinical_trial_matching_agent/apps/web/.next/standalone \
   /app/clinical-web
 
-# IMPORTANT: these must live at the standalone root for Next to serve _next assets
 COPY --from=clinical_builder \
   /build/services/clinical_trial_matching_agent/apps/web/.next/static \
   /app/clinical-web/.next/static
