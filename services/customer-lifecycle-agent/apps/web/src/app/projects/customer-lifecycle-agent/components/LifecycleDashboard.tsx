@@ -6,7 +6,7 @@ import {
   getLifecycle,
   runAgents,
   triggerIntervention,
-} from "@/lib/customerLifecycleApi";
+} from "@/api/customerLifecycleApi";
 
 import type { Account, AgentRun, JourneyStage } from "@/app/types";
 

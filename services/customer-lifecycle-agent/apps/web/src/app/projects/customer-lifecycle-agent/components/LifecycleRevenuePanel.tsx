@@ -1,167 +1,143 @@
 "use client";
 
-type LifecycleSummary = {
-  trial_profile: {
-    title: string;
-    buyer: string;
-    user: string;
-    value_per_converted_patient: number;
-    requested_patient_profile: {
-      diagnosis: string;
-      key_inclusion: string[];
-      performance: string[];
-      exclusions: string[];
-    };
-  };
-  funnel: {
-    prospects: number;
-    qualified: number;
-    evaluated: number;
-    in_review: number;
-    converted: number;
-    potential_value: number;
-    realized_value: number;
-    leakage_value: number;
-  };
-  review_queue: {
-    review_id: string;
-    evaluation_id: string;
-    patient_id: string;
-    priority: string;
-    reason: string[];
-    estimated_value: number;
-  }[];
-  agent_insight: {
-    severity: string;
-    reason: string;
-    recommendation: string;
-    estimated_gain: number;
-  };
-};
+import type { CustomerLifecycleSummary } from "@/app/types";
+
+type ReviewAction = "approve" | "reject" | "request_data";
 
 type Props = {
-  lifecycle?: LifecycleSummary | null;
-  onIngestPatient?: () => void;
-  onReviewCase?: (evaluationId: string) => void;
+  lifecycle: CustomerLifecycleSummary | null;
+  isRefreshing?: boolean;
+  onIngestProspect: () => void;
+  onReviewAction: (reviewId: string, action: ReviewAction) => void;
 };
 
 function money(value: number) {
   return `$${value.toLocaleString()}`;
 }
 
+function stageLabel(stage: string) {
+  return stage.replaceAll("_", " ");
+}
+
 export default function LifecycleRevenuePanel({
   lifecycle,
-  onIngestPatient,
-  onReviewCase,
+  isRefreshing = false,
+  onIngestProspect,
+  onReviewAction,
 }: Props) {
-  if (!lifecycle) return null;
+  if (!lifecycle) {
+    return (
+      <section className="panel">
+        <p className="section-label">Revenue lifecycle</p>
+        <h2>Loading lifecycle intelligence…</h2>
+      </section>
+    );
+  }
 
-  const { trial_profile, funnel, review_queue, agent_insight } = lifecycle;
+  const {
+    customer_profile,
+    prospect_feed,
+    funnel,
+    review_queue,
+    agent_insight,
+  } = lifecycle;
 
   return (
-    <section className="lifecycle-panel">
-      <div className="lifecycle-header">
+    <section className="lifecycle-revenue-panel">
+      <div className="lifecycle-revenue-header">
         <div>
-          <p className="eyebrow">Revenue Lifecycle Layer</p>
-          <h2>Trial demand → patient feed → review → conversion</h2>
+          <p className="section-label">Revenue Lifecycle</p>
+          <h2>Prospect → Activation → Conversion</h2>
           <p>
-            Buyer: {trial_profile.buyer}. User: {trial_profile.user}. Converted
-            patient value: {money(trial_profile.value_per_converted_patient)}.
+            Buyer: <strong>{customer_profile.buyer}</strong> · User:{" "}
+            <strong>{customer_profile.user}</strong>
           </p>
         </div>
 
-        <button className="secondary-button" onClick={onIngestPatient}>
-          Ingest Mock Patient
+        <button
+          className="primary-action"
+          onClick={onIngestProspect}
+          disabled={isRefreshing}
+        >
+          {isRefreshing ? "Updating…" : "Ingest Prospect"}
         </button>
       </div>
 
+      {/* TOP GRID */}
       <div className="lifecycle-grid">
-        <article className="lifecycle-card">
-          <h3>Requested Patient Profile</h3>
-          <p>{trial_profile.requested_patient_profile.diagnosis}</p>
-          <ul>
-            {trial_profile.requested_patient_profile.key_inclusion
-              .slice(0, 3)
-              .map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-          </ul>
-        </article>
+        <div className="card">
+          <h3>Target Profile</h3>
+          <p>{customer_profile.target_customer_profile.segment}</p>
+          <small>{customer_profile.target_customer_profile.use_case}</small>
+        </div>
 
-        <article className="lifecycle-card">
-          <h3>Revenue Funnel</h3>
-          <div className="funnel-row">
-            <span>Prospects</span>
-            <strong>{funnel.prospects}</strong>
-          </div>
-          <div className="funnel-row">
-            <span>Qualified</span>
-            <strong>{funnel.qualified}</strong>
-          </div>
-          <div className="funnel-row">
-            <span>Evaluated</span>
-            <strong>{funnel.evaluated}</strong>
-          </div>
-          <div className="funnel-row">
-            <span>Human Review</span>
-            <strong>{funnel.in_review}</strong>
-          </div>
-          <div className="funnel-row">
-            <span>Converted</span>
-            <strong>{funnel.converted}</strong>
-          </div>
-        </article>
+        <div className="card">
+          <h3>Funnel</h3>
+          <div>Prospects: {funnel.prospects}</div>
+          <div>Qualified: {funnel.qualified}</div>
+          <div>Evaluated: {funnel.evaluated}</div>
+          <div>Review: {funnel.in_review}</div>
+          <div>Converted: {funnel.converted}</div>
+        </div>
 
-        <article className="lifecycle-card">
-          <h3>Revenue Impact</h3>
-          <div className="metric-large">{money(funnel.realized_value)}</div>
-          <p>Realized value</p>
-          <div className="funnel-row">
-            <span>Potential</span>
-            <strong>{money(funnel.potential_value)}</strong>
-          </div>
-          <div className="funnel-row warning">
-            <span>Leakage</span>
-            <strong>{money(funnel.leakage_value)}</strong>
-          </div>
-        </article>
+        <div className="card">
+          <h3>Revenue</h3>
+          <div className="big">{money(funnel.realized_value)}</div>
+          <div>Potential: {money(funnel.potential_value)}</div>
+          <div className="warning">Leakage: {money(funnel.leakage_value)}</div>
+        </div>
 
-        <article className="lifecycle-card agent-card">
+        <div className="card insight">
           <h3>Agent Insight</h3>
           <p>{agent_insight.reason}</p>
           <strong>{agent_insight.recommendation}</strong>
-          <div className="estimated-gain">
-            Estimated upside: {money(agent_insight.estimated_gain)}
-          </div>
-        </article>
+          <div className="gain">+{money(agent_insight.estimated_gain)}</div>
+        </div>
       </div>
 
-      <div className="review-queue-panel">
-        <div>
-          <h3>Human Review Queue</h3>
-          <p>Coordinator decision point before conversion.</p>
+      {/* FEED + REVIEW */}
+      <div className="two-col">
+        <div className="card">
+          <h3>Live Prospect Feed</h3>
+          {prospect_feed.slice(0, 6).map((p) => (
+            <div key={p.id} className="row">
+              <div>
+                <strong>{p.name}</strong>
+                <div>{p.segment}</div>
+                <small>{p.signal}</small>
+              </div>
+              <div className="meta">
+                <span>{stageLabel(p.stage)}</span>
+                <strong>{p.fit_score}%</strong>
+              </div>
+            </div>
+          ))}
         </div>
 
-        <div className="review-queue-list">
-          {review_queue.length ? (
-            review_queue.map((item) => (
-              <div className="review-queue-row" key={item.review_id}>
-                <div>
-                  <strong>{item.patient_id}</strong>
-                  <p>{item.reason.join(" ")}</p>
-                </div>
-                <span>{item.priority}</span>
-                <button
-                  className="secondary-button compact"
-                  onClick={() => onReviewCase?.(item.evaluation_id)}
-                >
-                  Review
+        <div className="card">
+          <h3>Review Queue</h3>
+          {review_queue.length === 0 && <p>No blocked conversions</p>}
+
+          {review_queue.map((r) => (
+            <div key={r.id} className="row">
+              <div>
+                <strong>{r.prospect?.name}</strong>
+                <small>{r.reason.join(" ")}</small>
+              </div>
+
+              <div className="actions">
+                <button onClick={() => onReviewAction(r.id, "approve")}>
+                  Approve
+                </button>
+                <button onClick={() => onReviewAction(r.id, "request_data")}>
+                  Data
+                </button>
+                <button onClick={() => onReviewAction(r.id, "reject")}>
+                  Reject
                 </button>
               </div>
-            ))
-          ) : (
-            <p className="empty-copy">No open human review cases.</p>
-          )}
+            </div>
+          ))}
         </div>
       </div>
     </section>
