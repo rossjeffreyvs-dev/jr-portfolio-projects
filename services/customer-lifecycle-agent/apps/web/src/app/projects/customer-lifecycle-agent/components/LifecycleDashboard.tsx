@@ -17,6 +17,7 @@ export default function LifecycleDashboard() {
   );
   const [refreshingLifecycle, setRefreshingLifecycle] = useState(false);
   const [message, setMessage] = useState("");
+  const [autoIngestEnabled, setAutoIngestEnabled] = useState(false);
 
   async function refreshRevenueLifecycle() {
     const response = await getCustomerLifecycleSummary();
@@ -49,6 +50,33 @@ export default function LifecycleDashboard() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!autoIngestEnabled) return;
+
+    const intervalId = window.setInterval(async () => {
+      try {
+        setRefreshingLifecycle(true);
+
+        const response = await ingestMockProspect();
+        await refreshRevenueLifecycle();
+
+        setMessage(
+          `Live feed: ${response.prospect.name} entered the revenue funnel.`,
+        );
+      } catch (error) {
+        setMessage(
+          error instanceof Error
+            ? error.message
+            : "Unable to auto-ingest prospect.",
+        );
+      } finally {
+        setRefreshingLifecycle(false);
+      }
+    }, 6000);
+
+    return () => window.clearInterval(intervalId);
+  }, [autoIngestEnabled]);
+
   async function handleIngestProspect() {
     setRefreshingLifecycle(true);
     setMessage("");
@@ -77,9 +105,11 @@ export default function LifecycleDashboard() {
       if (action === "approve") {
         setMessage("Prospect converted. Realized revenue updated.");
       } else if (action === "reject") {
-        setMessage("Prospect rejected. Revenue blocker removed.");
+        setMessage("Prospect removed from pipeline. Revenue blocker cleared.");
       } else {
-        setMessage("Additional information requested.");
+        setMessage(
+          "Additional information requested. Prospect remains in review.",
+        );
       }
     } catch (error) {
       setMessage(
@@ -94,6 +124,25 @@ export default function LifecycleDashboard() {
 
   return (
     <div className="dashboard-stack">
+      <div className="live-feed-control">
+        <div>
+          <strong>Live Prospect Feed</strong>
+          <span>
+            {autoIngestEnabled
+              ? "Auto-ingest is running every 6 seconds."
+              : "Turn on auto-ingest to simulate prospects entering the funnel."}
+          </span>
+        </div>
+
+        <button
+          type="button"
+          className={autoIngestEnabled ? "secondary-button" : "primary-button"}
+          onClick={() => setAutoIngestEnabled((current) => !current)}
+        >
+          {autoIngestEnabled ? "Pause Live Feed" : "Start Live Feed"}
+        </button>
+      </div>
+
       <LifecycleRevenuePanel
         lifecycle={lifecycle}
         isRefreshing={refreshingLifecycle}

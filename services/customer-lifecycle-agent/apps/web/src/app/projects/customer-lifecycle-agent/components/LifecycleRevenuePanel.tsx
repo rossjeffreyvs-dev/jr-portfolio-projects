@@ -15,6 +15,10 @@ function money(value: number) {
   return `$${value.toLocaleString()}`;
 }
 
+function formatStage(stage: string) {
+  return stage.replaceAll("_", " ");
+}
+
 export default function LifecycleRevenuePanel({
   lifecycle,
   isRefreshing,
@@ -22,7 +26,12 @@ export default function LifecycleRevenuePanel({
   onReviewAction,
 }: Props) {
   if (!lifecycle) {
-    return <div>Loading lifecycle…</div>;
+    return (
+      <section className="lifecycle-revenue-panel">
+        <p className="section-label">Revenue Lifecycle Layer</p>
+        <h2>Loading lifecycle intelligence…</h2>
+      </section>
+    );
   }
 
   const {
@@ -34,11 +43,17 @@ export default function LifecycleRevenuePanel({
   } = lifecycle;
 
   return (
-    <section className="revenue-panel">
-      <div className="revenue-header">
+    <section className="lifecycle-revenue-panel">
+      <div className="lifecycle-revenue-header">
         <div>
           <p className="section-label">Revenue Lifecycle Layer</p>
-          <h2>Prospect feed → human review → converted customer</h2>
+          <h2>Prospect → Review → Conversion → Revenue</h2>
+
+          <p className="section-subtext">
+            The system identifies where revenue is blocked, explains why, and
+            routes the next best human action.
+          </p>
+
           <p className="section-subtext">
             Buyer: {customer_profile.buyer} · User: {customer_profile.user}
           </p>
@@ -46,115 +61,169 @@ export default function LifecycleRevenuePanel({
 
         <button
           className="primary-button"
+          type="button"
           onClick={onIngestProspect}
           disabled={isRefreshing}
         >
-          {isRefreshing ? "Updating…" : "Add New Prospect"}
+          {isRefreshing ? "Updating…" : "Simulate New Prospect"}
         </button>
       </div>
 
-      {/* Top metrics */}
-      <div className="revenue-grid">
-        <div className="revenue-card">
-          <h4>Target Customer Profile</h4>
+      <div className="lifecycle-grid">
+        <article className="lifecycle-card">
+          <h3>Target Customer Profile</h3>
           <p>{customer_profile.target_customer_profile.segment}</p>
           <small>{customer_profile.target_customer_profile.use_case}</small>
-        </div>
+        </article>
 
-        <div className="revenue-card">
-          <h4>Revenue Funnel</h4>
-          <p>Prospects: {funnel.prospects}</p>
-          <p>Qualified: {funnel.qualified}</p>
-          <p>Evaluated: {funnel.evaluated}</p>
-          <p>Human Review: {funnel.in_review}</p>
-          <p>Converted: {funnel.converted}</p>
-        </div>
+        <article className="lifecycle-card">
+          <h3>Revenue Funnel</h3>
 
-        <div className="revenue-card">
-          <h4>Revenue Impact</h4>
-          <p>Realized value: {money(funnel.realized_value)}</p>
-          <p>Potential: {money(funnel.potential_value)}</p>
-          <p style={{ color: "#dc2626" }}>
-            Leakage: {money(funnel.leakage_value)}
-          </p>
-        </div>
+          <div className="funnel-line">
+            <span>Prospects</span>
+            <strong>{funnel.prospects}</strong>
+          </div>
+          <div className="funnel-line">
+            <span>Qualified</span>
+            <strong>{funnel.qualified}</strong>
+          </div>
+          <div className="funnel-line">
+            <span>Evaluated</span>
+            <strong>{funnel.evaluated}</strong>
+          </div>
+          <div className="funnel-line">
+            <span>Human Review</span>
+            <strong>{funnel.in_review}</strong>
+          </div>
+          <div className="funnel-line">
+            <span>Converted</span>
+            <strong>{funnel.converted}</strong>
+          </div>
+        </article>
 
-        <div className="revenue-card">
-          <h4>Agent Revenue Insight</h4>
+        <article className="lifecycle-card">
+          <h3>Revenue Impact</h3>
+          <div className="revenue-number">{money(funnel.realized_value)}</div>
+          <p>Revenue Realized</p>
+
+          <div className="funnel-line">
+            <span>Pipeline Potential</span>
+            <strong>{money(funnel.potential_value)}</strong>
+          </div>
+
+          <div className="funnel-line warning">
+            <span>Revenue at Risk</span>
+            <strong>{money(funnel.leakage_value)}</strong>
+          </div>
+        </article>
+
+        <article className="lifecycle-card agent-insight-card">
+          <h3>Recommended Next Action</h3>
+          <em>{formatStage(agent_insight.stage)}</em>
           <p>{agent_insight.reason}</p>
           <strong>{agent_insight.recommendation}</strong>
-          <p style={{ marginTop: 8, color: "#16a34a" }}>
+
+          <div className="estimated-gain">
             Estimated upside: {money(agent_insight.estimated_gain)}
-          </p>
-        </div>
+          </div>
+        </article>
       </div>
 
-      {/* Main content */}
-      <div className="revenue-content">
-        {/* LEFT: Feed */}
-        <div className="revenue-feed">
-          <h4>Live Prospect Feed</h4>
+      <div className="lifecycle-two-column">
+        <article className="lifecycle-card">
+          <h3>Live Prospect Feed</h3>
+          <p className="muted-copy">
+            Incoming customer opportunities from product-led signup, referrals,
+            outbound, and partner channels.
+          </p>
 
-          {prospect_feed.map((p) => (
-            <div key={p.id} className="prospect-card">
-              <div>
-                <strong>{p.name}</strong>
-                <span>{p.segment}</span>
-              </div>
+          <div className="prospect-feed">
+            {prospect_feed.slice(0, 6).map((prospect) => (
+              <div className="prospect-card" key={prospect.id}>
+                <div className="prospect-header">
+                  <strong>{prospect.name}</strong>
+                  <span className="fit-score">{prospect.fit_score}%</span>
+                </div>
 
-              <div>
-                <small>{p.signal}</small>
-                <span>{p.fit_score}%</span>
-              </div>
+                <div className="prospect-meta-line">
+                  {prospect.segment} · {prospect.source}
+                </div>
 
-              <div className="stage-pill">{p.stage}</div>
-            </div>
-          ))}
-        </div>
+                <div className="prospect-signal">{prospect.signal}</div>
 
-        {/* RIGHT: Revenue Blockers */}
-        <div className="revenue-blockers">
-          <h4>Revenue at Risk (Needs Action)</h4>
-
-          {review_queue.map((item) => (
-            <div key={item.id} className="blocker-card">
-              <div>
-                <strong>{item.prospect?.name || item.prospect_id}</strong>
-                <span>
-                  {item.priority} priority · {money(item.estimated_value)}
-                </span>
-
-                {/* 🔥 NEW: Explainability Layer */}
-                <div className="why-prospect-box">
-                  <strong>Why this prospect?</strong>
-                  <ul>
-                    {item.reason.map((reason) => (
-                      <li key={reason}>{reason}</li>
-                    ))}
-                    <li>
-                      Estimated conversion value: {money(item.estimated_value)}
-                    </li>
-                    <li>Recommended action: {item.recommended_action}</li>
-                  </ul>
+                <div className="prospect-stage">
+                  {formatStage(prospect.stage)}
                 </div>
               </div>
+            ))}
+          </div>
+        </article>
 
-              <div className="blocker-actions">
-                <button onClick={() => onReviewAction(item.id, "approve")}>
-                  Approve → Convert ({money(item.estimated_value)})
-                </button>
+        <article className="lifecycle-card">
+          <h3>Revenue Blockers</h3>
+          <p className="muted-copy">
+            These prospects require a decision before value can be realized.
+          </p>
 
-                <button onClick={() => onReviewAction(item.id, "request_data")}>
-                  Request Data
-                </button>
+          <div className="review-list">
+            {review_queue.length ? (
+              review_queue.map((item) => (
+                <div className="blocker-card" key={item.id}>
+                  <div className="blocker-header">
+                    <div>
+                      <strong>{item.prospect?.name || item.prospect_id}</strong>
+                      <span>
+                        {item.priority} priority · {money(item.estimated_value)}
+                      </span>
+                    </div>
+                  </div>
 
-                <button onClick={() => onReviewAction(item.id, "reject")}>
-                  Reject
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+                  <div className="blocker-why">
+                    <p className="blocker-title">Why this prospect?</p>
+                    <ul>
+                      {item.reason.map((reason) => (
+                        <li key={reason}>{reason}</li>
+                      ))}
+                      <li>
+                        Estimated conversion value:{" "}
+                        {money(item.estimated_value)}
+                      </li>
+                      <li>Recommended action: {item.recommended_action}</li>
+                    </ul>
+                  </div>
+
+                  <div className="blocker-actions">
+                    <button
+                      className="primary"
+                      type="button"
+                      onClick={() => onReviewAction(item.id, "approve")}
+                    >
+                      Convert → +{money(item.estimated_value)}
+                    </button>
+
+                    <button
+                      className="secondary"
+                      type="button"
+                      onClick={() => onReviewAction(item.id, "request_data")}
+                    >
+                      Request Info
+                    </button>
+
+                    <button
+                      className="danger"
+                      type="button"
+                      onClick={() => onReviewAction(item.id, "reject")}
+                    >
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="muted-copy">No open revenue blockers.</p>
+            )}
+          </div>
+        </article>
       </div>
     </section>
   );

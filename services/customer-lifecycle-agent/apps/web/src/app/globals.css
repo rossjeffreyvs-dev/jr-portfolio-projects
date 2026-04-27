@@ -1196,3 +1196,45 @@ a {
     max-width: none;
   }
 }
+
+.live-feed-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  border: 1px solid #dbeafe;
+  border-radius: 20px;
+  background: #eff6ff;
+}
+
+.live-feed-control strong {
+  display: block;
+  color: #0f172a;
+  font-weight: 900;
+}
+
+.live-feed-control span {
+  display: block;
+  margin-top: 4px;
+  color: #475569;
+  font-size: 0.92rem;
+}
+
+.secondary-button {
+  appearance: none;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #0f172a;
+  cursor: pointer;
+  font-weight: 900;
+  padding: 10px 14px;
+}
+
+@media (max-width: 700px) {
+  .live-feed-control {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
