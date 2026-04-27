@@ -35,6 +35,16 @@ COPY services/clinical_trial_matching_agent/apps/web/ ./
 RUN npm run build
 
 
+# ---------- Build Customer Lifecycle Next app ----------
+FROM node:20-bookworm-slim AS customer_builder
+ENV NEXT_TELEMETRY_DISABLED=1
+WORKDIR /build/services/customer-lifecycle-agent/apps/web
+COPY services/customer-lifecycle-agent/apps/web/package*.json ./
+RUN npm ci
+COPY services/customer-lifecycle-agent/apps/web/ ./
+RUN npm run build
+
+
 # ---------- Runtime ----------
 FROM python:3.10-slim
 
@@ -45,7 +55,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 WORKDIR /app
 
-# Install Node.js runtime for Next standalone server
+# Install Node.js runtime for Next standalone servers
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     ca-certificates \
@@ -82,7 +92,7 @@ COPY services ./services
 COPY --from=resume_builder /build/services/resume_job_analyzer/frontend/dist \
   ./services/resume_job_analyzer/frontend/dist
 
-# Copy built static frontends for existing apps
+# Copy built static frontends
 COPY --from=fx_builder /build/services/fx_insights/frontend/dist \
   ./services/fx_insights/backend/static
 
@@ -101,6 +111,19 @@ COPY --from=clinical_builder \
 COPY --from=clinical_builder \
   /build/services/clinical_trial_matching_agent/apps/web/public \
   /app/clinical-web/public
+
+# Copy Customer Lifecycle standalone build
+COPY --from=customer_builder \
+  /build/services/customer-lifecycle-agent/apps/web/.next/standalone \
+  /app/customer-web
+
+COPY --from=customer_builder \
+  /build/services/customer-lifecycle-agent/apps/web/.next/static \
+  /app/customer-web/.next/static
+
+COPY --from=customer_builder \
+  /build/services/customer-lifecycle-agent/apps/web/public \
+  /app/customer-web/public
 
 COPY docker-entrypoint.sh /app/docker-entrypoint.sh
 RUN chmod +x /app/docker-entrypoint.sh
