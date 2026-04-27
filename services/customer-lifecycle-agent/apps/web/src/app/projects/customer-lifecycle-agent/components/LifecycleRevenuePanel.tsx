@@ -6,7 +6,7 @@ type ReviewAction = "approve" | "reject" | "request_data";
 
 type Props = {
   lifecycle: CustomerLifecycleSummary | null;
-  isRefreshing?: boolean;
+  isRefreshing: boolean;
   onIngestProspect: () => void;
   onReviewAction: (reviewId: string, action: ReviewAction) => void;
 };
@@ -15,23 +15,14 @@ function money(value: number) {
   return `$${value.toLocaleString()}`;
 }
 
-function stageLabel(stage: string) {
-  return stage.replaceAll("_", " ");
-}
-
 export default function LifecycleRevenuePanel({
   lifecycle,
-  isRefreshing = false,
+  isRefreshing,
   onIngestProspect,
   onReviewAction,
 }: Props) {
   if (!lifecycle) {
-    return (
-      <section className="panel">
-        <p className="section-label">Revenue lifecycle</p>
-        <h2>Loading lifecycle intelligence…</h2>
-      </section>
-    );
+    return <div>Loading lifecycle…</div>;
   }
 
   const {
@@ -43,96 +34,121 @@ export default function LifecycleRevenuePanel({
   } = lifecycle;
 
   return (
-    <section className="lifecycle-revenue-panel">
-      <div className="lifecycle-revenue-header">
+    <section className="revenue-panel">
+      <div className="revenue-header">
         <div>
-          <p className="section-label">Revenue Lifecycle</p>
-          <h2>Prospect → Activation → Conversion</h2>
-          <p>
-            Buyer: <strong>{customer_profile.buyer}</strong> · User:{" "}
-            <strong>{customer_profile.user}</strong>
+          <p className="section-label">Revenue Lifecycle Layer</p>
+          <h2>Prospect feed → human review → converted customer</h2>
+          <p className="section-subtext">
+            Buyer: {customer_profile.buyer} · User: {customer_profile.user}
           </p>
         </div>
 
         <button
-          className="primary-action"
+          className="primary-button"
           onClick={onIngestProspect}
           disabled={isRefreshing}
         >
-          {isRefreshing ? "Updating…" : "Ingest Prospect"}
+          {isRefreshing ? "Updating…" : "Add New Prospect"}
         </button>
       </div>
 
-      {/* TOP GRID */}
-      <div className="lifecycle-grid">
-        <div className="card">
-          <h3>Target Profile</h3>
+      {/* Top metrics */}
+      <div className="revenue-grid">
+        <div className="revenue-card">
+          <h4>Target Customer Profile</h4>
           <p>{customer_profile.target_customer_profile.segment}</p>
           <small>{customer_profile.target_customer_profile.use_case}</small>
         </div>
 
-        <div className="card">
-          <h3>Funnel</h3>
-          <div>Prospects: {funnel.prospects}</div>
-          <div>Qualified: {funnel.qualified}</div>
-          <div>Evaluated: {funnel.evaluated}</div>
-          <div>Review: {funnel.in_review}</div>
-          <div>Converted: {funnel.converted}</div>
+        <div className="revenue-card">
+          <h4>Revenue Funnel</h4>
+          <p>Prospects: {funnel.prospects}</p>
+          <p>Qualified: {funnel.qualified}</p>
+          <p>Evaluated: {funnel.evaluated}</p>
+          <p>Human Review: {funnel.in_review}</p>
+          <p>Converted: {funnel.converted}</p>
         </div>
 
-        <div className="card">
-          <h3>Revenue</h3>
-          <div className="big">{money(funnel.realized_value)}</div>
-          <div>Potential: {money(funnel.potential_value)}</div>
-          <div className="warning">Leakage: {money(funnel.leakage_value)}</div>
+        <div className="revenue-card">
+          <h4>Revenue Impact</h4>
+          <p>Realized value: {money(funnel.realized_value)}</p>
+          <p>Potential: {money(funnel.potential_value)}</p>
+          <p style={{ color: "#dc2626" }}>
+            Leakage: {money(funnel.leakage_value)}
+          </p>
         </div>
 
-        <div className="card insight">
-          <h3>Agent Insight</h3>
+        <div className="revenue-card">
+          <h4>Agent Revenue Insight</h4>
           <p>{agent_insight.reason}</p>
           <strong>{agent_insight.recommendation}</strong>
-          <div className="gain">+{money(agent_insight.estimated_gain)}</div>
+          <p style={{ marginTop: 8, color: "#16a34a" }}>
+            Estimated upside: {money(agent_insight.estimated_gain)}
+          </p>
         </div>
       </div>
 
-      {/* FEED + REVIEW */}
-      <div className="two-col">
-        <div className="card">
-          <h3>Live Prospect Feed</h3>
-          {prospect_feed.slice(0, 6).map((p) => (
-            <div key={p.id} className="row">
+      {/* Main content */}
+      <div className="revenue-content">
+        {/* LEFT: Feed */}
+        <div className="revenue-feed">
+          <h4>Live Prospect Feed</h4>
+
+          {prospect_feed.map((p) => (
+            <div key={p.id} className="prospect-card">
               <div>
                 <strong>{p.name}</strong>
-                <div>{p.segment}</div>
+                <span>{p.segment}</span>
+              </div>
+
+              <div>
                 <small>{p.signal}</small>
+                <span>{p.fit_score}%</span>
               </div>
-              <div className="meta">
-                <span>{stageLabel(p.stage)}</span>
-                <strong>{p.fit_score}%</strong>
-              </div>
+
+              <div className="stage-pill">{p.stage}</div>
             </div>
           ))}
         </div>
 
-        <div className="card">
-          <h3>Review Queue</h3>
-          {review_queue.length === 0 && <p>No blocked conversions</p>}
+        {/* RIGHT: Revenue Blockers */}
+        <div className="revenue-blockers">
+          <h4>Revenue at Risk (Needs Action)</h4>
 
-          {review_queue.map((r) => (
-            <div key={r.id} className="row">
+          {review_queue.map((item) => (
+            <div key={item.id} className="blocker-card">
               <div>
-                <strong>{r.prospect?.name}</strong>
-                <small>{r.reason.join(" ")}</small>
+                <strong>{item.prospect?.name || item.prospect_id}</strong>
+                <span>
+                  {item.priority} priority · {money(item.estimated_value)}
+                </span>
+
+                {/* 🔥 NEW: Explainability Layer */}
+                <div className="why-prospect-box">
+                  <strong>Why this prospect?</strong>
+                  <ul>
+                    {item.reason.map((reason) => (
+                      <li key={reason}>{reason}</li>
+                    ))}
+                    <li>
+                      Estimated conversion value: {money(item.estimated_value)}
+                    </li>
+                    <li>Recommended action: {item.recommended_action}</li>
+                  </ul>
+                </div>
               </div>
 
-              <div className="actions">
-                <button onClick={() => onReviewAction(r.id, "approve")}>
-                  Approve
+              <div className="blocker-actions">
+                <button onClick={() => onReviewAction(item.id, "approve")}>
+                  Approve → Convert ({money(item.estimated_value)})
                 </button>
-                <button onClick={() => onReviewAction(r.id, "request_data")}>
-                  Data
+
+                <button onClick={() => onReviewAction(item.id, "request_data")}>
+                  Request Data
                 </button>
-                <button onClick={() => onReviewAction(r.id, "reject")}>
+
+                <button onClick={() => onReviewAction(item.id, "reject")}>
                   Reject
                 </button>
               </div>
