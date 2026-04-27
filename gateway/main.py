@@ -31,7 +31,7 @@ class HostDispatcher:
 
         logger.info(f"Incoming request host={host} path={path}")
 
-        target = get_app_for_request(host, path)
+        target = get_app_for_request(host, scope.get("path", ""))
 
         if callable(target):
             await target(scope, receive, send)

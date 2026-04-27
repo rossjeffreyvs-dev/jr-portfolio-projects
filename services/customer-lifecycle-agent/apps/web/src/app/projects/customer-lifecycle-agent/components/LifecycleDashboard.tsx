@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import type { CustomerLifecycleSummary } from "@/app/types";
+import { useEffect, useRef, useState } from "react";
+import type { CustomerLifecycleSummary, Prospect } from "@/app/types";
 import {
   getCustomerLifecycleSummary,
   ingestMockProspect,
@@ -11,43 +11,111 @@ import LifecycleRevenuePanel from "./LifecycleRevenuePanel";
 
 type ReviewAction = "approve" | "reject" | "request_data";
 
+type ActivityEvent = {
+  id: string;
+  timestamp: string;
+  title: string;
+  detail: string;
+  tone?: "info" | "success" | "warning";
+};
+
+function nowLabel() {
+  return new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+  }).format(new Date());
+}
+
+function formatStage(stage: string) {
+  return stage.replaceAll("_", " ");
+}
+
+function buildProspectNarrative(prospect: Prospect) {
+  const stage = formatStage(prospect.stage);
+
+  return `${prospect.name} entered from ${prospect.source}. Agent evaluation scored ${prospect.fit_score}% fit and classified the prospect as ${stage}. Result: ${prospect.signal}. Estimated pipeline value: $${prospect.estimated_value.toLocaleString()}.`;
+}
+
 export default function LifecycleDashboard() {
   const [lifecycle, setLifecycle] = useState<CustomerLifecycleSummary | null>(
     null,
   );
   const [refreshingLifecycle, setRefreshingLifecycle] = useState(false);
   const [message, setMessage] = useState("");
+  const [typedMessage, setTypedMessage] = useState("");
   const [autoIngestEnabled, setAutoIngestEnabled] = useState(false);
+  const [activityEvents, setActivityEvents] = useState<ActivityEvent[]>([]);
+  const panelRef = useRef<HTMLDivElement | null>(null);
 
   async function refreshRevenueLifecycle() {
     const response = await getCustomerLifecycleSummary();
     setLifecycle(response);
   }
 
-  useEffect(() => {
-    let isMounted = true;
+  function addActivityEvent(event: Omit<ActivityEvent, "id" | "timestamp">) {
+    setActivityEvents((current) => {
+      const next = [
+        ...current,
+        {
+          id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+          timestamp: nowLabel(),
+          ...event,
+        },
+      ];
 
+      return next.slice(-5);
+    });
+  }
+
+  function showStatus(nextMessage: string) {
+    setMessage(nextMessage);
+    setTypedMessage("");
+  }
+
+  function scrollToRevenuePanel() {
+    window.setTimeout(() => {
+      const element = panelRef.current;
+      if (!element) return;
+
+      const top = element.getBoundingClientRect().top + window.scrollY - 28;
+
+      window.scrollTo({
+        top: Math.max(top, 0),
+        behavior: "smooth",
+      });
+    }, 120);
+  }
+
+  useEffect(() => {
+    if (!message) return;
+
+    let index = 0;
+
+    const interval = window.setInterval(() => {
+      index += 1;
+      setTypedMessage(message.slice(0, index));
+
+      if (index >= message.length) {
+        window.clearInterval(interval);
+      }
+    }, 12);
+
+    return () => window.clearInterval(interval);
+  }, [message]);
+
+  useEffect(() => {
     async function loadInitialLifecycle() {
       try {
-        const response = await getCustomerLifecycleSummary();
-
-        if (!isMounted) return;
-
-        setLifecycle(response);
+        await refreshRevenueLifecycle();
       } catch (error) {
-        if (!isMounted) return;
-
-        setMessage(
+        showStatus(
           error instanceof Error ? error.message : "Unable to load lifecycle.",
         );
       }
     }
 
     loadInitialLifecycle();
-
-    return () => {
-      isMounted = false;
-    };
   }, []);
 
   useEffect(() => {
@@ -60,15 +128,31 @@ export default function LifecycleDashboard() {
         const response = await ingestMockProspect();
         await refreshRevenueLifecycle();
 
-        setMessage(
-          `Live feed: ${response.prospect.name} entered the revenue funnel.`,
-        );
+        const detail = buildProspectNarrative(response.prospect);
+
+        showStatus(detail);
+        addActivityEvent({
+          title: "Prospect evaluated",
+          detail,
+          tone:
+            response.prospect.stage === "in_review"
+              ? "warning"
+              : response.prospect.stage === "converted"
+                ? "success"
+                : "info",
+        });
       } catch (error) {
-        setMessage(
+        const detail =
           error instanceof Error
             ? error.message
-            : "Unable to auto-ingest prospect.",
-        );
+            : "Unable to auto-ingest prospect.";
+
+        showStatus(detail);
+        addActivityEvent({
+          title: "Live feed error",
+          detail,
+          tone: "warning",
+        });
       } finally {
         setRefreshingLifecycle(false);
       }
@@ -77,16 +161,57 @@ export default function LifecycleDashboard() {
     return () => window.clearInterval(intervalId);
   }, [autoIngestEnabled]);
 
+  function handleToggleLiveFeed() {
+    const nextState = !autoIngestEnabled;
+    setAutoIngestEnabled(nextState);
+
+    if (nextState) {
+      const detail =
+        "Live feed started. The system will simulate inbound prospects, evaluate fit, classify funnel stage, and update revenue impact every 6 seconds.";
+
+      showStatus(detail);
+      addActivityEvent({
+        title: "Live feed started",
+        detail,
+        tone: "info",
+      });
+      scrollToRevenuePanel();
+    } else {
+      const detail = "Live feed paused. Prospect ingestion is stopped.";
+
+      showStatus(detail);
+      addActivityEvent({
+        title: "Live feed paused",
+        detail,
+        tone: "warning",
+      });
+    }
+  }
+
   async function handleIngestProspect() {
     setRefreshingLifecycle(true);
-    setMessage("");
 
     try {
       const response = await ingestMockProspect();
       await refreshRevenueLifecycle();
-      setMessage(`${response.prospect.name} added to the lifecycle funnel.`);
+
+      const detail = buildProspectNarrative(response.prospect);
+
+      showStatus(detail);
+      addActivityEvent({
+        title: "Manual prospect evaluated",
+        detail,
+        tone:
+          response.prospect.stage === "in_review"
+            ? "warning"
+            : response.prospect.stage === "converted"
+              ? "success"
+              : "info",
+      });
+
+      scrollToRevenuePanel();
     } catch (error) {
-      setMessage(
+      showStatus(
         error instanceof Error ? error.message : "Unable to ingest prospect.",
       );
     } finally {
@@ -96,23 +221,46 @@ export default function LifecycleDashboard() {
 
   async function handleReviewAction(reviewId: string, action: ReviewAction) {
     setRefreshingLifecycle(true);
-    setMessage("");
 
     try {
       await submitReviewAction(reviewId, action);
       await refreshRevenueLifecycle();
 
       if (action === "approve") {
-        setMessage("Prospect converted. Realized revenue updated.");
+        const detail =
+          "Human decision captured: prospect converted to customer. Realized revenue increased and the blocker was removed from the review queue.";
+
+        showStatus(detail);
+        addActivityEvent({
+          title: "Revenue converted",
+          detail,
+          tone: "success",
+        });
       } else if (action === "reject") {
-        setMessage("Prospect removed from pipeline. Revenue blocker cleared.");
+        const detail =
+          "Human decision captured: prospect removed from pipeline. Revenue blocker cleared without increasing realized revenue.";
+
+        showStatus(detail);
+        addActivityEvent({
+          title: "Prospect removed",
+          detail,
+          tone: "warning",
+        });
       } else {
-        setMessage(
-          "Additional information requested. Prospect remains in review.",
-        );
+        const detail =
+          "Human requested additional information. Conversion is paused, the prospect remains in review, and revenue stays at risk until follow-up is completed.";
+
+        showStatus(detail);
+        addActivityEvent({
+          title: "Follow-up workflow started",
+          detail,
+          tone: "warning",
+        });
       }
+
+      scrollToRevenuePanel();
     } catch (error) {
-      setMessage(
+      showStatus(
         error instanceof Error
           ? error.message
           : "Unable to submit review action.",
@@ -129,7 +277,7 @@ export default function LifecycleDashboard() {
           <strong>Live Prospect Feed</strong>
           <span>
             {autoIngestEnabled
-              ? "Auto-ingest is running every 6 seconds."
+              ? "Auto-ingest is running every 6 seconds. Updates appear inside the revenue panel below."
               : "Turn on auto-ingest to simulate prospects entering the funnel."}
           </span>
         </div>
@@ -137,20 +285,49 @@ export default function LifecycleDashboard() {
         <button
           type="button"
           className={autoIngestEnabled ? "secondary-button" : "primary-button"}
-          onClick={() => setAutoIngestEnabled((current) => !current)}
+          onClick={handleToggleLiveFeed}
         >
           {autoIngestEnabled ? "Pause Live Feed" : "Start Live Feed"}
         </button>
       </div>
 
-      <LifecycleRevenuePanel
-        lifecycle={lifecycle}
-        isRefreshing={refreshingLifecycle}
-        onIngestProspect={handleIngestProspect}
-        onReviewAction={handleReviewAction}
-      />
+      {activityEvents.length ? (
+        <section className="activity-panel">
+          <div>
+            <p className="section-label">Live Activity</p>
+            <h3>Recent lifecycle events</h3>
+          </div>
 
-      {message ? <div className="status-banner">{message}</div> : null}
+          <div className="activity-list">
+            {activityEvents.map((event) => (
+              <article
+                key={event.id}
+                className={`activity-event ${event.tone || "info"} ${
+                  event.id === activityEvents[activityEvents.length - 1]?.id
+                    ? "newest"
+                    : ""
+                }`}
+              >
+                <time>{event.timestamp}</time>
+                <div>
+                  <strong>{event.title}</strong>
+                  <p>{event.detail}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      <div ref={panelRef} className="revenue-panel-scroll-anchor">
+        <LifecycleRevenuePanel
+          lifecycle={lifecycle}
+          isRefreshing={refreshingLifecycle}
+          statusMessage={typedMessage || message}
+          onIngestProspect={handleIngestProspect}
+          onReviewAction={handleReviewAction}
+        />
+      </div>
     </div>
   );
 }

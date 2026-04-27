@@ -7,6 +7,7 @@ type ReviewAction = "approve" | "reject" | "request_data";
 type Props = {
   lifecycle: CustomerLifecycleSummary | null;
   isRefreshing: boolean;
+  statusMessage?: string;
   onIngestProspect: () => void;
   onReviewAction: (reviewId: string, action: ReviewAction) => void;
 };
@@ -22,12 +23,13 @@ function formatStage(stage: string) {
 export default function LifecycleRevenuePanel({
   lifecycle,
   isRefreshing,
+  statusMessage,
   onIngestProspect,
   onReviewAction,
 }: Props) {
   if (!lifecycle) {
     return (
-      <section className="lifecycle-revenue-panel">
+      <section className="lifecycle-revenue-panel" id="revenue-lifecycle-panel">
         <p className="section-label">Revenue Lifecycle Layer</p>
         <h2>Loading lifecycle intelligence…</h2>
       </section>
@@ -43,7 +45,11 @@ export default function LifecycleRevenuePanel({
   } = lifecycle;
 
   return (
-    <section className="lifecycle-revenue-panel">
+    <section className="lifecycle-revenue-panel" id="revenue-lifecycle-panel">
+      {statusMessage ? (
+        <div className="inline-status-banner">{statusMessage}</div>
+      ) : null}
+
       <div className="lifecycle-revenue-header">
         <div>
           <p className="section-label">Revenue Lifecycle Layer</p>
@@ -138,8 +144,11 @@ export default function LifecycleRevenuePanel({
           </p>
 
           <div className="prospect-feed">
-            {prospect_feed.slice(0, 6).map((prospect) => (
-              <div className="prospect-card" key={prospect.id}>
+            {prospect_feed.slice(0, 6).map((prospect, index) => (
+              <div
+                className="prospect-card"
+                key={`${prospect.id}-${prospect.created_at}-${index}`}
+              >
                 <div className="prospect-header">
                   <strong>{prospect.name}</strong>
                   <span className="fit-score">{prospect.fit_score}%</span>
@@ -167,58 +176,75 @@ export default function LifecycleRevenuePanel({
 
           <div className="review-list">
             {review_queue.length ? (
-              review_queue.map((item) => (
-                <div className="blocker-card" key={item.id}>
-                  <div className="blocker-header">
-                    <div>
-                      <strong>{item.prospect?.name || item.prospect_id}</strong>
-                      <span>
-                        {item.priority} priority · {money(item.estimated_value)}
-                      </span>
+              review_queue.map((item) => {
+                const isAwaitingInfo = item.reason.some((reason) =>
+                  reason.toLowerCase().includes("additional information"),
+                );
+
+                return (
+                  <div className="blocker-card" key={item.id}>
+                    <div className="blocker-header">
+                      <div>
+                        <strong>
+                          {item.prospect?.name || item.prospect_id}
+                        </strong>
+                        <span>
+                          {item.priority} priority ·{" "}
+                          {money(item.estimated_value)}
+                        </span>
+
+                        {item.status === "open" ? (
+                          <span className="workflow-badge">
+                            {isAwaitingInfo
+                              ? "Awaiting Info"
+                              : "Needs Decision"}
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
+
+                    <div className="blocker-why">
+                      <p className="blocker-title">Why this prospect?</p>
+                      <ul>
+                        {item.reason.map((reason) => (
+                          <li key={reason}>{reason}</li>
+                        ))}
+                        <li>
+                          Estimated conversion value:{" "}
+                          {money(item.estimated_value)}
+                        </li>
+                        <li>Recommended action: {item.recommended_action}</li>
+                      </ul>
+                    </div>
+
+                    <div className="blocker-actions">
+                      <button
+                        className="primary"
+                        type="button"
+                        onClick={() => onReviewAction(item.id, "approve")}
+                      >
+                        Convert → +{money(item.estimated_value)}
+                      </button>
+
+                      <button
+                        className="secondary"
+                        type="button"
+                        onClick={() => onReviewAction(item.id, "request_data")}
+                      >
+                        Request Info → Keep in Review
+                      </button>
+
+                      <button
+                        className="danger"
+                        type="button"
+                        onClick={() => onReviewAction(item.id, "reject")}
+                      >
+                        Reject → Remove
+                      </button>
                     </div>
                   </div>
-
-                  <div className="blocker-why">
-                    <p className="blocker-title">Why this prospect?</p>
-                    <ul>
-                      {item.reason.map((reason) => (
-                        <li key={reason}>{reason}</li>
-                      ))}
-                      <li>
-                        Estimated conversion value:{" "}
-                        {money(item.estimated_value)}
-                      </li>
-                      <li>Recommended action: {item.recommended_action}</li>
-                    </ul>
-                  </div>
-
-                  <div className="blocker-actions">
-                    <button
-                      className="primary"
-                      type="button"
-                      onClick={() => onReviewAction(item.id, "approve")}
-                    >
-                      Convert → +{money(item.estimated_value)}
-                    </button>
-
-                    <button
-                      className="secondary"
-                      type="button"
-                      onClick={() => onReviewAction(item.id, "request_data")}
-                    >
-                      Request Info
-                    </button>
-
-                    <button
-                      className="danger"
-                      type="button"
-                      onClick={() => onReviewAction(item.id, "reject")}
-                    >
-                      Reject
-                    </button>
-                  </div>
-                </div>
-              ))
+                );
+              })
             ) : (
               <p className="muted-copy">No open revenue blockers.</p>
             )}

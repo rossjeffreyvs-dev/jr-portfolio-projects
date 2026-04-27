@@ -51,8 +51,8 @@ CLINICAL_API_PREFIXES = (
 CUSTOMER_FRONTEND_URL = "http://127.0.0.1:3001"
 CUSTOMER_API_URL = "http://127.0.0.1:8010"
 
-CUSTOMER_PATH_PREFIX = "/customer-lifecycle-agent"
-CUSTOMER_API_PATH_PREFIX = "/customer-lifecycle-agent/api"
+CUSTOMER_PATH_PREFIX = "/agentic-customer-lifecycle-platform"
+CUSTOMER_API_PATH_PREFIX = "/agentic-customer-lifecycle-platform/api"
 
 
 HOST_MAP = {
@@ -80,24 +80,27 @@ def get_app_for_request(host: str, path: str):
     """
     normalized_host = normalize_host(host)
 
-    # Resume Analyzer subdomain/local-host routing.
+    # Customer Lifecycle path-based routing:
+    #
+    # Public:
+    #   https://jr-portfolio-projects.dtw628ha8cm94.us-west-2.cs.amazonlightsail.com/agentic-customer-lifecycle-platform
     #
     # Frontend:
-    #   http://127.0.0.1:3002
+    #   http://127.0.0.1:3001
     #
-    # Backend/API fallback:
-    #   in-process Flask app
-    if normalized_host in RESUME_HOSTS:
-        if path.startswith(RESUME_API_PREFIXES):
-            return resume_api_app
-        return RESUME_FRONTEND_URL
-
-    # Customer Lifecycle path-based routing.
+    # Backend/API:
+    #   http://127.0.0.1:8010
     if path.startswith(CUSTOMER_API_PATH_PREFIX):
         return CUSTOMER_API_URL
 
     if path == CUSTOMER_PATH_PREFIX or path.startswith(f"{CUSTOMER_PATH_PREFIX}/"):
         return CUSTOMER_FRONTEND_URL
+
+    # Resume Analyzer subdomain/local-host routing.
+    if normalized_host in RESUME_HOSTS:
+        if path.startswith(RESUME_API_PREFIXES):
+            return resume_api_app
+        return RESUME_FRONTEND_URL
 
     # Clinical Trial subdomain/local-host routing.
     if normalized_host in CLINICAL_HOSTS:
