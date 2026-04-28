@@ -25,7 +25,7 @@ start_claude_api() {
   ) &
 }
 
-# --- EXISTING SERVICES ---
+# --- Clinical Trial Matching ---
 
 start_service \
   "Clinical API on port 8000" \
@@ -38,6 +38,8 @@ start_service \
   env HOSTNAME=0.0.0.0 PORT=3000 \
   node /app/clinical-web/server.js
 
+# --- Customer Lifecycle ---
+
 start_customer_api
 
 start_service \
@@ -45,23 +47,23 @@ start_service \
   env HOSTNAME=0.0.0.0 PORT=3001 \
   node /app/customer-web/server.js
 
+# --- Resume Analyzer ---
+
 start_service \
   "Resume Analyzer UI on port 3002" \
   python -m http.server 3002 \
     --directory /app/services/resume_job_analyzer/frontend/dist
 
-
-# --- NEW: CLAUDE SERVICE ---
+# --- Claude Clinical Protocol Reasoning Engine ---
 
 start_claude_api
 
 start_service \
-  "Claude UI on port 5175" \
-  env HOSTNAME=0.0.0.0 PORT=5175 \
+  "Claude UI on port 3003" \
+  env HOSTNAME=0.0.0.0 PORT=3003 \
   node /app/claude-web/server.js
-  
 
-# --- GATEWAY ---
+# --- Gateway ---
 
 echo "Starting Gateway on port 8080..."
 exec uvicorn gateway.main:app --host 0.0.0.0 --port 8080

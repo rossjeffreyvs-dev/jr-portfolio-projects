@@ -1,28 +1,13 @@
-import logging
-
-import httpx
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from gateway.host_router import get_app_for_request
-from starlette.types import Receive, Scope, Send
+from starlette.types import Scope, Receive, Send
+import httpx
+import logging
 
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-
-REQUEST_HEADERS_TO_DROP = {
-    b"host",
-    b"content-length",
-    b"connection",
-    b"accept-encoding",
-}
-
-RESPONSE_HEADERS_TO_DROP = {
-    "transfer-encoding",
-    "content-length",
-    "content-encoding",
-}
 
 
 class HostDispatcher:
@@ -44,7 +29,7 @@ class HostDispatcher:
         headers = dict(scope["headers"])
         host = headers.get(b"host", b"").decode().split(":")[0]
 
-        logger.info("Incoming request host=%s path=%s", host, path)
+        logger.info(f"Incoming request host={host} path={path}")
 
         target = get_app_for_request(host, path)
 
@@ -58,7 +43,7 @@ class HostDispatcher:
                 receive,
                 send,
                 target_url=target["url"],
-                rewritten_path=target["path"],
+                override_path=target.get("path"),
             )
             return
 
@@ -68,7 +53,6 @@ class HostDispatcher:
                 receive,
                 send,
                 target_url=target,
-                rewritten_path=path,
             )
             return
 
@@ -80,15 +64,29 @@ class HostDispatcher:
         receive: Receive,
         send: Send,
         target_url: str,
-        rewritten_path: str,
+        override_path: str | None = None,
     ):
         timeout = httpx.Timeout(120.0, connect=10.0)
 
-        body = await self.read_body(receive)
-        url = self.build_url(target_url, rewritten_path, scope)
-        forward_headers = self.build_forward_headers(scope)
+        body = b""
+        more_body = True
 
-        logger.info("Proxying %s %s", scope["method"], url)
+        while more_body:
+            message = await receive()
+            body += message.get("body", b"")
+            more_body = message.get("more_body", False)
+
+        path = override_path or scope["path"]
+        url = f"{target_url}{path}"
+
+        if scope.get("query_string"):
+            url += f"?{scope['query_string'].decode()}"
+
+        forward_headers = {
+            k.decode(): v.decode()
+            for k, v in scope["headers"]
+            if k.lower() not in [b"host", b"content-length", b"connection"]
+        }
 
         try:
             async with httpx.AsyncClient(timeout=timeout) as client:
@@ -99,80 +97,53 @@ class HostDispatcher:
                     content=body,
                 )
 
-            await self.send_proxy_response(send, response)
+            response_headers = [
+                (k.encode(), v.encode())
+                for k, v in response.headers.items()
+                if k.lower()
+                not in [
+                    "transfer-encoding",
+                    "content-length",
+                ]
+            ]
 
-        except Exception as exc:
+            await send(
+                {
+                    "type": "http.response.start",
+                    "status": response.status_code,
+                    "headers": response_headers,
+                }
+            )
+
+            await send(
+                {
+                    "type": "http.response.body",
+                    "body": response.content,
+                }
+            )
+
+        except Exception as e:
             logger.exception("Proxy request failed")
-            await self.send_bad_gateway(send, exc)
 
-    async def read_body(self, receive: Receive) -> bytes:
-        body = b""
-        more_body = True
+            error_body = JSONResponse(
+                status_code=502,
+                content={"error": "Bad gateway", "detail": str(e)},
+            ).body
 
-        while more_body:
-            message = await receive()
-            body += message.get("body", b"")
-            more_body = message.get("more_body", False)
+            await send(
+                {
+                    "type": "http.response.start",
+                    "status": 502,
+                    "headers": [(b"content-type", b"application/json")],
+                }
+            )
 
-        return body
-
-    def build_url(self, target_url: str, rewritten_path: str, scope: Scope) -> str:
-        url = f"{target_url}{rewritten_path}"
-
-        if scope.get("query_string"):
-            url += f"?{scope['query_string'].decode()}"
-
-        return url
-
-    def build_forward_headers(self, scope: Scope) -> dict[str, str]:
-        return {
-            key.decode(): value.decode()
-            for key, value in scope["headers"]
-            if key.lower() not in REQUEST_HEADERS_TO_DROP
-        }
-
-    async def send_proxy_response(self, send: Send, response: httpx.Response):
-        response_headers = [
-            (key.encode(), value.encode())
-            for key, value in response.headers.items()
-            if key.lower() not in RESPONSE_HEADERS_TO_DROP
-        ]
-
-        await send(
-            {
-                "type": "http.response.start",
-                "status": response.status_code,
-                "headers": response_headers,
-            }
-        )
-
-        await send(
-            {
-                "type": "http.response.body",
-                "body": response.content,
-            }
-        )
-
-    async def send_bad_gateway(self, send: Send, exc: Exception):
-        error_body = JSONResponse(
-            status_code=502,
-            content={"error": "Bad gateway", "detail": str(exc)},
-        ).body
-
-        await send(
-            {
-                "type": "http.response.start",
-                "status": 502,
-                "headers": [(b"content-type", b"application/json")],
-            }
-        )
-
-        await send(
-            {
-                "type": "http.response.body",
-                "body": error_body,
-            }
-        )
+            await send(
+                {
+                    "type": "http.response.body",
+                    "body": error_body,
+                }
+            )
 
 
 fallback_app = FastAPI()

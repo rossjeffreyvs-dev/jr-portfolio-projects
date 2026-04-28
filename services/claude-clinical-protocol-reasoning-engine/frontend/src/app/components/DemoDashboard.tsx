@@ -152,29 +152,41 @@ export default function DemoDashboard({
 
     const runId = runIdRef.current;
     const newEvents = traceEvents.slice(lastProcessedTraceCountRef.current);
+
     lastProcessedTraceCountRef.current = traceEvents.length;
 
-    const fallbackEvents =
+    const fallbackEvents: TraceEvent[] = [
+      {
+        label: "Protocol loaded",
+        detail: "Clinical protocol criteria were loaded for reasoning.",
+        complete: true,
+      },
+      {
+        label: "Patient evidence reviewed",
+        detail:
+          "Structured patient evidence was reviewed against eligibility criteria.",
+        complete: true,
+      },
+      {
+        label: "Criteria evaluated",
+        detail: "Inclusion and exclusion criteria were evaluated.",
+        complete: true,
+      },
+      {
+        label: "Recommendation generated",
+        detail: "Final eligibility recommendation was generated.",
+        complete: true,
+      },
+    ];
+
+    const eventsToReplay =
       newEvents.length > 0
         ? newEvents
-        : [
-            {
-              label: "Protocol parsed",
-              detail: "Eligibility criteria loaded and normalized.",
-            },
-            {
-              label: "Patient evidence reviewed",
-              detail:
-                "Diagnosis, performance status, demographics, and clinical evidence checked.",
-            },
-            {
-              label: "Criteria evaluated",
-              detail:
-                "Inclusion and exclusion criteria compared against the patient profile.",
-            },
-          ];
+        : traceEvents.length > 0
+          ? traceEvents
+          : fallbackEvents;
 
-    runTraceSequence(fallbackEvents, runId, true);
+    void runTraceSequence(eventsToReplay, runId, true);
   }, [evaluation, isEvaluating, traceEvents]);
 
   return (

@@ -39,7 +39,6 @@ RUN npm run build
 FROM node:20-bookworm-slim AS customer_builder
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NEXT_PUBLIC_CUSTOMER_LIFECYCLE_API_BASE_URL=/agentic-customer-lifecycle-platform/api
-
 WORKDIR /build/services/customer-lifecycle-agent/apps/web
 COPY services/customer-lifecycle-agent/apps/web/package*.json ./
 RUN npm ci
@@ -51,7 +50,6 @@ RUN npm run build
 FROM node:20-bookworm-slim AS claude_builder
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NEXT_PUBLIC_CLAUDE_API_BASE_URL=/api
-
 WORKDIR /build/services/claude-clinical-protocol-reasoning-engine/frontend
 COPY services/claude-clinical-protocol-reasoning-engine/frontend/package*.json ./
 RUN npm ci
@@ -115,9 +113,31 @@ COPY --from=fx_builder /build/services/fx_insights/frontend/dist \
 COPY --from=semantic_builder /build/services/semantic_patient_search/frontend/dist \
   ./services/semantic_patient_search/backend/static
 
-# Copy built Claude frontend
-COPY --from=claude_builder /build/services/claude-clinical-protocol-reasoning-engine/frontend/dist \
-  ./services/claude-clinical-protocol-reasoning-engine/frontend/dist
+# Copy Clinical standalone build
+COPY --from=clinical_builder \
+  /build/services/clinical_trial_matching_agent/apps/web/.next/standalone \
+  /app/clinical-web
+
+COPY --from=clinical_builder \
+  /build/services/clinical_trial_matching_agent/apps/web/.next/static \
+  /app/clinical-web/.next/static
+
+COPY --from=clinical_builder \
+  /build/services/clinical_trial_matching_agent/apps/web/public \
+  /app/clinical-web/public
+
+# Copy Customer Lifecycle standalone build
+COPY --from=customer_builder \
+  /build/services/customer-lifecycle-agent/apps/web/.next/standalone \
+  /app/customer-web
+
+COPY --from=customer_builder \
+  /build/services/customer-lifecycle-agent/apps/web/.next/static \
+  /app/customer-web/.next/static
+
+COPY --from=customer_builder \
+  /build/services/customer-lifecycle-agent/apps/web/public \
+  /app/customer-web/public
 
 # Copy Claude standalone build
 COPY --from=claude_builder \
@@ -131,19 +151,6 @@ COPY --from=claude_builder \
 COPY --from=claude_builder \
   /build/services/claude-clinical-protocol-reasoning-engine/frontend/public \
   /app/claude-web/public
-  
-# Copy Customer Lifecycle standalone build
-COPY --from=customer_builder \
-  /build/services/customer-lifecycle-agent/apps/web/.next/standalone \
-  /app/customer-web
-
-COPY --from=customer_builder \
-  /build/services/customer-lifecycle-agent/apps/web/.next/static \
-  /app/customer-web/.next/static
-
-COPY --from=customer_builder \
-  /build/services/customer-lifecycle-agent/apps/web/public \
-  /app/customer-web/public
 
 COPY docker-entrypoint.sh /app/docker-entrypoint.sh
 RUN chmod +x /app/docker-entrypoint.sh
