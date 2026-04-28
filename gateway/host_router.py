@@ -52,6 +52,23 @@ CUSTOMER_INTERNAL_PAGE_PATH = "/projects/customer-lifecycle-agent"
 CUSTOMER_API_PREFIX = f"{CUSTOMER_PUBLIC_PREFIX}/api"
 
 
+CLAUDE_FRONTEND_URL = "http://127.0.0.1:5175"
+CLAUDE_API_URL = "http://127.0.0.1:8020"
+
+CLAUDE_HOSTS = {
+    "claude-clinical-protocol-reasoning-engine.jeffrey-ross.me",
+    "claude-clinical.local",
+    "claude-protocol.local",
+}
+
+CLAUDE_API_PREFIXES = (
+    "/health",
+    "/dashboard",
+    "/trials",
+    "/patients",
+)
+
+
 HOST_MAP = {
     "fx-insights.jeffrey-ross.me": fx_app,
     "semantic-patient-search.jeffrey-ross.me": semantic_app,
@@ -137,6 +154,11 @@ def get_app_for_request(host: str, path: str):
         if path.startswith(CLINICAL_API_PREFIXES):
             return CLINICAL_API_URL
         return CLINICAL_FRONTEND_URL
+
+    if normalized_host in CLAUDE_HOSTS:
+        if path.startswith(CLAUDE_API_PREFIXES):
+            return CLAUDE_API_URL
+        return CLAUDE_FRONTEND_URL
 
     return HOST_MAP.get(normalized_host, RESUME_FRONTEND_URL)
 

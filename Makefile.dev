@@ -205,8 +205,63 @@ semantic-smoke:
 	@curl -fsS http://127.0.0.1:$(SEM_FRONTEND_PORT)/ > /dev/null || (echo "Frontend check failed" && exit 1)
 	@echo "Semantic Search local smoke check passed"
 
-thermo: $(VENV)/bin/activate
-	PYTHONPATH=. $(PY) -m services.smart_thermostat.service
+# --- ADD THIS BLOCK near other service configs ---
+
+CLAUDE_DIR := services/claude-clinical-protocol-reasoning-engine
+CLAUDE_API_DIR := $(CLAUDE_DIR)/backend
+CLAUDE_WEB_DIR := $(CLAUDE_DIR)/frontend
+CLAUDE_BACKEND_PORT := 8020
+CLAUDE_FRONTEND_PORT := 5175
+
+
+# --- ADD THESE TARGETS near trial/customer sections ---
+
+claude-setup: $(VENV)/bin/activate
+	$(PIP) install -r $(CLAUDE_API_DIR)/requirements.txt
+
+claude-install: claude-setup
+	cd $(CLAUDE_WEB_DIR) && $(NPM) install
+
+claude-backend: claude-setup
+	cd $(CLAUDE_API_DIR) && PYTHONPATH=. $(abspath $(UVICORN)) app.main:app --reload --port $(CLAUDE_BACKEND_PORT)
+
+claude-frontend:
+	cd $(CLAUDE_WEB_DIR) && PORT=$(CLAUDE_FRONTEND_PORT) NEXT_PUBLIC_CLAUDE_API_BASE_URL=http://127.0.0.1:$(CLAUDE_BACKEND_PORT) $(NPM) run dev
+	
+claude-wait:
+	@echo "Waiting for Claude backend on :$(CLAUDE_BACKEND_PORT)..."
+	@attempts=0; \
+	until curl -sf http://127.0.0.1:$(CLAUDE_BACKEND_PORT)/health > /dev/null; do \
+		attempts=$$((attempts+1)); \
+		if [ $$attempts -ge 30 ]; then \
+			echo "Claude backend failed to become ready."; \
+			exit 1; \
+		fi; \
+		sleep 1; \
+	done
+	@echo "Claude backend is ready."
+
+claude: claude-install
+	@echo "Claude Clinical Protocol Reasoning Engine is starting..."
+	@echo "Frontend: http://127.0.0.1:$(CLAUDE_FRONTEND_PORT)"
+	@echo "Backend:  http://127.0.0.1:$(CLAUDE_BACKEND_PORT)"
+	@echo ""
+	@trap 'echo ""; echo "Stopping services..."; kill 0' EXIT INT TERM; \
+	$(MAKE) -f $(MAKEFILE_NAME) claude-backend & \
+	BACKEND_PID=$$!; \
+	$(MAKE) -f $(MAKEFILE_NAME) claude-wait; \
+	$(MAKE) -f $(MAKEFILE_NAME) claude-frontend & \
+	FRONTEND_PID=$$!; \
+	wait $$BACKEND_PID $$FRONTEND_PID
+
+claude-smoke:
+	@curl -fsS http://127.0.0.1:$(CLAUDE_BACKEND_PORT)/health > /dev/null || (echo "Backend failed" && exit 1)
+	@curl -fsS http://127.0.0.1:$(CLAUDE_FRONTEND_PORT) > /dev/null || (echo "Frontend failed" && exit 1)
+	@echo "Claude smoke test passed"
+
+claude-stop:
+	@kill -9 $$(lsof -ti :$(CLAUDE_BACKEND_PORT)) 2>/dev/null || true
+	@kill -9 $$(lsof -ti :$(CLAUDE_FRONTEND_PORT)) 2>/dev/null || true
 
 trial-setup: $(VENV)/bin/activate
 	$(PIP) install -r $(TRIAL_API_REQUIREMENTS)

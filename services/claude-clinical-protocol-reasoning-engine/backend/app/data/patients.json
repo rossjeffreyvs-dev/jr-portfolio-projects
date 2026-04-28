@@ -1,0 +1,47 @@
+[
+  {
+    "id": "P-101",
+    "source": "Synthea-style synthetic patient",
+    "name": "Synthetic Patient 101",
+    "age": 64,
+    "sex": "Female",
+    "diagnoses": ["Metastatic NSCLC", "Hypertension"],
+    "ecog": 1,
+    "labs": {
+      "hemoglobin": 11.8,
+      "creatinine": 0.9
+    },
+    "medications": ["Lisinopril"],
+    "flags": []
+  },
+  {
+    "id": "P-102",
+    "source": "Synthea-style synthetic patient",
+    "name": "Synthetic Patient 102",
+    "age": 58,
+    "sex": "Male",
+    "diagnoses": ["NSCLC", "Rheumatoid arthritis"],
+    "ecog": 1,
+    "labs": {
+      "hemoglobin": 12.4,
+      "creatinine": 1.1
+    },
+    "medications": ["Methotrexate"],
+    "flags": ["possible autoimmune exclusion"]
+  },
+  {
+    "id": "P-201",
+    "source": "Synthea-style synthetic patient",
+    "name": "Synthetic Patient 201",
+    "age": 52,
+    "sex": "Female",
+    "diagnoses": ["HER2-positive breast cancer"],
+    "ecog": 0,
+    "labs": {
+      "hemoglobin": 12.9,
+      "creatinine": 0.8
+    },
+    "medications": ["Trastuzumab"],
+    "flags": []
+  }
+]

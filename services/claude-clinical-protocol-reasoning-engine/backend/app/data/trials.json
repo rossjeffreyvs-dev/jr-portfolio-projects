@@ -1,0 +1,60 @@
+[
+  {
+    "id": "trial_nsclc_001",
+    "source": "ClinicalTrials.gov-style seed data",
+    "nctId": "NCT-DEMO-NSCLC-001",
+    "title": "Phase II Immunotherapy Study for Metastatic Non-Small Cell Lung Cancer",
+    "condition": "Metastatic NSCLC",
+    "phase": "Phase 2",
+    "status": "Recruiting",
+    "criteria": [
+      {
+        "id": "INC_001",
+        "type": "inclusion",
+        "category": "Diagnosis",
+        "text": "Histologically confirmed metastatic non-small cell lung cancer."
+      },
+      {
+        "id": "INC_002",
+        "type": "inclusion",
+        "category": "Performance Status",
+        "text": "ECOG performance status of 0 or 1."
+      },
+      {
+        "id": "EXC_001",
+        "type": "exclusion",
+        "category": "Autoimmune Disease",
+        "text": "Active autoimmune disease requiring systemic treatment."
+      }
+    ]
+  },
+  {
+    "id": "trial_breast_001",
+    "source": "ClinicalTrials.gov-style seed data",
+    "nctId": "NCT-DEMO-BREAST-001",
+    "title": "Targeted Therapy Study for HER2-Positive Breast Cancer",
+    "condition": "HER2-positive breast cancer",
+    "phase": "Phase 3",
+    "status": "Recruiting",
+    "criteria": [
+      {
+        "id": "INC_001",
+        "type": "inclusion",
+        "category": "Diagnosis",
+        "text": "Confirmed HER2-positive metastatic breast cancer."
+      },
+      {
+        "id": "INC_002",
+        "type": "inclusion",
+        "category": "Prior Therapy",
+        "text": "Prior treatment with standard HER2-directed therapy."
+      },
+      {
+        "id": "EXC_001",
+        "type": "exclusion",
+        "category": "Cardiac Function",
+        "text": "Clinically significant cardiac disease or reduced ejection fraction."
+      }
+    ]
+  }
+]

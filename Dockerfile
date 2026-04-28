@@ -46,6 +46,19 @@ RUN npm ci
 COPY services/customer-lifecycle-agent/apps/web/ ./
 RUN npm run build
 
+
+# ---------- Build Claude Clinical Protocol Reasoning Engine Next app ----------
+FROM node:20-bookworm-slim AS claude_builder
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_PUBLIC_CLAUDE_API_BASE_URL=/api
+
+WORKDIR /build/services/claude-clinical-protocol-reasoning-engine/frontend
+COPY services/claude-clinical-protocol-reasoning-engine/frontend/package*.json ./
+RUN npm ci
+COPY services/claude-clinical-protocol-reasoning-engine/frontend/ ./
+RUN npm run build
+
+
 # ---------- Runtime ----------
 FROM python:3.10-slim
 
@@ -80,10 +93,12 @@ RUN pip install --no-cache-dir --upgrade pip \
 COPY services/fx_insights/backend/requirements.txt fx.txt
 COPY services/semantic_patient_search/backend/requirements.txt sem.txt
 COPY services/clinical_trial_matching_agent/apps/api/requirements.txt clinical_api.txt
+COPY services/claude-clinical-protocol-reasoning-engine/backend/requirements.txt claude_api.txt
 
 RUN pip install --no-cache-dir -r fx.txt \
  && pip install --no-cache-dir -r sem.txt \
- && pip install --no-cache-dir -r clinical_api.txt
+ && pip install --no-cache-dir -r clinical_api.txt \
+ && pip install --no-cache-dir -r claude_api.txt
 
 # Copy app source
 COPY gateway ./gateway
@@ -100,19 +115,23 @@ COPY --from=fx_builder /build/services/fx_insights/frontend/dist \
 COPY --from=semantic_builder /build/services/semantic_patient_search/frontend/dist \
   ./services/semantic_patient_search/backend/static
 
-# Copy Clinical standalone build
-COPY --from=clinical_builder \
-  /build/services/clinical_trial_matching_agent/apps/web/.next/standalone \
-  /app/clinical-web
+# Copy built Claude frontend
+COPY --from=claude_builder /build/services/claude-clinical-protocol-reasoning-engine/frontend/dist \
+  ./services/claude-clinical-protocol-reasoning-engine/frontend/dist
 
-COPY --from=clinical_builder \
-  /build/services/clinical_trial_matching_agent/apps/web/.next/static \
-  /app/clinical-web/.next/static
+# Copy Claude standalone build
+COPY --from=claude_builder \
+  /build/services/claude-clinical-protocol-reasoning-engine/frontend/.next/standalone \
+  /app/claude-web
 
-COPY --from=clinical_builder \
-  /build/services/clinical_trial_matching_agent/apps/web/public \
-  /app/clinical-web/public
+COPY --from=claude_builder \
+  /build/services/claude-clinical-protocol-reasoning-engine/frontend/.next/static \
+  /app/claude-web/.next/static
 
+COPY --from=claude_builder \
+  /build/services/claude-clinical-protocol-reasoning-engine/frontend/public \
+  /app/claude-web/public
+  
 # Copy Customer Lifecycle standalone build
 COPY --from=customer_builder \
   /build/services/customer-lifecycle-agent/apps/web/.next/standalone \
