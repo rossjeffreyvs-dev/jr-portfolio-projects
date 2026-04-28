@@ -6,6 +6,7 @@ import FxProjectDescription from "./components/FxProjectDescription";
 import ProjectHero from "./components/ProjectHero";
 import ProjectTabs from "./components/ProjectTabs";
 import StandardHeader from "./components/StandardHeader";
+import ProjectFooter from "./components/ProjectFooter";
 
 export type TabKey = "description" | "demo" | "playbook";
 
@@ -49,6 +50,8 @@ export default function App() {
         {activeTab === "demo" && <FxDemo />}
         {activeTab === "playbook" && <FxPMPlaybook />}
       </main>
+
+      <ProjectFooter projectName="AI-Assisted FX Market Intelligence Workflow" />
     </div>
   );
 }

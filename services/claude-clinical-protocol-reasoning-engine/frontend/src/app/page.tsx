@@ -8,6 +8,7 @@ import ProjectDescription from "./components/ProjectDescription";
 import ProjectHero from "./components/ProjectHero";
 import ProjectTabs from "./components/ProjectTabs";
 import StandardHeader from "./components/StandardHeader";
+import ProjectFooter from "./components/ProjectFooter";
 
 import type {
   DashboardData,
@@ -256,6 +257,8 @@ export default function ClaudeProtocolPage() {
 
         {activeTab === "PM Playbook" && <PMPlaybook />}
       </main>
+
+      <ProjectFooter projectName="Claude Clinical Protocol Reasoning Engine" />
     </div>
   );
 }

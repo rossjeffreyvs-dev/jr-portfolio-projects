@@ -6,6 +6,7 @@ import ResumeDemo from "./components/ResumeDemo";
 import ResumePMPlaybook from "./components/ResumePMPlaybook";
 import ResumeProjectDescription from "./components/ResumeProjectDescription";
 import StandardHeader from "./components/StandardHeader";
+import ProjectFooter from "./components/ProjectFooter";
 
 export type TabKey = "description" | "demo" | "playbook";
 
@@ -31,6 +32,8 @@ export default function App() {
         {activeTab === "demo" && <ResumeDemo />}
         {activeTab === "playbook" && <ResumePMPlaybook />}
       </main>
+
+      <ProjectFooter projectName="AI-Assisted Resume Match Workflow<" />
     </div>
   );
 }

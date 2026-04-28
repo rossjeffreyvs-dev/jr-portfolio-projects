@@ -6,6 +6,8 @@ import ClinicalTrialDashboard from "@/components/clinical-trial-matching-agent/C
 import ClinicalTrialPMPlaybook from "@/components/clinical-trial-matching-agent/ClinicalTrialPMPlaybook";
 import ClinicalTrialProjectDescription from "@/components/clinical-trial-matching-agent/ClinicalTrialProjectDescription";
 import ReviewCasePanel from "@/components/clinical-trial-matching-agent/ReviewCasePanel";
+import ProjectFooter from "@/components/clinical-trial-matching-agent/ProjectFooter";
+
 import { useClinicalTrialDashboard } from "@/hooks/useClinicalTrialDashboard";
 import { useState } from "react";
 
@@ -212,6 +214,7 @@ export default function ClinicalTrialProjectPage() {
           </>
         )}
       </main>
+      <ProjectFooter projectName="Clinical Trial Patient Matching Agent" />
     </div>
   );
 }

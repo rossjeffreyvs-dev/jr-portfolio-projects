@@ -6,6 +6,7 @@ import SemanticDemo from "./components/SemanticDemo";
 import SemanticPMPlaybook from "./components/SemanticPMPlaybook";
 import SemanticProjectDescription from "./components/SemanticProjectDescription";
 import StandardHeader from "./components/StandardHeader";
+import ProjectFooter from "./components/ProjectFooter";
 import type { ActiveTab } from "./types";
 
 export default function App() {
@@ -27,6 +28,8 @@ export default function App() {
         {activeTab === "demo" && <SemanticDemo />}
         {activeTab === "playbook" && <SemanticPMPlaybook />}
       </main>
+
+      <ProjectFooter projectName="Semantic Patient Search<" />
     </div>
   );
 }
