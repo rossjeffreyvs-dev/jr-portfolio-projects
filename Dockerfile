@@ -38,12 +38,13 @@ RUN npm run build
 # ---------- Build Customer Lifecycle Next app ----------
 FROM node:20-bookworm-slim AS customer_builder
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_PUBLIC_CUSTOMER_LIFECYCLE_API_BASE_URL=/agentic-customer-lifecycle-platform/api
+
 WORKDIR /build/services/customer-lifecycle-agent/apps/web
 COPY services/customer-lifecycle-agent/apps/web/package*.json ./
 RUN npm ci
 COPY services/customer-lifecycle-agent/apps/web/ ./
 RUN npm run build
-
 
 # ---------- Runtime ----------
 FROM python:3.10-slim

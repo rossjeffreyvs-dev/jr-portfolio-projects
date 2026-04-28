@@ -38,7 +38,7 @@ CUSTOMER_DIR := services/customer-lifecycle-agent
 CUSTOMER_API_DIR := $(CUSTOMER_DIR)/api
 CUSTOMER_WEB_DIR := $(CUSTOMER_DIR)/apps/web
 CUSTOMER_BACKEND_PORT := 8010
-CUSTOMER_FRONTEND_PORT := 3000
+CUSTOMER_FRONTEND_PORT := 3001
 CUSTOMER_FRONTEND_ROUTE := /projects/customer-lifecycle-agent
 
 .DEFAULT_GOAL := help
@@ -269,7 +269,7 @@ customer-backend: customer-setup
 	cd $(CUSTOMER_API_DIR) && PYTHONPATH=. $(abspath $(UVICORN)) main:app --reload --port $(CUSTOMER_BACKEND_PORT)
 
 customer-frontend:
-	cd $(CUSTOMER_WEB_DIR) && NEXT_PUBLIC_CUSTOMER_LIFECYCLE_API_BASE_URL=http://127.0.0.1:$(CUSTOMER_BACKEND_PORT) $(NPM) run dev
+	cd $(CUSTOMER_WEB_DIR) && PORT=$(CUSTOMER_FRONTEND_PORT) NEXT_PUBLIC_CUSTOMER_LIFECYCLE_API_BASE_URL=http://127.0.0.1:$(CUSTOMER_BACKEND_PORT) $(NPM) run dev
 
 customer-wait:
 	@echo "Waiting for customer lifecycle backend on :$(CUSTOMER_BACKEND_PORT)..."
