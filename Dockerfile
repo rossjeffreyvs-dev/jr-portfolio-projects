@@ -49,7 +49,7 @@ RUN npm run build
 # ---------- Build Claude Clinical Protocol Reasoning Engine Next app ----------
 FROM node:20-bookworm-slim AS claude_builder
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV NEXT_PUBLIC_CLAUDE_API_BASE_URL=/api
+ENV NEXT_PUBLIC_CLAUDE_API_BASE_URL=/claude-clinical-protocol-reasoning-engine/api
 WORKDIR /build/services/claude-clinical-protocol-reasoning-engine/frontend
 COPY services/claude-clinical-protocol-reasoning-engine/frontend/package*.json ./
 RUN npm ci

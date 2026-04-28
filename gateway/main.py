@@ -82,10 +82,17 @@ class HostDispatcher:
         if scope.get("query_string"):
             url += f"?{scope['query_string'].decode()}"
 
+        excluded_request_headers = {
+            b"host",
+            b"content-length",
+            b"connection",
+            b"accept-encoding",
+        }
+
         forward_headers = {
             k.decode(): v.decode()
             for k, v in scope["headers"]
-            if k.lower() not in [b"host", b"content-length", b"connection"]
+            if k.lower() not in excluded_request_headers
         }
 
         try:
@@ -97,14 +104,17 @@ class HostDispatcher:
                     content=body,
                 )
 
+            excluded_response_headers = {
+                "transfer-encoding",
+                "content-length",
+                "content-encoding",
+                "connection",
+            }
+
             response_headers = [
                 (k.encode(), v.encode())
                 for k, v in response.headers.items()
-                if k.lower()
-                not in [
-                    "transfer-encoding",
-                    "content-length",
-                ]
+                if k.lower() not in excluded_response_headers
             ]
 
             await send(

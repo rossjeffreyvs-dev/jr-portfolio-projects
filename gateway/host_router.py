@@ -55,13 +55,14 @@ CUSTOMER_API_PREFIX = f"{CUSTOMER_PUBLIC_PREFIX}/api"
 CLAUDE_FRONTEND_URL = "http://127.0.0.1:3003"
 CLAUDE_API_URL = "http://127.0.0.1:8020"
 
+CLAUDE_PUBLIC_PREFIX = "/claude-clinical-protocol-reasoning-engine"
+CLAUDE_API_PREFIX = f"{CLAUDE_PUBLIC_PREFIX}/api"
+
 CLAUDE_HOSTS = {
     "claude-clinical-protocol-reasoning-engine.jeffrey-ross.me",
     "claude-clinical.local",
     "claude-protocol.local",
 }
-
-CLAUDE_API_PREFIX = "/api"
 
 CLAUDE_API_PREFIXES = (
     "/health",
@@ -153,6 +154,15 @@ def route_claude(path: str):
             rewrite_prefixed_api_path(path, CLAUDE_API_PREFIX),
         )
 
+    if path == CLAUDE_PUBLIC_PREFIX or path.startswith(f"{CLAUDE_PUBLIC_PREFIX}/"):
+        return proxy_target(CLAUDE_FRONTEND_URL, path)
+
+    if path.startswith("/api"):
+        return proxy_target(
+            CLAUDE_API_URL,
+            path.replace("/api", "", 1) or "/",
+        )
+
     if path.startswith(CLAUDE_API_PREFIXES):
         return proxy_target(CLAUDE_API_URL, path)
 
@@ -169,6 +179,14 @@ def get_app_for_request(host: str, path: str):
     if customer_target:
         return customer_target
 
+    claude_target = route_claude(path)
+    if claude_target and (
+        path == CLAUDE_PUBLIC_PREFIX
+        or path.startswith(f"{CLAUDE_PUBLIC_PREFIX}/")
+        or normalized_host in CLAUDE_HOSTS
+    ):
+        return claude_target
+
     if normalized_host in RESUME_HOSTS:
         if path.startswith(RESUME_API_PREFIXES):
             return resume_api_app
@@ -178,21 +196,6 @@ def get_app_for_request(host: str, path: str):
         if path.startswith(CLINICAL_API_PREFIXES):
             return CLINICAL_API_URL
         return CLINICAL_FRONTEND_URL
-
-    if normalized_host in CLAUDE_HOSTS:
-        # API routes first (highest priority)
-        if path.startswith("/api") or path.startswith(CLAUDE_API_PREFIXES):
-            return proxy_target(
-                CLAUDE_API_URL,
-                path.replace("/api", "", 1) if path.startswith("/api") else path,
-            )
-
-        # Static assets (Next.js)
-        if is_next_static_asset(path):
-            return proxy_target(CLAUDE_FRONTEND_URL, path)
-
-        # Default → frontend
-        return proxy_target(CLAUDE_FRONTEND_URL, path)
 
     return HOST_MAP.get(normalized_host, RESUME_FRONTEND_URL)
 
