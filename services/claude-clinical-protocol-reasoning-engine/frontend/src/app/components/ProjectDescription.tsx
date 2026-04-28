@@ -1,7 +1,7 @@
 export default function ProjectDescription() {
   return (
-    <section className="panel">
-      <p className="eyebrow">Project Overview</p>
+    <section className="description-card claude-overview-card">
+      <p className="section-label">Project Overview</p>
       <h2>AI-assisted protocol interpretation</h2>
       <p>
         This project combines ClinicalTrials.gov-style trial data, Synthea-style
@@ -9,11 +9,23 @@ export default function ProjectDescription() {
         criteria with transparent explanations.
       </p>
 
-      <div className="feature-grid">
-        <div>Protocol criteria parsing</div>
-        <div>Patient profile normalization</div>
-        <div>Criterion-level reasoning</div>
-        <div>Human review escalation</div>
+      <div className="claude-feature-grid">
+        <article>
+          <span className="insight-icon">▦</span>
+          <strong>Protocol criteria parsing</strong>
+        </article>
+        <article>
+          <span className="insight-icon">👤</span>
+          <strong>Patient profile normalization</strong>
+        </article>
+        <article>
+          <span className="insight-icon">✓</span>
+          <strong>Criterion-level reasoning</strong>
+        </article>
+        <article>
+          <span className="insight-icon">↗</span>
+          <strong>Human review escalation</strong>
+        </article>
       </div>
     </section>
   );

@@ -8,11 +8,12 @@ type ProjectTabsProps = {
 
 export default function ProjectTabs({ activeTab, onChange }: ProjectTabsProps) {
   return (
-    <div className="tab-row">
+    <div className="project-tabs" aria-label="Project sections">
       {tabs.map((tab) => (
         <button
           key={tab}
-          className={activeTab === tab ? "tab active" : "tab"}
+          type="button"
+          className={activeTab === tab ? "tab-btn active" : "tab-btn"}
           onClick={() => onChange(tab)}
         >
           {tab}

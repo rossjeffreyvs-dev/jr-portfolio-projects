@@ -13,10 +13,10 @@ export default function EvaluationResults({
   }
 
   return (
-    <section className="panel results-panel">
-      <div className="results-header">
+    <section className="panel results-panel clinical-results-panel">
+      <div className="results-header clinical-results-header">
         <div>
-          <p className="eyebrow">Recommendation Summary</p>
+          <p className="section-label">Recommendation Summary</p>
           <h2>{formatRecommendation(evaluation.recommendation)}</h2>
           <p>
             {evaluation.summary.matches} matched ·{" "}
@@ -30,9 +30,9 @@ export default function EvaluationResults({
         </div>
       </div>
 
-      <div className="why-panel">
-        <div>
-          <p className="eyebrow">Why this decision?</p>
+      <div className="why-panel clinical-why-panel">
+        <div className="clinical-why-copy">
+          <p className="section-label">Why this decision</p>
           <h3>Evidence-based eligibility reasoning</h3>
           <p>
             {evaluation.decision_rationale ||
@@ -40,38 +40,19 @@ export default function EvaluationResults({
           </p>
         </div>
 
-        <div className="why-grid">
+        <div className="why-grid clinical-why-metrics">
           <div>
             <strong>{evaluation.summary.matches}</strong>
-            <span>Criteria matched patient evidence</span>
+            <span>Matched criteria</span>
           </div>
           <div>
             <strong>{evaluation.summary.no_matches}</strong>
-            <span>Criteria failed against patient evidence</span>
+            <span>Failed criteria</span>
           </div>
           <div>
             <strong>{evaluation.summary.uncertain}</strong>
-            <span>Criteria require human review</span>
+            <span>Needs review</span>
           </div>
-        </div>
-      </div>
-
-      <div className="summary-metrics">
-        <div>
-          <strong>{evaluation.summary.matches}</strong>
-          <span>Matched</span>
-        </div>
-        <div>
-          <strong>{evaluation.summary.no_matches}</strong>
-          <span>Failed</span>
-        </div>
-        <div>
-          <strong>{evaluation.summary.uncertain}</strong>
-          <span>Uncertain</span>
-        </div>
-        <div>
-          <strong>{evaluation.summary.total}</strong>
-          <span>Total criteria</span>
         </div>
       </div>
 

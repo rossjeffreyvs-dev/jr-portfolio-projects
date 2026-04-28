@@ -8,15 +8,16 @@ export default function ProjectHero({
   patientCount,
 }: ProjectHeroProps) {
   return (
-    <section className="project-hero">
-      <p className="eyebrow">Claude Reasoning Demo</p>
+    <section className="project-hero centered">
+      <p className="hero-eyebrow-text">Claude Reasoning Demo</p>
       <h1>Claude Clinical Protocol Reasoning Engine</h1>
-      <p>
+
+      <p className="hero-subtitle">
         Interpret eligibility language, evaluate synthetic patient records, and
         produce transparent clinical protocol reasoning.
       </p>
 
-      <div className="hero-metrics">
+      <div className="hero-metrics centered">
         <div>
           <strong>{trialCount || 2}</strong>
           <span>Loaded trials</span>
