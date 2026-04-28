@@ -285,6 +285,11 @@ button:disabled {
   padding: 28px;
 }
 
+.description-stack {
+  display: grid;
+  gap: 24px;
+}
+
 .panel.wide {
   grid-column: span 2;
 }
