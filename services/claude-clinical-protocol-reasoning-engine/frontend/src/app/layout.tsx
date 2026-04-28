@@ -1,7 +1,7 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "JR Projects | Claude Clinical Protocol Reasoning",
+  title: "Projects | Claude Clinical Protocol Reasoning",
   description:
     "Clinical protocol reasoning demo using trials, synthetic patients, and Claude-style evaluation.",
   icons: {
