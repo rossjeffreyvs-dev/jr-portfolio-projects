@@ -1,10 +1,11 @@
-import './globals.css';
-import type { Metadata } from 'next';
-import { ReactNode } from 'react';
+import "./globals.css";
+import type { Metadata } from "next";
+import { ReactNode } from "react";
 
 export const metadata: Metadata = {
-  title: 'Clinical Trial Matching Agent',
-  description: 'Portfolio demo for agentic clinical trial matching.',
+  title: "Clinical Trial Matching Agent",
+  description: "Portfolio demo for agentic clinical trial matching.",
+  icons: { icon: "/favicon.svg" },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

@@ -57,6 +57,17 @@ COPY services/claude-clinical-protocol-reasoning-engine/frontend/ ./
 RUN npm run build
 
 
+# ---------- Build TrainJazz Next app ----------
+FROM node:20-bookworm-slim AS trainjazz_builder
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_PUBLIC_BASE_PATH=/services/train-jazz
+WORKDIR /build/services/train-jazz/apps/web
+COPY services/train-jazz/apps/web/package*.json ./
+RUN npm ci
+COPY services/train-jazz/apps/web/ ./
+RUN npm run build
+
+
 # ---------- Runtime ----------
 FROM python:3.10-slim
 
@@ -151,6 +162,19 @@ COPY --from=claude_builder \
 COPY --from=claude_builder \
   /build/services/claude-clinical-protocol-reasoning-engine/frontend/public \
   /app/claude-web/public
+
+# Copy TrainJazz standalone build
+COPY --from=trainjazz_builder \
+  /build/services/train-jazz/apps/web/.next/standalone \
+  /app/train-jazz-web
+
+COPY --from=trainjazz_builder \
+  /build/services/train-jazz/apps/web/.next/static \
+  /app/train-jazz-web/.next/static
+
+COPY --from=trainjazz_builder \
+  /build/services/train-jazz/apps/web/public \
+  /app/train-jazz-web/public
 
 COPY docker-entrypoint.sh /app/docker-entrypoint.sh
 RUN chmod +x /app/docker-entrypoint.sh

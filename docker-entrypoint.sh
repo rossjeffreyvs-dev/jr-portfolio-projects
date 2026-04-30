@@ -63,6 +63,13 @@ start_service \
   env HOSTNAME=0.0.0.0 PORT=3003 \
   node /app/claude-web/server.js
 
+# --- TrainJazz ---
+
+start_service \
+  "TrainJazz UI on port 3004" \
+  env HOSTNAME=0.0.0.0 PORT=3004 \
+  node /app/train-jazz-web/server.js
+
 # --- Gateway ---
 
 echo "Starting Gateway on port 8080..."
