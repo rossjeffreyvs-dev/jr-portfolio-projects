@@ -1,15 +1,78 @@
 const playbookSteps = [
-  { icon: "📄", label: "Parse protocol criteria" },
-  { icon: "👤", label: "Normalize patient evidence" },
-  { icon: "🧠", label: "Explain eligibility reasoning" },
-  { icon: "⚖️", label: "Route uncertain cases" },
-  { icon: "📈", label: "Measure review quality" },
+  {
+    index: "01",
+    icon: "📄",
+    label: "Parse protocol criteria",
+    description:
+      "Convert dense eligibility language into structured criteria that can be reviewed and evaluated.",
+  },
+  {
+    index: "02",
+    icon: "👤",
+    label: "Normalize patient evidence",
+    description:
+      "Map synthetic patient details to the evidence fields required for each inclusion and exclusion rule.",
+  },
+  {
+    index: "03",
+    icon: "🧠",
+    label: "Explain eligibility reasoning",
+    description:
+      "Show criterion-level rationale, confidence, and evidence gaps instead of a black-box match score.",
+  },
+  {
+    index: "04",
+    icon: "⚖️",
+    label: "Route uncertain cases",
+    description:
+      "Send ambiguous, incomplete, or higher-risk recommendations to a human review queue.",
+  },
+  {
+    index: "05",
+    icon: "📈",
+    label: "Measure review quality",
+    description:
+      "Track reviewer agreement, evidence traceability, and screening-time reduction over time.",
+  },
+];
+
+const mvpSteps = [
+  {
+    icon: "📄",
+    label: "Criteria extraction",
+    description:
+      "Start with a focused set of inclusion and exclusion criteria from one active protocol.",
+  },
+  {
+    icon: "👤",
+    label: "Patient profile review",
+    description:
+      "Present the patient context needed to evaluate each rule clearly and consistently.",
+  },
+  {
+    icon: "🧠",
+    label: "Criterion reasoning",
+    description:
+      "Explain match, no-match, and uncertain decisions at the criterion level.",
+  },
+  {
+    icon: "⚖️",
+    label: "Human review queue",
+    description:
+      "Route uncertain or high-impact cases to the right reviewer with supporting evidence.",
+  },
+  {
+    icon: "📈",
+    label: "Decision feedback",
+    description:
+      "Capture approval, rejection, and reviewer notes to improve future workflow design.",
+  },
 ];
 
 export default function PMPlaybook() {
   return (
     <div className="content-grid clinical-playbook-grid">
-      <section className="panel wide clinical-playbook-overview">
+      <section className="panel wide clinical-playbook-overview section-emphasis">
         <p className="section-label">PM Playbook</p>
         <h2>How I would productize clinical protocol reasoning</h2>
         <p>
@@ -19,17 +82,31 @@ export default function PMPlaybook() {
           evidence was used, and when a case should move to human review.
         </p>
 
-        <div className="clinical-playbook-strip">
+        <div
+          className="claude-playbook-flow"
+          aria-label="Productized protocol reasoning flow"
+        >
           {playbookSteps.map((step) => (
-            <div className="clinical-playbook-pill" key={step.label}>
-              <span>{step.icon}</span>
-              <strong>{step.label}</strong>
-            </div>
+            <article className="claude-playbook-flow-card" key={step.label}>
+              <span className="clinical-playbook-step-index">{step.index}</span>
+
+              <div className="claude-playbook-flow-title">
+                <span
+                  className="clinical-playbook-pill-icon"
+                  aria-hidden="true"
+                >
+                  {step.icon}
+                </span>
+                <strong>{step.label}</strong>
+              </div>
+
+              <p>{step.description}</p>
+            </article>
           ))}
         </div>
       </section>
 
-      <section className="panel">
+      <section className="panel section-soft">
         <p className="section-label">Buyer & User</p>
         <h2>Who this is for</h2>
         <ul className="playbook-list">
@@ -50,7 +127,7 @@ export default function PMPlaybook() {
         </ul>
       </section>
 
-      <section className="panel">
+      <section className="panel section-soft">
         <p className="section-label">Product Strategy</p>
         <h2>Primary product bet</h2>
         <p>
@@ -64,20 +141,28 @@ export default function PMPlaybook() {
       <section className="panel wide">
         <p className="section-label">MVP Scope</p>
         <h2>What I would build first</h2>
-
-        <div className="clinical-flow-row">
-          <span>📄 Criteria extraction</span>
-          <span>👤 Patient profile review</span>
-          <span>🧠 Criterion reasoning</span>
-          <span>⚖️ Human review queue</span>
-          <span>📈 Decision feedback</span>
-        </div>
-
-        <p>
+        <p className="section-subtext">
           The first version should focus on one high-value loop: evaluate a
           patient against an active protocol, explain each inclusion and
           exclusion decision, and route uncertain cases for human review.
         </p>
+
+        <div className="claude-mvp-grid" aria-label="MVP scope steps">
+          {mvpSteps.map((step) => (
+            <article className="claude-mvp-card" key={step.label}>
+              <div className="claude-mvp-title">
+                <span
+                  className="clinical-playbook-pill-icon"
+                  aria-hidden="true"
+                >
+                  {step.icon}
+                </span>
+                <strong>{step.label}</strong>
+              </div>
+              <p>{step.description}</p>
+            </article>
+          ))}
+        </div>
       </section>
 
       <section className="panel">
