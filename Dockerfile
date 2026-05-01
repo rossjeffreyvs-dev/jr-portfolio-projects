@@ -60,7 +60,7 @@ RUN npm run build
 # ---------- Build TrainJazz Next app ----------
 FROM node:20-bookworm-slim AS trainjazz_builder
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV NEXT_PUBLIC_BASE_PATH=/services/train-jazz
+ENV NEXT_PUBLIC_BASE_PATH=/train-jazz
 WORKDIR /build/services/train-jazz/apps/web
 COPY services/train-jazz/apps/web/package*.json ./
 RUN npm ci

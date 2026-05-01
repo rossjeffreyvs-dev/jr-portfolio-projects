@@ -78,8 +78,8 @@ CLAUDE_API_PREFIXES = (
 
 TRAINJAZZ_FRONTEND_URL = "http://127.0.0.1:3004"
 
-TRAINJAZZ_PUBLIC_PREFIX = "/services/train-jazz"
-TRAINJAZZ_INTERNAL_PAGE_PATH = "/projects/train-jazz-agent"
+TRAINJAZZ_PUBLIC_PREFIX = "/train-jazz"
+TRAINJAZZ_LEGACY_PUBLIC_PREFIX = "/services/train-jazz"
 
 
 HOST_MAP = {
@@ -109,22 +109,6 @@ def is_next_static_asset(path: str) -> bool:
     )
 
 
-def is_prefixed_next_static_asset(path: str, public_prefix: str) -> bool:
-    return (
-        path.startswith(f"{public_prefix}/_next/")
-        or path.startswith(f"{public_prefix}/favicon")
-        or path.startswith(f"{public_prefix}/robots.txt")
-        or path.startswith(f"{public_prefix}/sitemap.xml")
-        or path.startswith(f"{public_prefix}/manifest")
-        or path.startswith(f"{public_prefix}/apple-touch-icon")
-    )
-
-
-def strip_public_prefix(path: str, public_prefix: str) -> str:
-    stripped = path.replace(public_prefix, "", 1)
-    return stripped or "/"
-
-
 def rewrite_prefixed_api_path(path: str, public_api_prefix: str) -> str:
     rewritten = path.replace(public_api_prefix, "", 1)
     return rewritten or "/"
@@ -146,12 +130,20 @@ def rewrite_prefixed_next_page_path(
     return f"{internal_page_path}{suffix}"
 
 
+def rewrite_trainjazz_path(path: str) -> str:
+    if path == TRAINJAZZ_LEGACY_PUBLIC_PREFIX:
+        return TRAINJAZZ_PUBLIC_PREFIX
+
+    if path.startswith(f"{TRAINJAZZ_LEGACY_PUBLIC_PREFIX}/"):
+        suffix = path.replace(TRAINJAZZ_LEGACY_PUBLIC_PREFIX, "", 1)
+        return f"{TRAINJAZZ_PUBLIC_PREFIX}{suffix}"
+
+    return path
+
+
 def route_clinical(path: str):
     if path.startswith(CLINICAL_API_PREFIXES):
         return proxy_target(CLINICAL_API_URL, path)
-
-    if is_next_static_asset(path):
-        return proxy_target(CLINICAL_FRONTEND_URL, path)
 
     return proxy_target(CLINICAL_FRONTEND_URL, path)
 
@@ -205,21 +197,13 @@ def route_claude(path: str):
 
 
 def route_trainjazz(path: str):
-    if is_prefixed_next_static_asset(path, TRAINJAZZ_PUBLIC_PREFIX):
-        return proxy_target(
-            TRAINJAZZ_FRONTEND_URL,
-            strip_public_prefix(path, TRAINJAZZ_PUBLIC_PREFIX),
-        )
-
     if path == TRAINJAZZ_PUBLIC_PREFIX or path.startswith(f"{TRAINJAZZ_PUBLIC_PREFIX}/"):
-        return proxy_target(
-            TRAINJAZZ_FRONTEND_URL,
-            rewrite_prefixed_next_page_path(
-                path,
-                TRAINJAZZ_PUBLIC_PREFIX,
-                TRAINJAZZ_INTERNAL_PAGE_PATH,
-            ),
-        )
+        return proxy_target(TRAINJAZZ_FRONTEND_URL, rewrite_trainjazz_path(path))
+
+    if path == TRAINJAZZ_LEGACY_PUBLIC_PREFIX or path.startswith(
+        f"{TRAINJAZZ_LEGACY_PUBLIC_PREFIX}/"
+    ):
+        return proxy_target(TRAINJAZZ_FRONTEND_URL, rewrite_trainjazz_path(path))
 
     return None
 
@@ -231,6 +215,15 @@ def get_app_for_request(host: str, path: str):
     if trainjazz_target:
         return trainjazz_target
 
+    if normalized_host in CLINICAL_HOSTS:
+        return route_clinical(path)
+
+    if normalized_host in HOST_MAP:
+        return HOST_MAP[normalized_host]
+
+    if normalized_host in CLAUDE_HOSTS:
+        return route_claude(path)
+
     customer_target = route_customer_lifecycle(path)
     if customer_target:
         return customer_target
@@ -239,7 +232,6 @@ def get_app_for_request(host: str, path: str):
     if claude_target and (
         path == CLAUDE_PUBLIC_PREFIX
         or path.startswith(f"{CLAUDE_PUBLIC_PREFIX}/")
-        or normalized_host in CLAUDE_HOSTS
     ):
         return claude_target
 
@@ -248,10 +240,7 @@ def get_app_for_request(host: str, path: str):
             return resume_api_app
         return RESUME_FRONTEND_URL
 
-    if normalized_host in CLINICAL_HOSTS:
-        return route_clinical(path)
-
-    return HOST_MAP.get(normalized_host, RESUME_FRONTEND_URL)
+    return RESUME_FRONTEND_URL
 
 
 def get_app_for_host(host: str):
