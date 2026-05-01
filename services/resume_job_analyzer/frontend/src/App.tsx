@@ -17,23 +17,25 @@ export default function App() {
     <div className="app-shell">
       <StandardHeader />
 
-      <ProjectHero
-        title="AI Resume Match Analyzer"
-        description="Compare a resume against a job description and generate an AI-powered match analysis"
-      />
+      <main className="page-shell">
+        <ProjectHero
+          title="AI Resume Match Analyzer"
+          description="Compare a resume against a job description and generate an AI-powered match analysis."
+        />
 
-      <ProjectTabs
-        activeTab={activeTab}
-        onTabChange={(tab) => setActiveTab(tab)}
-      />
+        <ProjectTabs
+          activeTab={activeTab}
+          onTabChange={(tab) => setActiveTab(tab)}
+        />
 
-      <main className="project-content">
-        {activeTab === "description" && <ResumeProjectDescription />}
-        {activeTab === "demo" && <ResumeDemo />}
-        {activeTab === "playbook" && <ResumePMPlaybook />}
+        <section className="project-content">
+          {activeTab === "description" && <ResumeProjectDescription />}
+          {activeTab === "demo" && <ResumeDemo />}
+          {activeTab === "playbook" && <ResumePMPlaybook />}
+        </section>
       </main>
 
-      <ProjectFooter projectName="AI-Assisted Resume Match Workflow<" />
+      <ProjectFooter projectName="AI Resume Match Analyzer" />
     </div>
   );
 }

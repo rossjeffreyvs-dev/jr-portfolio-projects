@@ -1,7 +1,52 @@
+type PlaybookStep = {
+  index: string;
+  icon: string;
+  title: string;
+  description: string;
+};
+
+const productSteps: PlaybookStep[] = [
+  {
+    index: "01",
+    icon: "🧾",
+    title: "Input job description",
+    description:
+      "Start with the target role so the product can anchor feedback in real requirements.",
+  },
+  {
+    index: "02",
+    icon: "📄",
+    title: "Upload resume",
+    description:
+      "Capture the candidate source document without forcing manual re-entry.",
+  },
+  {
+    index: "03",
+    icon: "🔎",
+    title: "Extract text",
+    description:
+      "Parse the uploaded file into clean text for repeatable comparison.",
+  },
+  {
+    index: "04",
+    icon: "🧠",
+    title: "Generate report",
+    description:
+      "Summarize fit, strengths, gaps, and role-specific recommendations.",
+  },
+  {
+    index: "05",
+    icon: "✅",
+    title: "Review guidance",
+    description:
+      "Help the user act on the analysis with clear next steps and editable feedback.",
+  },
+];
+
 export default function ResumePMPlaybook() {
   return (
     <div className="project-description pm-playbook">
-      <section className="description-card overview-card">
+      <section className="description-card overview-card section-emphasis">
         <p className="description-eyebrow">PM Playbook</p>
         <h2>AI Resume Match Analyzer</h2>
         <p className="description-lede">
@@ -10,17 +55,44 @@ export default function ResumePMPlaybook() {
         </p>
 
         <div className="description-highlight-grid playbook-highlight-grid">
-          <div className="description-highlight">Candidate problem framing</div>
-          <div className="description-highlight">MVP workflow scope</div>
-          <div className="description-highlight">Trust and explainability</div>
-          <div className="description-highlight">Feedback-driven iteration</div>
+          <article className="description-highlight">
+            <span className="description-icon" aria-hidden="true">
+              🎯
+            </span>
+            <strong>Candidate problem framing</strong>
+          </article>
+          <article className="description-highlight">
+            <span className="description-icon" aria-hidden="true">
+              🧩
+            </span>
+            <strong>MVP workflow scope</strong>
+          </article>
+          <article className="description-highlight">
+            <span className="description-icon" aria-hidden="true">
+              🛡️
+            </span>
+            <strong>Trust and explainability</strong>
+          </article>
+          <article className="description-highlight">
+            <span className="description-icon" aria-hidden="true">
+              🔁
+            </span>
+            <strong>Feedback-driven iteration</strong>
+          </article>
         </div>
       </section>
-
       <section className="problem-solution-grid">
-        <article className="description-card section-card">
-          <p className="description-eyebrow">Discovery</p>
-          <h3>Problem Framing & Discovery</h3>
+        <article className="description-card section-card section-soft">
+          <div className="description-section-header compact-heading">
+            <p className="description-eyebrow">Discovery</p>
+
+            <div className="playbook-card-title-row">
+              <span className="section-icon" aria-hidden="true">
+                🔍
+              </span>
+              <h3>Problem framing & discovery</h3>
+            </div>
+          </div>{" "}
           <ul className="check-list">
             <li>Candidates need faster feedback on role fit.</li>
             <li>
@@ -30,9 +102,17 @@ export default function ResumePMPlaybook() {
           </ul>
         </article>
 
-        <article className="description-card section-card">
-          <p className="description-eyebrow">Strategy</p>
-          <h3>Product Vision & Strategy</h3>
+        <article className="description-card section-card section-soft">
+          <div className="description-section-header compact-heading">
+            <p className="description-eyebrow">Strategy</p>
+
+            <div className="playbook-card-title-row">
+              <span className="section-icon" aria-hidden="true">
+                🧭
+              </span>
+              <h3>Product vision & strategy</h3>
+            </div>
+          </div>{" "}
           <ul className="check-list">
             <li>Position as an assistant, not an automated hiring decision.</li>
             <li>Make the comparison transparent and easy to review.</li>
@@ -40,40 +120,51 @@ export default function ResumePMPlaybook() {
           </ul>
         </article>
       </section>
-
       <section className="description-card section-card">
-        <p className="description-eyebrow">MVP</p>
-        <h3>What This Demo Proves</h3>
+        <div className="description-section-header compact-heading">
+          <p className="description-eyebrow">MVP</p>
+
+          <div className="playbook-card-title-row">
+            <span className="section-icon" aria-hidden="true">
+              🚀
+            </span>
+            <h3>What this demo proves</h3>
+          </div>
+        </div>{" "}
         <p className="description-lede compact">
           The MVP validates whether users can understand and act on an
           AI-assisted resume match report.
         </p>
-
-        <div className="workflow-step-grid">
-          {[
-            "Input job description",
-            "Upload resume",
-            "Extract text",
-            "Generate report",
-            "Review guidance",
-          ].map((step, index) => (
-            <div className="workflow-step-pair" key={step}>
-              <article className="workflow-step-card">
-                <p>
-                  {index + 1}. {step}
-                </p>
-                <h4>{step}</h4>
-              </article>
-              {index < 4 ? <div className="workflow-arrow">→</div> : null}
-            </div>
+        <div className="workflow-step-grid product-step-grid">
+          {productSteps.map((step) => (
+            <article
+              className="workflow-step-card product-step-card"
+              key={step.index}
+            >
+              <span className="workflow-step-index">{step.index}</span>
+              <div className="workflow-step-title">
+                <span className="workflow-step-icon" aria-hidden="true">
+                  {step.icon}
+                </span>
+                <h4>{step.title}</h4>
+              </div>
+              <p>{step.description}</p>
+            </article>
           ))}
         </div>
       </section>
-
       <section className="takeaway-grid-section">
-        <article className="description-card section-card">
-          <p className="description-eyebrow">Measurement</p>
-          <h3>Success Metrics</h3>
+        <article className="description-card section-card section-soft">
+          <div className="description-section-header compact-heading">
+            <p className="description-eyebrow">Measurement</p>
+
+            <div className="playbook-card-title-row">
+              <span className="section-icon" aria-hidden="true">
+                📈
+              </span>
+              <h3>Success metrics</h3>
+            </div>
+          </div>{" "}
           <ul className="check-list">
             <li>Report generation completion rate</li>
             <li>User copy/download rate</li>
@@ -82,9 +173,17 @@ export default function ResumePMPlaybook() {
           </ul>
         </article>
 
-        <article className="description-card section-card">
-          <p className="description-eyebrow">Risk</p>
-          <h3>Product Risks & Guardrails</h3>
+        <article className="description-card section-card section-soft">
+          <div className="description-section-header compact-heading">
+            <p className="description-eyebrow">Risk</p>
+
+            <div className="playbook-card-title-row">
+              <span className="section-icon" aria-hidden="true">
+                🛡️
+              </span>
+              <h3>Product risks & guardrails</h3>
+            </div>
+          </div>{" "}
           <ul className="check-list">
             <li>Avoid presenting analysis as hiring certainty.</li>
             <li>Make outputs reviewable and editable.</li>
@@ -93,17 +192,19 @@ export default function ResumePMPlaybook() {
           </ul>
         </article>
       </section>
-
-      <section className="demo-note-card">
-        <div>
-          <p>Portfolio signal</p>
+      <div className="portfolio-signal-card">
+        <div className="portfolio-signal-main">
+          <p className="description-eyebrow">Portfolio Signal</p>
           <h3>
             Shows product thinking across UX, document AI, workflow design, and
             candidate-facing recommendations.
           </h3>
         </div>
-        <span>Discovery → MVP → AI workflow → Measurable user value</span>
-      </section>
+
+        <div className="portfolio-signal-flow">
+          Discovery → MVP → AI workflow → Measurable user value
+        </div>
+      </div>{" "}
     </div>
   );
 }

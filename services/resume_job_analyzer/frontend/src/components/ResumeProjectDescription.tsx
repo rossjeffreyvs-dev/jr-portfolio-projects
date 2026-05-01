@@ -1,7 +1,104 @@
+type Highlight = {
+  icon: string;
+  title: string;
+};
+
+type WorkflowStep = {
+  index: string;
+  icon: string;
+  title: string;
+  description: string;
+};
+
+type ArchitectureColumn = {
+  eyebrow: string;
+  title: string;
+  items: string[];
+};
+
+const highlights: Highlight[] = [
+  { icon: "📄", title: "Resume parsing" },
+  { icon: "🧾", title: "Job description analysis" },
+  { icon: "🎯", title: "AI match scoring" },
+  { icon: "🔎", title: "Gap identification" },
+  { icon: "✅", title: "Actionable recommendations" },
+];
+
+const workflowSteps: WorkflowStep[] = [
+  {
+    index: "01",
+    icon: "🧾",
+    title: "Paste job description",
+    description:
+      "Load the target role, responsibilities, required skills, and evaluation context.",
+  },
+  {
+    index: "02",
+    icon: "📄",
+    title: "Upload resume",
+    description:
+      "Provide the candidate resume as the source document for role-fit analysis.",
+  },
+  {
+    index: "03",
+    icon: "🧠",
+    title: "Extract document text",
+    description:
+      "Parse resume content into structured text that can be compared against the role.",
+  },
+  {
+    index: "04",
+    icon: "⚖️",
+    title: "Generate match analysis",
+    description:
+      "Compare evidence across strengths, gaps, and role-specific alignment signals.",
+  },
+  {
+    index: "05",
+    icon: "✨",
+    title: "Review recommendations",
+    description:
+      "Return clear guidance that helps the candidate understand what to improve next.",
+  },
+];
+
+const architectureColumns: ArchitectureColumn[] = [
+  {
+    eyebrow: "Frontend",
+    title: "React Interface",
+    items: [
+      "Project shell",
+      "Resume upload flow",
+      "Job description input",
+      "Match report viewer",
+    ],
+  },
+  {
+    eyebrow: "Backend",
+    title: "Flask API",
+    items: [
+      "File upload endpoint",
+      "PDF / DOCX parsing",
+      "Sample demo route",
+      "OpenAI integration",
+    ],
+  },
+  {
+    eyebrow: "AI Layer",
+    title: "LLM Match Analysis",
+    items: [
+      "Resume-to-role comparison",
+      "Strength identification",
+      "Gap analysis",
+      "Recommendation generation",
+    ],
+  },
+];
+
 export default function ResumeProjectDescription() {
   return (
     <div className="project-description">
-      <section className="description-card overview-card">
+      <section className="description-card overview-card section-emphasis">
         <p className="description-eyebrow">Project Overview</p>
         <h2>AI-Assisted Resume Match Workflow</h2>
         <p className="description-lede">
@@ -12,20 +109,28 @@ export default function ResumeProjectDescription() {
         </p>
 
         <div className="description-highlight-grid">
-          <div className="description-highlight">Resume parsing</div>
-          <div className="description-highlight">Job description analysis</div>
-          <div className="description-highlight">AI match scoring</div>
-          <div className="description-highlight">Gap identification</div>
-          <div className="description-highlight">
-            Actionable recommendations
-          </div>
+          {highlights.map((item) => (
+            <article className="description-highlight" key={item.title}>
+              <span className="description-icon" aria-hidden="true">
+                {item.icon}
+              </span>
+              <strong>{item.title}</strong>
+            </article>
+          ))}
         </div>
       </section>
 
       <section className="problem-solution-grid">
-        <article className="description-card section-card">
-          <p className="description-eyebrow">Problem</p>
-          <h3>Resume Fit Is Hard to Interpret</h3>
+        <article className="description-card section-card section-soft">
+          <div className="description-section-header compact-heading">
+            <p className="description-eyebrow">Problem</p>
+            <div className="playbook-card-title-row">
+              <span className="section-icon" aria-hidden="true">
+                ❔
+              </span>
+              <h3>Resume fit is hard to interpret</h3>
+            </div>
+          </div>{" "}
           <p>
             Candidates often struggle to understand whether their resume matches
             a target role. Job descriptions are dense, resumes are unstructured,
@@ -33,9 +138,16 @@ export default function ResumeProjectDescription() {
           </p>
         </article>
 
-        <article className="description-card section-card">
-          <p className="description-eyebrow">Solution</p>
-          <h3>Structured AI Match Review</h3>
+        <article className="description-card section-card section-soft">
+          <div className="description-section-header compact-heading">
+            <p className="description-eyebrow">Solution</p>
+            <div className="playbook-card-title-row">
+              <span className="section-icon" aria-hidden="true">
+                ✓
+              </span>
+              <h3>Structured AI match review</h3>
+            </div>
+          </div>{" "}
           <p>
             The system extracts text from uploaded resumes, compares it against
             a job description, and generates a clear report showing strengths,
@@ -45,67 +157,56 @@ export default function ResumeProjectDescription() {
       </section>
 
       <section className="description-card section-card">
-        <p className="description-eyebrow">How It Works</p>
-        <h3>Workflow</h3>
-
-        <div className="workflow-step-grid">
-          {[
-            "Paste job description",
-            "Upload resume",
-            "Extract document text",
-            "Generate match analysis",
-            "Review recommendations",
-          ].map((step, index) => (
-            <div className="workflow-step-pair" key={step}>
-              <article className="workflow-step-card">
-                <p>
-                  {index + 1}. {step}
-                </p>
-                <h4>{step}</h4>
-              </article>
-              {index < 4 ? <div className="workflow-arrow">→</div> : null}
-            </div>
+        <div className="description-section-header compact-heading">
+          <p className="description-eyebrow">Workflow</p>
+          <div className="playbook-card-title-row">
+            <span className="section-icon" aria-hidden="true">
+              ⚙️
+            </span>
+            <h3>How It Works</h3>
+          </div>
+        </div>{" "}
+        <div className="workflow-step-grid product-step-grid">
+          {workflowSteps.map((step) => (
+            <article
+              className="workflow-step-card product-step-card"
+              key={step.index}
+            >
+              <span className="workflow-step-index">{step.index}</span>
+              <div className="workflow-step-title">
+                <span className="workflow-step-icon" aria-hidden="true">
+                  {step.icon}
+                </span>
+                <h4>{step.title}</h4>
+              </div>
+              <p>{step.description}</p>
+            </article>
           ))}
         </div>
       </section>
 
       <section className="description-card section-card">
-        <p className="description-eyebrow">System Architecture</p>
-        <h3>Technical Architecture</h3>
-
-        <div className="architecture-column-grid">
-          <article className="architecture-column architecture-blue">
-            <p>Frontend</p>
-            <h4>React Interface</h4>
-            <ul>
-              <li>Project shell</li>
-              <li>Resume upload flow</li>
-              <li>Job description input</li>
-              <li>Match report viewer</li>
-            </ul>
-          </article>
-
-          <article className="architecture-column architecture-purple">
-            <p>Backend</p>
-            <h4>Flask API</h4>
-            <ul>
-              <li>File upload endpoint</li>
-              <li>PDF / DOCX parsing</li>
-              <li>Sample demo route</li>
-              <li>OpenAI integration</li>
-            </ul>
-          </article>
-
-          <article className="architecture-column architecture-green">
-            <p>AI Layer</p>
-            <h4>LLM Match Analysis</h4>
-            <ul>
-              <li>Resume-to-role comparison</li>
-              <li>Strength identification</li>
-              <li>Gap analysis</li>
-              <li>Recommendation generation</li>
-            </ul>
-          </article>
+        <div className="description-section-header compact-heading">
+          <p className="description-eyebrow">Architecture</p>
+          <div className="playbook-card-title-row">
+            <span className="section-icon" aria-hidden="true">
+              🧩
+            </span>
+            <h3>Technical architecture</h3>
+          </div>
+        </div>{" "}
+        <div className="architecture-column-grid neutral-architecture-grid">
+          {architectureColumns.map((column) => (
+            <article className="architecture-column" key={column.title}>
+              <p>{column.eyebrow}</p>
+              <h4>{column.title}</h4>
+              <ul className="check-list">
+                {column.items.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </article>
+          ))}
         </div>
       </section>
 
