@@ -1,15 +1,38 @@
+"use client";
+
+import { useState } from "react";
+
 export default function StandardHeader() {
+  const [open, setOpen] = useState(false);
+
   return (
-    <header className="siteHeader">
-      <div className="siteHeaderInner">
-        <a className="brandLockup" href="https://www.jeffrey-ross.me">
-          <span className="brandBadge">JR</span>
-          <span className="brandText">Projects</span>
+    <header className="site-header">
+      <div className="site-header-inner">
+        <a href="https://www.jeffrey-ross.me/projects" className="brand-link">
+          <div className="brand">
+            <div className="brand-mark">JR</div>
+            <div>Projects</div>
+          </div>
         </a>
 
-        <nav className="siteNav" aria-label="Primary navigation">
+        <button
+          className="mobile-menu-button"
+          type="button"
+          aria-label="Toggle navigation menu"
+          aria-expanded={open}
+          onClick={() => setOpen((value) => !value)}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+
+        <nav
+          className={`top-nav ${open ? "is-open" : ""}`}
+          aria-label="Project navigation"
+        >
           <a href="https://www.jeffrey-ross.me">Home</a>
-          <a className="active" href="https://www.jeffrey-ross.me/projects">
+          <a href="https://www.jeffrey-ross.me/projects" className="active">
             Projects
           </a>
           <a href="https://www.jeffrey-ross.me/blog">Blog</a>

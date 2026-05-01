@@ -773,3 +773,662 @@ button {
     font-size: 1.2rem;
   }
 }
+
+/* -------------------------------------------------------------------------- */
+/* Customer Lifecycle Alignment + Semantic Polish Overrides                    */
+/* -------------------------------------------------------------------------- */
+
+:root {
+  --page-max: 1240px;
+  --page-pad: 28px;
+  --bg: #f4f7fb;
+  --text: #0f172a;
+  --muted: #475569;
+  --muted-soft: #64748b;
+  --line: #dbe3ef;
+  --line-strong: #cbd5e1;
+  --panel-soft: #f8fafc;
+  --blue: #0f172a;
+  --navy: #0f172a;
+  --navy-strong: #0f172a;
+  --shadow: 0 14px 32px rgba(15, 23, 42, 0.04);
+}
+
+body {
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(59, 130, 246, 0.08),
+      transparent 28rem
+    ),
+    var(--bg);
+}
+
+/* Header supports both the previous camelCase header and the newer shared header. */
+.siteHeader,
+.site-header {
+  width: 100%;
+  border-bottom: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.76);
+  backdrop-filter: blur(12px);
+}
+
+.siteHeaderInner,
+.site-header-inner {
+  width: min(var(--page-max), calc(100% - (var(--page-pad) * 2)));
+  min-height: 72px;
+  margin: 0 auto;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.site-header {
+  display: block;
+  padding: 0;
+}
+
+.siteHeader a,
+.site-header a,
+.brand-link {
+  text-decoration: none;
+}
+
+.brandLockup,
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  color: #0f172a;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.brandBadge,
+.brand-mark {
+  width: 52px;
+  height: 52px;
+  border: 3px solid #0f172a;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #0f172a;
+  font-size: 20px;
+  line-height: 1;
+  font-weight: 900;
+}
+
+.brandText {
+  font-size: 18px;
+}
+
+.siteNav,
+.top-nav {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  width: auto;
+  color: #64748b;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.siteNav a,
+.top-nav a {
+  position: relative;
+  padding: 24px 0 21px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.siteNav a:hover,
+.top-nav a:hover,
+.siteNav a.active,
+.top-nav a.active,
+.top-nav .active {
+  color: #0f172a;
+}
+
+.siteNav a.active::after,
+.top-nav a.active::after,
+.top-nav .active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 11px;
+  height: 3px;
+  border-radius: 999px;
+  background: #0f172a;
+}
+
+.mobile-menu-button {
+  display: none;
+  appearance: none;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #ffffff;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+}
+
+.mobile-menu-button span {
+  width: 18px;
+  height: 2px;
+  border-radius: 999px;
+  background: #0f172a;
+}
+
+.pageContainer {
+  width: min(var(--page-max), calc(100% - (var(--page-pad) * 2)));
+  margin: 0 auto;
+  padding: 40px 0 72px;
+}
+
+.projectHero {
+  max-width: 980px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.projectHero h1 {
+  color: #0f172a;
+  font-size: clamp(2.15rem, 4.2vw, 3.25rem);
+  line-height: 1.04;
+  font-weight: 900;
+  letter-spacing: -0.045em;
+}
+
+.projectHero p {
+  max-width: 900px;
+  margin: 12px auto 0;
+  color: #64748b;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.projectTabs {
+  gap: 16px;
+  margin: 28px auto 42px;
+}
+
+.projectTab {
+  min-width: 126px;
+  border: 1px solid var(--line);
+  background: #ffffff;
+  color: #475569;
+  padding: 16px 30px;
+  border-radius: 18px;
+  font-size: 16px;
+  font-weight: 800;
+  box-shadow: none;
+}
+
+.projectTab.active {
+  border-color: #0f172a;
+  background: #0f172a;
+  color: #ffffff;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.16);
+}
+
+.contentCard,
+.cardish,
+.infoCard,
+.primaryPanel {
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: var(--shadow);
+}
+
+.descriptionLayout {
+  width: min(var(--page-max), 100%);
+  gap: 24px;
+}
+
+.descriptionHero,
+.primaryPanel,
+.infoCard,
+.descriptionSection {
+  padding: 28px;
+}
+
+.section-emphasis {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.section-soft {
+  background: #fbfcff;
+}
+
+.descriptionKicker,
+.panelKicker,
+.fieldLabel,
+.playbookNavTitle {
+  color: #64748b;
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.descriptionHero h2,
+.panelHeaderRow h2 {
+  max-width: 920px;
+  color: #0f172a;
+  font-size: clamp(1.45rem, 2.4vw, 2rem);
+  line-height: 1.12;
+  font-weight: 900;
+  letter-spacing: -0.035em;
+}
+
+.descriptionLead,
+.panelIntro {
+  max-width: 1080px;
+  color: #475569;
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.descriptionHighlightGrid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 24px;
+}
+
+.descriptionHighlightCard {
+  min-height: 86px;
+  border: 1px solid var(--line);
+  background: #f8fafc;
+  color: #0f172a;
+  font-weight: 900;
+}
+
+.descriptionIcon,
+.workflowStepIcon {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  border: 0;
+  border-radius: 14px;
+  background: #f1f5f9;
+  color: #0f172a;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.06);
+  font-size: 1rem;
+}
+
+.descriptionTwoCol {
+  gap: 24px;
+}
+
+.descriptionSectionHeader {
+  align-items: center;
+}
+
+.descriptionSection h3,
+.descriptionSectionHeader h3,
+.infoCard h3,
+.resultsHeader h3 {
+  color: #0f172a;
+  font-size: 1.14rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.descriptionSectionIntro {
+  margin: 8px 0 0;
+  color: #64748b;
+  line-height: 1.6;
+}
+
+.semanticWorkflowGrid,
+.workflowGrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.workflowGrid article {
+  min-height: 190px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: #f8fafc;
+  padding: 18px;
+  text-align: left;
+}
+
+.workflowGrid span.workflowStepIndex {
+  display: block;
+  width: auto;
+  height: auto;
+  margin: 0 0 10px;
+  border-radius: 0;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.workflowStepTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.workflowStepTitle h4 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 0.98rem;
+  line-height: 1.25;
+  font-weight: 900;
+}
+
+.workflowGrid p {
+  margin: 14px 0 0;
+  color: #475569;
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+/* Demo polish */
+.dashboardGrid {
+  grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.9fr);
+  gap: 24px;
+}
+
+.queryPanel,
+.resultCard,
+.emptyState,
+.infoCard,
+.prospect-card,
+.selection-summary {
+  border-color: var(--line);
+  background: #f8fafc;
+}
+
+.primaryButton {
+  border-radius: 16px;
+  background: linear-gradient(135deg, #111827, #1f2937);
+  color: #ffffff;
+  font-weight: 900;
+  box-shadow: 0 12px 28px rgba(17, 24, 39, 0.18);
+}
+
+.sampleChip {
+  border-color: var(--line);
+  color: #0f172a;
+}
+
+.scoreBadge {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.matchExplanation {
+  background: #f8fafc;
+  border-color: var(--line);
+}
+
+/* PM Playbook */
+.semanticPlaybookShell {
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 24px;
+}
+
+.playbookNav {
+  top: 96px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: var(--shadow);
+}
+
+.playbookNav a:hover {
+  background: #f1f5f9;
+}
+
+.semanticPlaybookStrip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 24px;
+}
+
+.semanticPlaybookStrip article {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 86px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: #f8fafc;
+  color: #0f172a;
+  font-weight: 900;
+  line-height: 1.3;
+}
+
+.semanticPlaybookStrip span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  border-radius: 14px;
+  background: #f1f5f9;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.06);
+}
+
+.semanticPlaybookGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.semanticPlaybookTitleRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.semanticPlaybookTitleRow .descriptionKicker {
+  margin-bottom: 6px;
+}
+
+.descriptionBulletList li::before {
+  background: #0f172a;
+  opacity: 0.28;
+}
+
+/* Footer classes are provided in case this project swaps from inline footer styles later. */
+.project-footer {
+  margin-top: 72px;
+  border-top: 1px solid #e5e7eb;
+  background: #f8fafc;
+  color: #475569;
+}
+
+.project-footer-inner {
+  width: min(var(--page-max), calc(100% - (var(--page-pad) * 2)));
+  margin: 0 auto;
+  padding: 42px 0 28px;
+  display: grid;
+  grid-template-columns: minmax(220px, 1.2fr) minmax(280px, 2fr);
+  gap: 32px;
+}
+
+.project-footer-nav {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(120px, 1fr));
+  gap: 24px;
+}
+
+@media (max-width: 1120px) {
+  .descriptionHighlightGrid,
+  .semanticPlaybookStrip,
+  .workflowGrid,
+  .semanticWorkflowGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboardGrid,
+  .playbookShell,
+  .semanticPlaybookShell,
+  .playbookGrid,
+  .semanticPlaybookGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .playbookNav {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .playbookNavTitle {
+    width: 100%;
+  }
+}
+
+@media (max-width: 860px) {
+  :root {
+    --page-pad: 20px;
+  }
+
+  .siteHeaderInner,
+  .site-header-inner {
+    min-height: 68px;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 10px 0;
+  }
+
+  .siteHeaderInner {
+    width: min(var(--page-max), calc(100% - (var(--page-pad) * 2)));
+  }
+
+  .siteNav {
+    width: 100%;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+
+  .mobile-menu-button {
+    display: inline-flex;
+    margin-left: auto;
+  }
+
+  .top-nav {
+    display: none;
+    width: 100%;
+    padding: 10px 0 4px;
+    grid-template-columns: 1fr;
+    gap: 6px;
+    font-size: 14px;
+  }
+
+  .top-nav.is-open {
+    display: grid;
+  }
+
+  .top-nav a {
+    display: block;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: #f8fafc;
+  }
+
+  .top-nav a.active {
+    background: #eef2ff;
+    padding-bottom: 12px;
+  }
+
+  .top-nav a.active::after {
+    display: none;
+  }
+
+  .descriptionTwoCol,
+  .resultGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .projectTabs {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 640px) {
+  :root {
+    --page-pad: 16px;
+  }
+
+  .pageContainer,
+  .siteHeaderInner,
+  .site-header-inner {
+    width: min(var(--page-max), calc(100% - (var(--page-pad) * 2)));
+  }
+
+  .pageContainer {
+    padding-top: 32px;
+  }
+
+  .brandBadge,
+  .brand-mark {
+    width: 44px;
+    height: 44px;
+    font-size: 17px;
+    border-radius: 12px;
+  }
+
+  .brandText,
+  .brand {
+    font-size: 17px;
+  }
+
+  .projectHero h1 {
+    font-size: 2rem;
+  }
+
+  .projectTabs {
+    gap: 0.75rem;
+    margin: 24px auto 24px;
+  }
+
+  .projectTab {
+    width: 100%;
+  }
+
+  .descriptionHero,
+  .primaryPanel,
+  .infoCard,
+  .descriptionSection,
+  .cardish,
+  .contentCard {
+    padding: 1.15rem;
+    border-radius: 1.25rem;
+  }
+
+  .descriptionHighlightGrid,
+  .workflowGrid,
+  .semanticWorkflowGrid,
+  .semanticPlaybookStrip {
+    grid-template-columns: 1fr;
+  }
+
+  .project-footer-inner,
+  .project-footer-nav {
+    grid-template-columns: 1fr;
+  }
+}

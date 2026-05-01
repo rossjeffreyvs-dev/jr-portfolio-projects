@@ -29,7 +29,7 @@ export default function App() {
         {activeTab === "playbook" && <SemanticPMPlaybook />}
       </main>
 
-      <ProjectFooter projectName="Semantic Patient Search<" />
+      <ProjectFooter projectName="Semantic Patient Search" />
     </div>
   );
 }
