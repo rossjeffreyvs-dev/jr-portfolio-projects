@@ -77,22 +77,27 @@ const mvpSteps = [
   {
     icon: "🧪",
     title: "Select active trial",
+    text: "Choose an active clinical trial to evaluate against and load its eligibility criteria and context.",
   },
   {
     icon: "🔍",
     title: "Find ranked patient",
+    text: "Identify and rank likely candidate patients based on trial-specific eligibility signals.",
   },
   {
     icon: "⚙️",
     title: "Run evaluation",
+    text: "Execute the multi-agent workflow to assess each patient against inclusion and exclusion criteria.",
   },
   {
     icon: "📑",
     title: "Review criteria evidence",
+    text: "Inspect criterion-level matches, supporting evidence, and rationale behind the recommendation.",
   },
   {
     icon: "✅",
     title: "Approve or reject case",
+    text: "Make a final decision or request additional review for borderline or ambiguous cases.",
   },
 ];
 
@@ -105,14 +110,16 @@ const metrics = [
   "False positive / false negative rate",
 ];
 
+function InlineIcon({ children }: { children: string }) {
+  return <span className="clinical-playbook-inline-icon">{children}</span>;
+}
+
 export default function ClinicalTrialPMPlaybook() {
   return (
     <div className="description-layout clinical-playbook">
       <section className="description-hero card clinical-playbook-hero">
         <div className="clinical-playbook-title-row">
-          <div className="clinical-playbook-icon clinical-playbook-icon-large">
-            📖
-          </div>
+          <InlineIcon>📖</InlineIcon>
 
           <div>
             <div className="description-kicker">PM Playbook</div>
@@ -128,7 +135,7 @@ export default function ClinicalTrialPMPlaybook() {
         <div className="clinical-playbook-highlight-grid">
           {highlightCards.map((card) => (
             <div key={card.label} className="clinical-playbook-highlight-card">
-              <div className="clinical-playbook-icon">{card.icon}</div>
+              <InlineIcon>{card.icon}</InlineIcon>
               <div className="description-highlight-label">{card.label}</div>
             </div>
           ))}
@@ -143,7 +150,7 @@ export default function ClinicalTrialPMPlaybook() {
           >
             <div className="description-section-header">
               <div className="clinical-playbook-section-heading">
-                <div className="clinical-playbook-icon">{section.icon}</div>
+                <InlineIcon>{section.icon}</InlineIcon>
                 <div>
                   <div className="description-kicker">{section.eyebrow}</div>
                   <h3>{section.title}</h3>
@@ -165,7 +172,7 @@ export default function ClinicalTrialPMPlaybook() {
       <section className="description-section card clinical-playbook-card">
         <div className="description-section-header">
           <div className="clinical-playbook-section-heading">
-            <div className="clinical-playbook-icon">🧩</div>
+            <InlineIcon>🧩</InlineIcon>
             <div>
               <div className="description-kicker">Solution Design</div>
               <h3>Agent Architecture</h3>
@@ -178,17 +185,21 @@ export default function ClinicalTrialPMPlaybook() {
           </p>
         </div>
 
-        <div className="clinical-playbook-agent-flow">
+        <div className="clinical-playbook-agent-flow clinical-playbook-product-flow">
           {agentCards.map((agent, index) => (
             <div key={agent.title} className="clinical-playbook-flow-item">
-              <div className="clinical-playbook-agent-card">
-                <div className="clinical-playbook-icon">{agent.icon}</div>
-                <strong>{agent.title}</strong>
+              <div className="clinical-playbook-agent-card clinical-playbook-flow-card">
+                <div className="clinical-playbook-flow-title">
+                  <InlineIcon>{agent.icon}</InlineIcon>
+                  <strong>{agent.title}</strong>
+                </div>
                 <p>{agent.text}</p>
               </div>
 
               {index < agentCards.length - 1 ? (
-                <div className="clinical-playbook-arrow">→</div>
+                <div className="clinical-playbook-arrow" aria-hidden="true">
+                  →
+                </div>
               ) : null}
             </div>
           ))}
@@ -198,7 +209,7 @@ export default function ClinicalTrialPMPlaybook() {
       <section className="description-section card clinical-playbook-card">
         <div className="description-section-header">
           <div className="clinical-playbook-section-heading">
-            <div className="clinical-playbook-icon">🚀</div>
+            <InlineIcon>🚀</InlineIcon>
             <div>
               <div className="description-kicker">MVP</div>
               <h3>What This Demo Proves</h3>
@@ -211,19 +222,16 @@ export default function ClinicalTrialPMPlaybook() {
           </p>
         </div>
 
-        <div className="clinical-playbook-step-flow">
+        <div className="clinical-playbook-step-flow clinical-playbook-product-flow clinical-playbook-mvp-flow">
           {mvpSteps.map((step, index) => (
             <div key={step.title} className="clinical-playbook-flow-item">
-              <div className="clinical-playbook-step-card">
-                <div className="clinical-playbook-icon">{step.icon}</div>
-                <strong>
-                  {index + 1}. {step.title}
-                </strong>
+              <div className="clinical-playbook-step-card clinical-playbook-flow-card">
+                <div className="clinical-playbook-flow-title">
+                  <InlineIcon>{step.icon}</InlineIcon>
+                  <strong>{step.title}</strong>
+                </div>
+                <p>{step.text}</p>
               </div>
-
-              {index < mvpSteps.length - 1 ? (
-                <div className="clinical-playbook-arrow">→</div>
-              ) : null}
             </div>
           ))}
         </div>
@@ -233,7 +241,7 @@ export default function ClinicalTrialPMPlaybook() {
         <section className="description-section card clinical-playbook-card clinical-playbook-blue">
           <div className="description-section-header">
             <div className="clinical-playbook-section-heading">
-              <div className="clinical-playbook-icon">📊</div>
+              <InlineIcon>📊</InlineIcon>
               <div>
                 <div className="description-kicker">Metrics</div>
                 <h3>Success KPI Framework</h3>
@@ -256,7 +264,7 @@ export default function ClinicalTrialPMPlaybook() {
         <section className="description-section card clinical-playbook-card clinical-playbook-green">
           <div className="description-section-header">
             <div className="clinical-playbook-section-heading">
-              <div className="clinical-playbook-icon">🧪</div>
+              <InlineIcon>🧪</InlineIcon>
               <div>
                 <div className="description-kicker">Experimentation</div>
                 <h3>Validation Plan</h3>
@@ -275,7 +283,7 @@ export default function ClinicalTrialPMPlaybook() {
       <section className="description-section card clinical-playbook-card clinical-playbook-purple">
         <div className="description-section-header">
           <div className="clinical-playbook-section-heading">
-            <div className="clinical-playbook-icon">🔁</div>
+            <InlineIcon>🔁</InlineIcon>
             <div>
               <div className="description-kicker">Feedback Loop</div>
               <h3>Human-in-the-Loop Learning</h3>
@@ -294,7 +302,7 @@ export default function ClinicalTrialPMPlaybook() {
         <section className="description-section card clinical-playbook-card clinical-playbook-orange">
           <div className="description-section-header">
             <div className="clinical-playbook-section-heading">
-              <div className="clinical-playbook-icon">⚠️</div>
+              <InlineIcon>⚠️</InlineIcon>
               <div>
                 <div className="description-kicker">Risks</div>
                 <h3>Tradeoffs & Controls</h3>
@@ -313,7 +321,7 @@ export default function ClinicalTrialPMPlaybook() {
         <section className="description-section card clinical-playbook-card clinical-playbook-green">
           <div className="description-section-header">
             <div className="clinical-playbook-section-heading">
-              <div className="clinical-playbook-icon">💡</div>
+              <InlineIcon>💡</InlineIcon>
               <div>
                 <div className="description-kicker">Reflection</div>
                 <h3>PM Takeaway</h3>

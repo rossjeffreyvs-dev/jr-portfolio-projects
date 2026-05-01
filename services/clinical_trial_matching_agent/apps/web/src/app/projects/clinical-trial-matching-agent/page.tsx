@@ -5,8 +5,9 @@ import ChangeTrialModal from "@/components/clinical-trial-matching-agent/ChangeT
 import ClinicalTrialDashboard from "@/components/clinical-trial-matching-agent/ClinicalTrialDashboard";
 import ClinicalTrialPMPlaybook from "@/components/clinical-trial-matching-agent/ClinicalTrialPMPlaybook";
 import ClinicalTrialProjectDescription from "@/components/clinical-trial-matching-agent/ClinicalTrialProjectDescription";
-import ReviewCasePanel from "@/components/clinical-trial-matching-agent/ReviewCasePanel";
 import ProjectFooter from "@/components/clinical-trial-matching-agent/ProjectFooter";
+import ReviewCasePanel from "@/components/clinical-trial-matching-agent/ReviewCasePanel";
+import StandardHeader from "@/components/clinical-trial-matching-agent/StandardHeader";
 
 import { useClinicalTrialDashboard } from "@/hooks/useClinicalTrialDashboard";
 import { useState } from "react";
@@ -68,24 +69,7 @@ export default function ClinicalTrialProjectPage() {
 
   return (
     <div className="page-shell">
-      <header className="site-header">
-        <a href="https://www.jeffrey-ross.me/projects">
-          <div className="brand">
-            <div className="brand-mark">JR</div>
-            <div>Projects</div>
-          </div>
-        </a>
-
-        <nav className="top-nav">
-          <a href="https://www.jeffrey-ross.me">Home</a>
-          <a href="https://www.jeffrey-ross.me/projects" className="active">
-            Projects
-          </a>
-          <a href="https://www.jeffrey-ross.me/blog">Blog</a>
-          <a href="https://www.jeffrey-ross.me/about">About</a>
-          <a href="https://www.jeffrey-ross.me/contact">Contact</a>
-        </nav>
-      </header>
+      <StandardHeader />
 
       <main className="container">
         <section className="hero">
@@ -214,6 +198,7 @@ export default function ClinicalTrialProjectPage() {
           </>
         )}
       </main>
+
       <ProjectFooter projectName="Clinical Trial Patient Matching Agent" />
     </div>
   );

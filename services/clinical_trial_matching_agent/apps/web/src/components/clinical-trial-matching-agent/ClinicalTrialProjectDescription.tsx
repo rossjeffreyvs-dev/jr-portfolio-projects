@@ -72,34 +72,34 @@ const DESCRIPTION_CONTENT: {
   ],
   howItWorks: [
     {
-      step: "1. Patient Selection",
+      step: "Patient Selection",
       title: "Patient Selection",
       description:
         "A patient is selected from the active trial’s eligible population.",
       icon: "users",
     },
     {
-      step: "2. Eligibility Evaluation",
+      step: "Eligibility Evaluation",
       title: "Eligibility Evaluation",
       description:
         "Agents evaluate patient data against inclusion and exclusion criteria.",
       icon: "clipboard",
     },
     {
-      step: "3. Recommendation",
+      step: "Recommendation",
       title: "Recommendation",
       description:
         "A recommendation with rationale and confidence is generated.",
       icon: "sparkles",
     },
     {
-      step: "4. Evidence Review",
+      step: "Evidence Review",
       title: "Evidence Review",
       description: "Criteria-level evidence is presented for transparency.",
       icon: "target",
     },
     {
-      step: "5. Human Review",
+      step: "Human Review",
       title: "Human Review",
       description: "Reviewers approve, reject, or request more information.",
       icon: "users",
@@ -197,105 +197,25 @@ const DESCRIPTION_CONTENT: {
 };
 
 function SectionIcon({ name }: { name: IconName }) {
+  const icons: Record<IconName, string> = {
+    workflow: "🧭",
+    shield: "🛡️",
+    clipboard: "📋",
+    users: "👥",
+    target: "🎯",
+    problem: "?",
+    solution: "✓",
+    overview: "📄",
+    architecture: "🏗️",
+    sparkles: "✨",
+  };
+
   return (
-    <span className="description-icon" aria-hidden="true">
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.9"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        {name === "workflow" ? (
-          <>
-            <path d="M12 5v4" />
-            <path d="M6 19v-4" />
-            <path d="M18 19v-4" />
-            <path d="M12 9H7a1 1 0 0 0-1 1v1" />
-            <path d="M12 9h5a1 1 0 0 1 1 1v1" />
-            <rect x="9" y="3" width="6" height="4" rx="1.5" />
-            <rect x="3" y="15" width="6" height="6" rx="1.5" />
-            <rect x="15" y="15" width="6" height="6" rx="1.5" />
-          </>
-        ) : null}
-
-        {name === "shield" ? (
-          <path d="M12 3l7 3v5c0 5-3.5 8-7 10-3.5-2-7-5-7-10V6l7-3z" />
-        ) : null}
-
-        {name === "clipboard" ? (
-          <>
-            <rect x="6" y="5" width="12" height="16" rx="2" />
-            <path d="M9 5.5h6V4a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v1.5z" />
-            <path d="M9 11h6" />
-            <path d="M9 15h6" />
-          </>
-        ) : null}
-
-        {name === "users" ? (
-          <>
-            <path d="M16 20v-1a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v1" />
-            <circle cx="10" cy="8" r="3" />
-            <path d="M20 20v-1a3 3 0 0 0-2-2.83" />
-            <path d="M16 5.13a3 3 0 0 1 0 5.74" />
-          </>
-        ) : null}
-
-        {name === "target" ? (
-          <>
-            <circle cx="12" cy="12" r="7" />
-            <circle cx="12" cy="12" r="3" />
-            <path d="M12 2v3" />
-            <path d="M12 19v3" />
-            <path d="M2 12h3" />
-            <path d="M19 12h3" />
-          </>
-        ) : null}
-
-        {name === "problem" ? (
-          <>
-            <circle cx="12" cy="12" r="9" />
-            <path d="M9.5 9a2.5 2.5 0 1 1 4.2 1.8c-.8.8-1.2 1.2-1.2 2.2" />
-            <circle cx="12" cy="17" r=".8" fill="currentColor" stroke="none" />
-          </>
-        ) : null}
-
-        {name === "solution" ? (
-          <>
-            <circle cx="12" cy="12" r="9" />
-            <path d="m8.5 12 2.2 2.2 4.8-5" />
-          </>
-        ) : null}
-
-        {name === "overview" ? (
-          <>
-            <path d="M7 3h7l3 3v15H7z" />
-            <path d="M14 3v4h4" />
-            <path d="M10 12h4" />
-            <path d="M10 16h4" />
-          </>
-        ) : null}
-
-        {name === "architecture" ? (
-          <>
-            <rect x="3" y="4" width="18" height="4" rx="1.5" />
-            <rect x="3" y="10" width="18" height="4" rx="1.5" />
-            <rect x="3" y="16" width="18" height="4" rx="1.5" />
-            <path d="M7 8v2" />
-            <path d="M12 14v2" />
-            <path d="M17 8v2" />
-          </>
-        ) : null}
-
-        {name === "sparkles" ? (
-          <>
-            <path d="m12 4 1.8 4.2L18 10l-4.2 1.8L12 16l-1.8-4.2L6 10l4.2-1.8L12 4z" />
-            <path d="M19 4v3" />
-            <path d="M20.5 5.5h-3" />
-          </>
-        ) : null}
-      </svg>
+    <span
+      className={`description-icon description-icon-${name}`}
+      aria-hidden="true"
+    >
+      {icons[name]}
     </span>
   );
 }
@@ -372,13 +292,12 @@ export default function ClinicalTrialProjectDescription() {
           {DESCRIPTION_CONTENT.howItWorks.map((item, index) => (
             <div key={item.step} className="description-step-flow-item">
               <div className="description-step-card">
-                <div className="description-step-title">{item.step}</div>
-                <div className="description-step-icon-wrap">
+                <div className="description-step-title">
                   <SectionIcon name={item.icon} />
+                  <span>{item.step.replace(/^\d+\.\s*/, "")}</span>
                 </div>
                 <p>{item.description}</p>
               </div>
-
               {index < DESCRIPTION_CONTENT.howItWorks.length - 1 ? (
                 <div className="description-step-arrow" aria-hidden="true">
                   →
@@ -429,14 +348,22 @@ export default function ClinicalTrialProjectDescription() {
           <div className="description-agent-flow">
             {DESCRIPTION_CONTENT.workflowAgents.map((agent, index) => (
               <div key={agent.title} className="description-agent-flow-item">
-                <div className={`description-agent-card tone-${agent.tone}`}>
+                <div className="description-step-card">
+                  <div className="description-step-title">
+                    <SectionIcon name={agent.icon} />
+                    <span>{agent.title}</span>
+                  </div>
+                  <p>{agent.description}</p>
+                </div>
+
+                {/* <div className={`description-agent-card tone-${agent.tone}`}>
                   <div className="description-agent-card-icon">
                     <SectionIcon name={agent.icon} />
                   </div>
                   <div className="description-agent-title">{agent.title}</div>
                   <p>{agent.description}</p>
                 </div>
-
+ */}
                 {index < DESCRIPTION_CONTENT.workflowAgents.length - 1 ? (
                   <div className="description-step-arrow" aria-hidden="true">
                     →
