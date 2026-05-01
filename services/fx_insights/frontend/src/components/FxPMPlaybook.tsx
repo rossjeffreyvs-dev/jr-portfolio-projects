@@ -1,9 +1,31 @@
-const PLAYBOOK_CONTENT = {
+type PlaybookAgent = {
+  index: string;
+  icon: string;
+  title: string;
+  text: string;
+};
+
+type MvpStep = {
+  index: string;
+  icon: string;
+  title: string;
+  description: string;
+};
+
+const PLAYBOOK_CONTENT: {
+  highlights: { icon: string; label: string }[];
+  discovery: string[];
+  strategy: string[];
+  architecture: PlaybookAgent[];
+  mvpSteps: MvpStep[];
+  metrics: string[];
+  risks: string[];
+} = {
   highlights: [
-    "Discovery-led market workflow framing",
-    "MVP scope and report generation loop",
-    "Streaming UX and trust-building interaction design",
-    "Financial-services platform fit",
+    { icon: "🔎", label: "Discovery-led market workflow framing" },
+    { icon: "🧪", label: "MVP scope and report generation loop" },
+    { icon: "⚡", label: "Streaming UX and trust-building interaction design" },
+    { icon: "🏦", label: "Financial-services platform fit" },
   ],
   discovery: [
     "FX users need faster ways to convert market movement and headlines into concise commentary.",
@@ -17,32 +39,72 @@ const PLAYBOOK_CONTENT = {
   ],
   architecture: [
     {
+      index: "01",
+      icon: "📈",
       title: "Rate Retrieval Agent",
       text: "Fetches current FX rates for selected base and quote currencies.",
     },
     {
+      index: "02",
+      icon: "📰",
       title: "Market News Agent",
       text: "Retrieves current headlines for selected countries or market regions.",
     },
     {
+      index: "03",
+      icon: "✨",
       title: "Insight Synthesis Agent",
       text: "Combines rate movement and qualitative context into a concise interpretation.",
     },
     {
+      index: "04",
+      icon: "✉️",
       title: "Report Generation Agent",
       text: "Formats the insight as a client-ready market summary.",
     },
     {
+      index: "05",
+      icon: "👤",
       title: "Review Layer",
       text: "Keeps the generated commentary visible, editable, and reviewable before use.",
     },
   ],
   mvpSteps: [
-    "Select base currency, quote currencies, and countries",
-    "Retrieve FX rates and market headlines",
-    "Stream generation progress to the UI",
-    "Produce client-ready commentary",
-    "Review and refine output",
+    {
+      index: "01",
+      icon: "🌐",
+      title: "Select market inputs",
+      description:
+        "Choose base currency, quote currencies, and countries for market context.",
+    },
+    {
+      index: "02",
+      icon: "📊",
+      title: "Retrieve market data",
+      description:
+        "Collect FX rates and recent headlines from the workflow service.",
+    },
+    {
+      index: "03",
+      icon: "⚡",
+      title: "Stream progress",
+      description:
+        "Show stage-level progress while external data and AI generation run.",
+    },
+    {
+      index: "04",
+      icon: "📝",
+      title: "Generate commentary",
+      description:
+        "Produce a concise client-ready market narrative grounded in retrieved context.",
+    },
+    {
+      index: "05",
+      icon: "✅",
+      title: "Review output",
+      description:
+        "Let the analyst review, refine, and decide whether the summary is usable.",
+    },
   ],
   metrics: [
     "Time to generate first usable market summary",
@@ -62,7 +124,7 @@ const PLAYBOOK_CONTENT = {
 export default function FxPMPlaybook() {
   return (
     <div className="project-description pm-playbook">
-      <section className="description-card overview-card">
+      <section className="description-card overview-card pm-overview-card">
         <p className="description-eyebrow">PM Playbook</p>
         <h2>AI FX Market Intelligence</h2>
         <p className="description-lede">
@@ -72,8 +134,11 @@ export default function FxPMPlaybook() {
 
         <div className="description-highlight-grid playbook-highlight-grid">
           {PLAYBOOK_CONTENT.highlights.map((item) => (
-            <div className="description-highlight" key={item}>
-              <span>{item}</span>
+            <div className="description-highlight" key={item.label}>
+              <span className="playbook-pill-icon" aria-hidden="true">
+                {item.icon}
+              </span>
+              <span>{item.label}</span>
             </div>
           ))}
         </div>
@@ -109,10 +174,16 @@ export default function FxPMPlaybook() {
           black-box AI response.
         </p>
 
-        <div className="agent-grid playbook-agent-grid">
+        <div className="fx-playbook-flow">
           {PLAYBOOK_CONTENT.architecture.map((agent) => (
-            <article className="agent-card agent-blue" key={agent.title}>
-              <h4>{agent.title}</h4>
+            <article className="fx-playbook-flow-card" key={agent.title}>
+              <span className="fx-step-index">{agent.index}</span>
+              <div className="fx-playbook-flow-title">
+                <span className="playbook-pill-icon" aria-hidden="true">
+                  {agent.icon}
+                </span>
+                <strong>{agent.title}</strong>
+              </div>
               <p>{agent.text}</p>
             </article>
           ))}
@@ -127,19 +198,18 @@ export default function FxPMPlaybook() {
           AI-assisted FX briefing workflow.
         </p>
 
-        <div className="workflow-step-grid">
-          {PLAYBOOK_CONTENT.mvpSteps.map((step, index) => (
-            <div className="workflow-step-pair" key={step}>
-              <article className="workflow-step-card">
-                <p>
-                  {index + 1}. {step}
-                </p>
-                <h4>{step}</h4>
-              </article>
-              {index < PLAYBOOK_CONTENT.mvpSteps.length - 1 ? (
-                <div className="workflow-arrow">→</div>
-              ) : null}
-            </div>
+        <div className="fx-mvp-grid">
+          {PLAYBOOK_CONTENT.mvpSteps.map((step) => (
+            <article className="fx-mvp-card" key={step.title}>
+              <span className="fx-step-index">{step.index}</span>
+              <div className="fx-playbook-flow-title">
+                <span className="playbook-pill-icon" aria-hidden="true">
+                  {step.icon}
+                </span>
+                <strong>{step.title}</strong>
+              </div>
+              <p>{step.description}</p>
+            </article>
           ))}
         </div>
       </section>
@@ -166,7 +236,7 @@ export default function FxPMPlaybook() {
         </article>
       </section>
 
-      <section className="demo-note-card">
+      <section className="demo-note-card portfolio-signal-card">
         <div>
           <p>Portfolio signal</p>
           <h3>

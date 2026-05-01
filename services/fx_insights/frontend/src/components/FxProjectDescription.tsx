@@ -371,13 +371,19 @@ export default function FxProjectDescription() {
           description="A high-level view of the simulated workflow from market inputs to client report."
         />
 
-        <div className="workflow-step-grid">
+        <div className="workflow-step-grid fx-workflow-grid">
           {DESCRIPTION_CONTENT.howItWorks.map((step, index) => (
             <div className="workflow-step-pair" key={step.step}>
-              <article className="workflow-step-card">
-                <p>{step.step}</p>
-                <SectionIcon name={step.icon} />
-                <h4>{step.title}</h4>
+              <article className="workflow-step-card fx-workflow-card">
+                <span className="workflow-step-index">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+
+                <div className="workflow-step-title-row">
+                  <SectionIcon name={step.icon} />
+                  <h4>{step.title}</h4>
+                </div>
+
                 <span>{step.description}</span>
               </article>
 

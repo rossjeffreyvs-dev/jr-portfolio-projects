@@ -35,7 +35,7 @@ export default function App() {
   }
 
   return (
-    <div className="app-shell">
+    <div className="app-shell fx-page">
       <StandardHeader />
 
       <ProjectHero
