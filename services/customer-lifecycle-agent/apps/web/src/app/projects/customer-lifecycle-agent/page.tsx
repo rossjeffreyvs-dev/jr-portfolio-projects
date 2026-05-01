@@ -1,19 +1,17 @@
-import StandardHeader from "./components/StandardHeader";
+import ProjectFooter from "./components/ProjectFooter";
 import ProjectHero from "./components/ProjectHero";
 import ProjectTabs from "./components/ProjectTabs";
-import ProjectFooter from "./components/ProjectFooter";
+import StandardHeader from "./components/StandardHeader";
 
-export default function CustomerLifecycleAgentPage() {
+export default function TrainJazzPage() {
   return (
-    <>
+    <div className="project-shell">
       <StandardHeader />
-
-      <main className="page-shell">
+      <main className="project-main">
         <ProjectHero />
         <ProjectTabs />
       </main>
-
-      <ProjectFooter projectName="Customer Lifecycle Agent" />
-    </>
+      <ProjectFooter projectName="Train Jazz Agent" />
+    </div>
   );
 }
