@@ -11,7 +11,7 @@ export default function TrainJazzPage() {
         <ProjectHero />
         <ProjectTabs />
       </main>
-      <ProjectFooter projectName="Train Jazz Agent" />
+      <ProjectFooter projectName="Agentic Customer Lifecycle Platform" />
     </div>
   );
 }

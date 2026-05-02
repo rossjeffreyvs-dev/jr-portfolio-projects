@@ -1,3 +1,57 @@
+import Panel from "./Panel";
+import FeatureListGrid from "./FeatureListGrid";
+import ArchitectureGrid from "./ArchitectureGrid";
+
+const workflowSteps = [
+  { icon: "⚡", label: "Prospect Ingested" },
+  { icon: "🎯", label: "Fit Evaluated" },
+  { icon: "🧭", label: "Stage Classified" },
+  { icon: "👤", label: "Blocker Reviewed" },
+  { icon: "💰", label: "Revenue Updated" },
+];
+
+const architectureItems = [
+  {
+    eyebrow: "Frontend",
+    title: "Next.js / React",
+    description:
+      "Demo tabs, live prospect feed, revenue funnel, activity stream, blocker review queue, and explainability panels.",
+  },
+  {
+    eyebrow: "API layer",
+    title: "FastAPI lifecycle service",
+    description:
+      "Provides lifecycle summary, prospect ingestion, and human review actions for convert, request information, and reject decisions.",
+  },
+  {
+    eyebrow: "Data layer",
+    title: "Structured lifecycle data",
+    description:
+      "Models prospects, funnel stages, review queue, estimated value, revenue realized, revenue at risk, and recommended actions.",
+  },
+  {
+    eyebrow: "Agent layer",
+    title: "Signal and decision agents",
+    description:
+      "Simulates lifecycle agents for prospect evaluation, activation, personalization, experimentation, revenue optimization, and retention.",
+  },
+];
+
+const agents = [
+  "Ingestion Agent: detects new prospect activity and adds it to the lifecycle funnel.",
+  "Evaluation Agent: scores fit, classifies stage, and estimates potential value.",
+  "Revenue Agent: identifies blocked revenue and prioritizes the highest-value action.",
+  "Review Agent: keeps humans involved for conversion,rejection, or follow-up decisions.",
+];
+
+const results = [
+  "Connects product signals to revenue outcomes.",
+  "Explains why each prospect matters before action is taken.",
+  "Shows where conversion is blocked and what decision is needed.",
+  "Demonstrates a human-in-the-loop pattern for revenue-impacting actions.",
+  "Creates a reusable foundation for CRM, product analytics, billing, support, and customer success integrations.",
+];
+
 export default function ProjectDescription() {
   return (
     <div className="content-grid">
@@ -9,11 +63,9 @@ export default function ProjectDescription() {
         <p>
           This demo models a revenue-focused lifecycle platform where agents
           monitor incoming prospects, product-led signals, activation
-          milestones, review blockers, and conversion outcomes.
-        </p>
-        <p>
-          The system shows how an operator can move from signal detection to
-          explanation, human decision, and measurable revenue impact.
+          milestones, review blockers, and conversion outcomes. The system shows
+          how an operator can move from signal detection to explanation, human
+          decision, and measurable revenue impact.
         </p>
 
         <div className="insight-strip">
@@ -40,12 +92,10 @@ export default function ProjectDescription() {
         </div>
       </section>
 
-      <section className="panel panel-accent-orange">
-        <p className="section-label">Problem</p>
-        <h2 className="panel-heading-icon">
-          <span>?</span>
-          Revenue leaks between interest and conversion
-        </h2>
+      <Panel
+        eyebrow="Problem"
+        title="Revenue leaks between interest and conversion"
+      >
         <p>
           Growth, developer experience, sales, and customer success teams often
           have signals spread across analytics, CRM, support, billing,
@@ -55,14 +105,9 @@ export default function ProjectDescription() {
           High-value prospects can stall because a technical review, security
           question, product activation gap, or commercial blocker is unresolved.
         </p>
-      </section>
+      </Panel>
 
-      <section className="panel panel-accent-green">
-        <p className="section-label">Solution</p>
-        <h2 className="panel-heading-icon">
-          <span>✓</span>
-          Signal → explanation → action → revenue
-        </h2>
+      <Panel eyebrow="Solution" title="Signal → explanation → action → revenue">
         <p>
           The platform simulates a lifecycle intelligence layer that turns
           prospect and customer signals into recommended actions. It evaluates
@@ -73,127 +118,36 @@ export default function ProjectDescription() {
           Each blocked prospect includes a rationale, estimated value, and
           recommended next step so an operator understands what to do and why.
         </p>
-      </section>
+      </Panel>
 
-      <section className="panel wide">
-        <p className="section-label">How It Works</p>
-        <h2 className="panel-heading-icon">
-          <span>↗</span>
-          Revenue lifecycle workflow
-        </h2>
+      <Panel
+        eyebrow="How It Works"
+        title="Revenue lifecycle workflow"
+        body="New prospects enter from simulated channels such as product-led signup, referrals, outbound, developer community, or inbound demo requests. The system evaluates fit, estimates revenue potential, determines whether human review is required, and updates funnel metrics in real time."
+        wide
+      >
+        <FeatureListGrid items={workflowSteps} />
+      </Panel>
 
-        <div className="flow-row icon-flow-row">
-          <span>⚡ Prospect Ingested</span>
-          <span>🎯 Fit Evaluated</span>
-          <span>🧭 Stage Classified</span>
-          <span>👤 Blocker Reviewed</span>
-          <span>💰 Revenue Updated</span>
-        </div>
+      <Panel
+        eyebrow="System architecture"
+        title="Frontend, API, data model, and agent workflow"
+        wide
+      >
+        <ArchitectureGrid items={architectureItems} />
+      </Panel>
 
-        <p>
-          New prospects enter from simulated channels such as product-led
-          signup, referrals, outbound, developer community, or inbound demo
-          requests. The system evaluates fit, estimates revenue potential,
-          determines whether human review is required, and updates funnel
-          metrics in real time.
-        </p>
-      </section>
+      <Panel
+        eyebrow="Agent Workflow"
+        title="Multi-agent operating model"
+        bullets={agents}
+      />
 
-      <section className="panel wide">
-        <p className="section-label">System Architecture</p>
-        <h2 className="panel-heading-icon">
-          <span>▦</span>
-          Frontend, API, lifecycle data model, and agent workflow
-        </h2>
-
-        <div className="content-grid">
-          <article className="project-card project-card-accent">
-            <p className="section-label">Frontend</p>
-            <h2>🖥️ Next.js / React</h2>
-            <p>
-              Demo tabs, live prospect feed, revenue funnel, activity stream,
-              blocker review queue, and explainability panels.
-            </p>
-          </article>
-
-          <article className="project-card project-card-accent">
-            <p className="section-label">API Layer</p>
-            <h2>🔌 FastAPI lifecycle service</h2>
-            <p>
-              Provides lifecycle summary, prospect ingestion, and human review
-              actions for convert, request information, and reject decisions.
-            </p>
-          </article>
-
-          <article className="project-card project-card-accent">
-            <p className="section-label">Data Layer</p>
-            <h2>🧱 Structured lifecycle data</h2>
-            <p>
-              Models prospects, funnel stages, review queue, estimated value,
-              revenue realized, revenue at risk, and recommended actions.
-            </p>
-          </article>
-
-          <article className="project-card project-card-accent">
-            <p className="section-label">Agent Layer</p>
-            <h2>🤖 Signal and decision agents</h2>
-            <p>
-              Simulates lifecycle agents for prospect evaluation, activation,
-              personalization, experimentation, revenue optimization, and
-              retention.
-            </p>
-          </article>
-        </div>
-      </section>
-
-      <section className="panel panel-accent-purple">
-        <p className="section-label">Agent Workflow</p>
-        <h2 className="panel-heading-icon">
-          <span>◎</span>
-          Multi-agent operating model
-        </h2>
-        <ul className="playbook-list icon-list">
-          <li>
-            <strong>Ingestion Agent:</strong> detects new prospect activity and
-            adds it to the lifecycle funnel.
-          </li>
-          <li>
-            <strong>Evaluation Agent:</strong> scores fit, classifies stage, and
-            estimates potential value.
-          </li>
-          <li>
-            <strong>Revenue Agent:</strong> identifies blocked revenue and
-            prioritizes the highest-value action.
-          </li>
-          <li>
-            <strong>Review Agent:</strong> keeps humans involved for conversion,
-            rejection, or follow-up decisions.
-          </li>
-        </ul>
-      </section>
-
-      <section className="panel panel-accent-green">
-        <p className="section-label">Results & Impact</p>
-        <h2 className="panel-heading-icon">
-          <span>✓</span>
-          What the demo proves
-        </h2>
-        <ul className="playbook-list icon-list">
-          <li>Connects product signals to revenue outcomes.</li>
-          <li>Explains why each prospect matters before action is taken.</li>
-          <li>
-            Shows where conversion is blocked and what decision is needed.
-          </li>
-          <li>
-            Demonstrates a human-in-the-loop pattern for revenue-impacting
-            actions.
-          </li>
-          <li>
-            Creates a reusable foundation for CRM, product analytics, billing,
-            support, and customer success integrations.
-          </li>
-        </ul>
-      </section>
+      <Panel
+        eyebrow="Results & Impact"
+        title="What the demo proves"
+        bullets={results}
+      />
     </div>
   );
 }

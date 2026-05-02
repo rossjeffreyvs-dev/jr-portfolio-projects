@@ -259,6 +259,21 @@ a {
   color: #64748b;
 }
 
+.project-main {
+  width: 100%;
+}
+
+.project-tabs-shell,
+.tab-panel {
+  width: min(var(--page-max), calc(100% - (var(--page-pad) * 2)));
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.tab-panel {
+  padding-bottom: 72px;
+}
+
 /* ------------------ */
 /* Tabs               */
 /* ------------------ */
@@ -331,11 +346,18 @@ a {
 }
 
 .section-label {
-  margin: 0 0 10px;
+  /* margin: 0 0 10px;
   color: #64748b;
   font-size: 0.76rem;
   font-weight: 800;
   letter-spacing: 0.06em;
+  text-transform: uppercase; */
+
+  margin: 0 0 0px; /* tighter */
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
@@ -1875,5 +1897,249 @@ a {
 
   .project-footer-bottom {
     text-align: left;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* UI Primitive: Panel (Final)                                                 */
+/* -------------------------------------------------------------------------- */
+
+.ui-panel {
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 28px;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.05);
+  padding: 28px;
+}
+
+.ui-panel-wide {
+  grid-column: 1 / -1;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Eyebrow                                                                    */
+/* -------------------------------------------------------------------------- */
+
+.ui-panel .ui-eyebrow {
+  margin: 0 0 4px; /* tighter */
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Title                                                                       */
+/* -------------------------------------------------------------------------- */
+
+.ui-panel .ui-panel-title {
+  margin: 0 0 8px; /* tighter */
+  color: #2a2220;
+  font-size: 1.2rem;
+  line-height: 1.28;
+  font-weight: 800; /* slightly softer than before */
+  letter-spacing: -0.018em;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Body                                                                        */
+/* -------------------------------------------------------------------------- */
+
+.ui-panel .ui-panel-body {
+  margin: 0;
+  color: #52637a; /* softer than #43536b */
+  font-size: 0.98rem;
+  line-height: 1.7;
+}
+
+/* -------------------------------------------------------------------------- */
+/* List (matches your preferred bottom style)                                  */
+/* -------------------------------------------------------------------------- */
+
+.ui-panel .ui-clean-list {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.ui-panel .ui-panel-body {
+  font-size: 0.85rem;
+  line-height: 1.55; /* key change */
+  color: #52637a;
+}
+
+.ui-panel .ui-clean-list li {
+  position: relative;
+  padding-left: 22px;
+  color: #52637a;
+  font-size: 0.85rem;
+  line-height: 1.5; /* slightly tighter than paragraph */
+}
+
+.ui-panel .ui-clean-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.48em;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #94a3b8;
+}
+
+/* Optional: slightly stronger emphasis labels */
+.ui-panel .ui-clean-list strong {
+  color: #334155;
+  font-weight: 700;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Content spacing                                                             */
+/* -------------------------------------------------------------------------- */
+
+.ui-panel .ui-panel-content {
+  margin-top: 16px; /* reduced from 24 */
+}
+
+.ui-panel .ui-panel-content p {
+  margin: 0 0 10px;
+  color: #52637a;
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
+.ui-panel .ui-panel-content p:last-child {
+  margin-bottom: 0;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Responsive                                                                  */
+/* -------------------------------------------------------------------------- */
+
+@media (max-width: 700px) {
+  .ui-panel {
+    padding: 1.15rem;
+    border-radius: 1.25rem;
+  }
+
+  .ui-panel .ui-panel-title {
+    font-size: 1.1rem;
+  }
+}
+
+.ui-disclaimer {
+  margin: 24px 0 32px;
+  padding: 12px 16px;
+  border-radius: 999px;
+
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+
+  color: #64748b;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.ui-feature-list-grid {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.ui-feature-list-grid-5 {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.ui-feature-list-grid-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.ui-feature-list-card {
+  min-height: 76px;
+  padding: 18px;
+  border: 1px solid #dbe3ef;
+  border-radius: 20px;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #0f172a;
+  font-size: 0.95rem;
+  font-weight: 850;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.ui-feature-list-icon {
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+@media (max-width: 1100px) {
+  .ui-feature-list-grid-5,
+  .ui-feature-list-grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .ui-feature-list-grid-5,
+  .ui-feature-list-grid-4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* grid */
+.ui-architecture-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+  margin-top: 18px;
+}
+
+/* card */
+.ui-architecture-card {
+  padding: 22px;
+  border: 1px solid #dbe3ef;
+  border-radius: 22px;
+  background: #f8fafc;
+}
+
+/* eyebrow */
+.ui-architecture-eyebrow {
+  margin: 0 0 6px;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+/* title */
+.ui-architecture-title {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+  font-weight: 850;
+  color: #0f172a;
+  line-height: 1.25;
+}
+
+/* body */
+.ui-architecture-body {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: #52637a;
+}
+
+/* responsive */
+@media (max-width: 900px) {
+  .ui-architecture-grid {
+    grid-template-columns: 1fr;
   }
 }

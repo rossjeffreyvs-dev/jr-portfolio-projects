@@ -1,7 +1,85 @@
+import Panel from "./Panel";
+import FeatureListGrid from "./FeatureListGrid";
+import ArchitectureGrid from "./ArchitectureGrid";
+
+const users = [
+  "Buyer: Head of Product, Growth, Revenue, Developer Experience, or Customer Success.",
+  "Primary users:</strong> customer success managers, growth operators, solutions engineers, and lifecycle PMs.",
+  "Business need:</strong> improve conversion, activation, retention, and expansion from existing customer signals.",
+];
+
+const workflowSteps = [
+  { icon: "📡", label: "Signal ingestion" },
+  { icon: "🎯", label: "Fit evaluation" },
+  { icon: "💰", label: "Revenue risk queue" },
+  { icon: "👤", label: "Human review" },
+  { icon: "📈", label: "Outcome tracking" },
+];
+
+const validations = [
+  "Which signals best predict conversion or activation?",
+  "Which blockers most often delay revenue?",
+  "Which actions should be automated vs. human-reviewed?",
+  "How much explanation does an operator need before acting?",
+  "What outcome proves the recommendation was useful?",
+];
+
+const metrics = [
+  "Prospect-to-qualified conversion rate",
+  "Qualified-to-evaluated conversion rate",
+  "Review queue resolution time",
+  "Revenue at risk reduced",
+  "Revenue realized from reviewed opportunities",
+  "Operator trust in recommendation rationale",
+];
+
+const architectureItems = [
+  {
+    eyebrow: "Product Analytics",
+    title: "Usage signals",
+    description:
+      "Events from Segment, Amplitude, Mixpanel, or internal logs to detect onboarding progress, activation gaps, and usage momentum.",
+  },
+  {
+    eyebrow: "CRM",
+    title: "Account context",
+    description:
+      "Salesforce or HubSpot data for account owner, stage, segment, opportunity value, sales motion, and follow-up ownership.",
+  },
+  {
+    eyebrow: "Support + Success",
+    title: "Blocker context",
+    description:
+      "Zendesk, Intercom, or Gainsight signals to identify unresolved questions, implementation friction, or customer health risk.",
+  },
+  {
+    eyebrow: "Workflow",
+    title: "Action routing",
+    description:
+      "Slack, email, task management, or internal review queues to assign the next best action to a human owner.",
+  },
+];
+
+const risks = [
+  "Revenue-impacting conversion or rejection decisions",
+  "Enterprise account escalation",
+  "Security, legal, or compliance blockers",
+  "Low-confidence model recommendations",
+  "Actions that directly affect customer communication",
+];
+
+const iterations = [
+  "Add feedback loops from accepted and rejected recommendations.",
+  "Compare agent-suggested actions against control groups.",
+  "Add confidence scoring and reason-code analytics.",
+  "Support account-specific playbooks by segment and lifecycle stage.",
+  "Connect outcomes back to product analytics and CRM revenue data.",
+];
+
 export default function PMPlaybook() {
   return (
     <div className="content-grid">
-      <section className="panel wide panel-accent-purple">
+      <section className="panel wide panel-accent-blue">
         <p className="section-label">PM Playbook</p>
         <h2 className="feature-title">How I would productize this platform</h2>
         <p>
@@ -35,34 +113,13 @@ export default function PMPlaybook() {
         </div>
       </section>
 
-      <section className="panel panel-accent-blue">
-        <p className="section-label">Buyer & User</p>
-        <h2 className="panel-heading-icon">
-          <span>👥</span>
-          Who this is for
-        </h2>
-        <ul className="playbook-list icon-list">
-          <li>
-            <strong>Buyer:</strong> Head of Product, Growth, Revenue, Developer
-            Experience, or Customer Success.
-          </li>
-          <li>
-            <strong>Primary users:</strong> customer success managers, growth
-            operators, solutions engineers, and lifecycle PMs.
-          </li>
-          <li>
-            <strong>Business need:</strong> improve conversion, activation,
-            retention, and expansion from existing customer signals.
-          </li>
-        </ul>
-      </section>
+      <Panel
+        eyebrow="Agent Workflow"
+        title="Multi-agent operating model"
+        bullets={users}
+      />
 
-      <section className="panel panel-accent-green">
-        <p className="section-label">Product Strategy</p>
-        <h2 className="panel-heading-icon">
-          <span>🎯</span>
-          Primary product bet
-        </h2>
+      <Panel eyebrow="Product Strategy" title="Primary product bet">
         <p>
           The core bet is that revenue teams do not just need more dashboards;
           they need an explainable action layer that converts signals into
@@ -72,142 +129,50 @@ export default function PMPlaybook() {
           The product should show which opportunities are valuable, why they are
           blocked, and what action is most likely to move them forward.
         </p>
-      </section>
+      </Panel>
 
-      <section className="panel wide">
-        <p className="section-label">MVP Scope</p>
-        <h2 className="panel-heading-icon">
-          <span>▦</span>
-          What I would build first
-        </h2>
-
-        <div className="flow-row icon-flow-row">
-          <span>📡 Signal ingestion</span>
-          <span>🎯 Fit evaluation</span>
-          <span>💰 Revenue risk queue</span>
-          <span>👤 Human review</span>
-          <span>📈 Outcome tracking</span>
-        </div>
-
-        <p>
-          The first version should focus on one high-value workflow: identifying
+      <Panel
+        eyebrow="MVP Scope"
+        title="What I would build first"
+        body="The first version should focus on one high-value workflow: identifying
           prospects or customers stuck before conversion and routing them to a
-          clear human decision. Everything else should support that loop.
-        </p>
-      </section>
+          clear human decision. Everything else should support that loop."
+        wide
+      >
+        <FeatureListGrid items={workflowSteps} />
+      </Panel>
 
-      <section className="panel panel-accent-orange">
-        <p className="section-label">Key PM Questions</p>
-        <h2 className="panel-heading-icon">
-          <span>?</span>
-          What to validate
-        </h2>
-        <ul className="playbook-list icon-list">
-          <li>Which signals best predict conversion or activation?</li>
-          <li>Which blockers most often delay revenue?</li>
-          <li>Which actions should be automated vs. human-reviewed?</li>
-          <li>How much explanation does an operator need before acting?</li>
-          <li>What outcome proves the recommendation was useful?</li>
-        </ul>
-      </section>
+      <Panel
+        eyebrow="Key PM Questions"
+        title="What to validate"
+        bullets={validations}
+      />
 
-      <section className="panel panel-accent-green">
-        <p className="section-label">Evaluation Metrics</p>
-        <h2 className="panel-heading-icon">
-          <span>📈</span>
-          How success should be measured
-        </h2>
-        <ul className="playbook-list icon-list">
-          <li>Prospect-to-qualified conversion rate</li>
-          <li>Qualified-to-evaluated conversion rate</li>
-          <li>Review queue resolution time</li>
-          <li>Revenue at risk reduced</li>
-          <li>Revenue realized from reviewed opportunities</li>
-          <li>Operator trust in recommendation rationale</li>
-        </ul>
-      </section>
+      <Panel
+        eyebrow="Evaluation Metrics"
+        title="How success should be measured"
+        bullets={metrics}
+      />
 
-      <section className="panel wide panel-accent-blue">
-        <p className="section-label">Integration Strategy</p>
-        <h2 className="panel-heading-icon">
-          <span>🔌</span>
-          Where this would connect in the real world
-        </h2>
+      <Panel
+        eyebrow="Integration Strategy"
+        title="Where this would connect in the real world"
+        wide
+      >
+        <ArchitectureGrid items={architectureItems} />
+      </Panel>
 
-        <div className="content-grid">
-          <article className="project-card project-card-accent">
-            <p className="section-label">Product Analytics</p>
-            <h2>📊 Usage signals</h2>
-            <p>
-              Events from Segment, Amplitude, Mixpanel, or internal logs to
-              detect onboarding progress, activation gaps, and usage momentum.
-            </p>
-          </article>
+      <Panel
+        eyebrow="Risk & Governance"
+        title="What should stay human-reviewed"
+        bullets={risks}
+      />
 
-          <article className="project-card project-card-accent">
-            <p className="section-label">CRM</p>
-            <h2>🏢 Account context</h2>
-            <p>
-              Salesforce or HubSpot data for account owner, stage, segment,
-              opportunity value, sales motion, and follow-up ownership.
-            </p>
-          </article>
-
-          <article className="project-card project-card-accent">
-            <p className="section-label">Support + Success</p>
-            <h2>🧩 Blocker context</h2>
-            <p>
-              Zendesk, Intercom, or Gainsight signals to identify unresolved
-              questions, implementation friction, or customer health risk.
-            </p>
-          </article>
-
-          <article className="project-card project-card-accent">
-            <p className="section-label">Workflow</p>
-            <h2>📨 Action routing</h2>
-            <p>
-              Slack, email, task management, or internal review queues to assign
-              the next best action to a human owner.
-            </p>
-          </article>
-        </div>
-      </section>
-
-      <section className="panel panel-accent-orange">
-        <p className="section-label">Risk & Governance</p>
-        <h2 className="panel-heading-icon">
-          <span>⚠</span>
-          What should stay human-reviewed
-        </h2>
-        <ul className="playbook-list icon-list">
-          <li>Revenue-impacting conversion or rejection decisions</li>
-          <li>Enterprise account escalation</li>
-          <li>Security, legal, or compliance blockers</li>
-          <li>Low-confidence model recommendations</li>
-          <li>Actions that directly affect customer communication</li>
-        </ul>
-      </section>
-
-      <section className="panel panel-accent-purple">
-        <p className="section-label">Next Iteration</p>
-        <h2 className="panel-heading-icon">
-          <span>🔁</span>
-          How I would evolve it
-        </h2>
-        <ul className="playbook-list icon-list">
-          <li>
-            Add feedback loops from accepted and rejected recommendations.
-          </li>
-          <li>Compare agent-suggested actions against control groups.</li>
-          <li>Add confidence scoring and reason-code analytics.</li>
-          <li>
-            Support account-specific playbooks by segment and lifecycle stage.
-          </li>
-          <li>
-            Connect outcomes back to product analytics and CRM revenue data.
-          </li>
-        </ul>
-      </section>
+      <Panel
+        eyebrow="Next Iteration"
+        title="How I would evolve it"
+        bullets={iterations}
+      />
     </div>
   );
 }
