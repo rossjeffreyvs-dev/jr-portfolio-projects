@@ -1,9 +1,25 @@
 const playbookSteps = [
-  { icon: "🚇", title: "Define signal", subtitle: "Transit events + line state" },
-  { icon: "🎛️", title: "Ingest activity", subtitle: "Line counts, density, movement" },
-  { icon: "🤖", title: "Conduct ensemble", subtitle: "Shape texture and tension" },
+  {
+    icon: "🚇",
+    title: "Define signal",
+    subtitle: "Transit events + line state",
+  },
+  {
+    icon: "🎛️",
+    title: "Ingest activity",
+    subtitle: "Line counts, density, movement",
+  },
+  {
+    icon: "🤖",
+    title: "Conduct ensemble",
+    subtitle: "Shape texture and tension",
+  },
   { icon: "🎷", title: "Generate output", subtitle: "Ambient jazz soundscape" },
-  { icon: "📈", title: "Measure quality", subtitle: "Pleasantness and clarity" },
+  {
+    icon: "📈",
+    title: "Measure quality",
+    subtitle: "Pleasantness and clarity",
+  },
 ];
 
 export default function PMPlaybook() {
@@ -11,9 +27,14 @@ export default function PMPlaybook() {
     <div className="content-grid playbook-grid">
       <section className="panel wide panel-accent-purple playbook-hero-card">
         <p className="section-label">PM Playbook</p>
-        <h2 className="feature-title">How I would productize this agentic sound system</h2>
+        <h2 className="feature-title">
+          How I would productize this agentic sound system
+        </h2>
         <p>
-          The product strategy is to turn a creative subway sonification experiment into a reusable real-time signal interpretation platform: ingest operational activity, explain the system state, and generate a human-perceivable output.
+          The product strategy is to turn a creative subway sonification
+          experiment into a reusable real-time signal interpretation platform:
+          ingest operational activity, explain the system state, and generate a
+          human-perceivable output.
         </p>
         <div className="playbook-step-grid">
           {playbookSteps.map((step) => (
@@ -31,13 +52,22 @@ export default function PMPlaybook() {
       <section className="panel playbook-info-card panel-accent-blue">
         <p className="section-label">Buyer & User</p>
         <div className="panel-heading-icon">
-          <span className="playbook-circle-icon">👥</span>
+          {/* <span className="playbook-circle-icon">👥</span> */}
           <h2>Who this is for</h2>
         </div>
         <ul className="playbook-list check-list">
-          <li><strong>Creative technologists:</strong> build ambient installations from operational data.</li>
-          <li><strong>Data platform teams:</strong> explore non-dashboard observability interfaces.</li>
-          <li><strong>Product teams:</strong> demonstrate agentic interpretation of real-time signals.</li>
+          <li>
+            <strong>Creative technologists:</strong> build ambient installations
+            from operational data.
+          </li>
+          <li>
+            <strong>Data platform teams:</strong> explore non-dashboard
+            observability interfaces.
+          </li>
+          <li>
+            <strong>Product teams:</strong> demonstrate agentic interpretation
+            of real-time signals.
+          </li>
         </ul>
       </section>
 
@@ -48,7 +78,10 @@ export default function PMPlaybook() {
           <h2>Primary product bet</h2>
         </div>
         <p>
-          Real-time systems do not always need another dashboard. The bet is that an AI conductor can translate activity, density, and tension into an ambient operating layer that makes a complex system easier to feel, monitor, and explain.
+          Real-time systems do not always need another dashboard. The bet is
+          that an AI conductor can translate activity, density, and tension into
+          an ambient operating layer that makes a complex system easier to feel,
+          monitor, and explain.
         </p>
       </section>
 
@@ -66,7 +99,9 @@ export default function PMPlaybook() {
           <span>🎧 Audio quality loop</span>
         </div>
         <p>
-          The first release should focus on one high-value loop: reliable signal ingestion, understandable conductor decisions, and a pleasant audio-visual experience. Everything else should support that loop.
+          The first release should focus on one high-value loop: reliable signal
+          ingestion, understandable conductor decisions, and a pleasant
+          audio-visual experience. Everything else should support that loop.
         </p>
       </section>
 
@@ -77,10 +112,21 @@ export default function PMPlaybook() {
           <h2>Multi-agent operating model</h2>
         </div>
         <ul className="playbook-list check-list">
-          <li><strong>Ingestion Agent:</strong> tracks subway activity by line.</li>
-          <li><strong>Movement Agent:</strong> updates train positions on the visual map.</li>
-          <li><strong>Mapping Agent:</strong> maps line personality to instruments.</li>
-          <li><strong>AI Conductor:</strong> shapes density, activity, tension, and lead voice.</li>
+          <li>
+            <strong>Ingestion Agent:</strong> tracks subway activity by line.
+          </li>
+          <li>
+            <strong>Movement Agent:</strong> updates train positions on the
+            visual map.
+          </li>
+          <li>
+            <strong>Mapping Agent:</strong> maps line personality to
+            instruments.
+          </li>
+          <li>
+            <strong>AI Conductor:</strong> shapes density, activity, tension,
+            and lead voice.
+          </li>
         </ul>
       </section>
 
@@ -94,7 +140,9 @@ export default function PMPlaybook() {
           <li>Converts operational activity into an understandable output.</li>
           <li>Shows how an AI decision layer can shape system behavior.</li>
           <li>Demonstrates a reusable pattern for ambient monitoring.</li>
-          <li>Turns a complex real-time signal into a calm product experience.</li>
+          <li>
+            Turns a complex real-time signal into a calm product experience.
+          </li>
         </ul>
       </section>
     </div>

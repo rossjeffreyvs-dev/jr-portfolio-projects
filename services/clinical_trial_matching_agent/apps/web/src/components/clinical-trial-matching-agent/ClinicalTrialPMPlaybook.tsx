@@ -1,4 +1,5 @@
 "use client";
+import Panel from "./Panel";
 
 const playbookSections = [
   {
@@ -110,6 +111,19 @@ const metrics = [
   "False positive / false negative rate",
 ];
 
+const validations = [
+  "Compare agent-assisted screening vs manual review time.",
+  "Measure reviewer trust with and without evidence display.",
+  "Test HITL thresholds for low-confidence recommendations.",
+];
+
+const risks = [
+  "Incorrect eligibility recommendations require HITL gating.",
+  "Weak evidence quality requires structured validation.",
+  "Fragmented data requires confidence scoring.",
+  "Clinical adoption requires transparency over automation.",
+];
+
 function InlineIcon({ children }: { children: string }) {
   return <span className="clinical-playbook-inline-icon">{children}</span>;
 }
@@ -119,7 +133,7 @@ export default function ClinicalTrialPMPlaybook() {
     <div className="description-layout clinical-playbook">
       <section className="description-hero card clinical-playbook-hero">
         <div className="clinical-playbook-title-row">
-          <InlineIcon>📖</InlineIcon>
+          {/* <InlineIcon>📖</InlineIcon> */}
 
           <div>
             <div className="description-kicker">PM Playbook</div>
@@ -144,35 +158,20 @@ export default function ClinicalTrialPMPlaybook() {
 
       <div className="description-two-col">
         {playbookSections.map((section) => (
-          <section
+          <Panel
             key={section.title}
-            className="description-section card clinical-playbook-card"
-          >
-            <div className="description-section-header">
-              <div className="clinical-playbook-section-heading">
-                <InlineIcon>{section.icon}</InlineIcon>
-                <div>
-                  <div className="description-kicker">{section.eyebrow}</div>
-                  <h3>{section.title}</h3>
-                </div>
-              </div>
-
-              <p>{section.body}</p>
-            </div>
-
-            <ul className="description-bullet-list clinical-playbook-list">
-              {section.bullets.map((bullet) => (
-                <li key={bullet}>{bullet}</li>
-              ))}
-            </ul>
-          </section>
+            eyebrow={section.eyebrow}
+            title={section.title}
+            body={section.body}
+            bullets={section.bullets}
+          />
         ))}
       </div>
 
       <section className="description-section card clinical-playbook-card">
         <div className="description-section-header">
           <div className="clinical-playbook-section-heading">
-            <InlineIcon>🧩</InlineIcon>
+            {/* <InlineIcon>🧩</InlineIcon> */}
             <div>
               <div className="description-kicker">Solution Design</div>
               <h3>Agent Architecture</h3>
@@ -209,7 +208,7 @@ export default function ClinicalTrialPMPlaybook() {
       <section className="description-section card clinical-playbook-card">
         <div className="description-section-header">
           <div className="clinical-playbook-section-heading">
-            <InlineIcon>🚀</InlineIcon>
+            {/* <InlineIcon>🚀</InlineIcon> */}
             <div>
               <div className="description-kicker">MVP</div>
               <h3>What This Demo Proves</h3>
@@ -238,104 +237,50 @@ export default function ClinicalTrialPMPlaybook() {
       </section>
 
       <div className="description-two-col">
-        <section className="description-section card clinical-playbook-card clinical-playbook-blue">
-          <div className="description-section-header">
-            <div className="clinical-playbook-section-heading">
-              <InlineIcon>📊</InlineIcon>
-              <div>
-                <div className="description-kicker">Metrics</div>
-                <h3>Success KPI Framework</h3>
-              </div>
-            </div>
+        <Panel
+          key="metrics"
+          eyebrow="Metrics"
+          title="Success KPI Framework"
+          body="The north-star metric is trial enrollment efficiency: eligible
+              patients identified per unit of screening time."
+          bullets={metrics}
+        />
 
-            <p>
-              The north-star metric is trial enrollment efficiency: eligible
-              patients identified per unit of screening time.
-            </p>
-          </div>
-
-          <ul className="description-bullet-list clinical-playbook-list">
-            {metrics.map((metric) => (
-              <li key={metric}>{metric}</li>
-            ))}
-          </ul>
-        </section>
-
-        <section className="description-section card clinical-playbook-card clinical-playbook-green">
-          <div className="description-section-header">
-            <div className="clinical-playbook-section-heading">
-              <InlineIcon>🧪</InlineIcon>
-              <div>
-                <div className="description-kicker">Experimentation</div>
-                <h3>Validation Plan</h3>
-              </div>
-            </div>
-          </div>
-
-          <ul className="description-bullet-list clinical-playbook-list">
-            <li>Compare agent-assisted screening vs manual review time.</li>
-            <li>Measure reviewer trust with and without evidence display.</li>
-            <li>Test HITL thresholds for low-confidence recommendations.</li>
-          </ul>
-        </section>
+        <Panel
+          key="experimentation"
+          eyebrow="Experimentation"
+          title="Validation Plan"
+          body=""
+          bullets={validations}
+        />
       </div>
 
-      <section className="description-section card clinical-playbook-card clinical-playbook-purple">
-        <div className="description-section-header">
-          <div className="clinical-playbook-section-heading">
-            <InlineIcon>🔁</InlineIcon>
-            <div>
-              <div className="description-kicker">Feedback Loop</div>
-              <h3>Human-in-the-Loop Learning</h3>
-            </div>
-          </div>
-
-          <p>
-            Every recommendation should capture reviewer action, override
+      <Panel
+        key="feedback"
+        eyebrow="Feedback Loop"
+        title="Human-in-the-Loop Learning"
+        body="Every recommendation should capture reviewer action, override
             reason, and criteria-level corrections so future eligibility
-            evaluations become more accurate and easier to audit.
-          </p>
-        </div>
-      </section>
+            evaluations become more accurate and easier to audit."
+      />
 
       <div className="description-two-col">
-        <section className="description-section card clinical-playbook-card clinical-playbook-orange">
-          <div className="description-section-header">
-            <div className="clinical-playbook-section-heading">
-              <InlineIcon>⚠️</InlineIcon>
-              <div>
-                <div className="description-kicker">Risks</div>
-                <h3>Tradeoffs & Controls</h3>
-              </div>
-            </div>
-          </div>
+        <Panel
+          key="risks"
+          eyebrow="Risks"
+          title="Tradeoffs & Controls"
+          bullets={risks}
+        />
 
-          <ul className="description-bullet-list clinical-playbook-list">
-            <li>Incorrect eligibility recommendations require HITL gating.</li>
-            <li>Weak evidence quality requires structured validation.</li>
-            <li>Fragmented data requires confidence scoring.</li>
-            <li>Clinical adoption requires transparency over automation.</li>
-          </ul>
-        </section>
-
-        <section className="description-section card clinical-playbook-card clinical-playbook-green">
-          <div className="description-section-header">
-            <div className="clinical-playbook-section-heading">
-              <InlineIcon>💡</InlineIcon>
-              <div>
-                <div className="description-kicker">Reflection</div>
-                <h3>PM Takeaway</h3>
-              </div>
-            </div>
-
-            <p>
-              The product opportunity is not simply automating screening. It is
+        <Panel
+          key="reflection"
+          eyebrow="Reflection"
+          title="PM Takeaway"
+          body="The product opportunity is not simply automating screening. It is
               building a trusted decision-support workflow that improves speed
               while preserving clinician oversight, explainability, and
-              auditability.
-            </p>
-          </div>
-        </section>
+              auditability."
+        />
       </div>
     </div>
   );

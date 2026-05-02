@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Panel from "./Panel";
 
 type IconName =
   | "workflow"
@@ -264,28 +265,36 @@ export default function ClinicalTrialProjectDescription() {
       </section>
 
       <div className="description-two-col">
-        <DescriptionSection title="Problem" icon="problem">
+        <Panel
+          eyebrow="Problem"
+          title="Clinical trial screening is slow, complex, and highly manual"
+        >
           {DESCRIPTION_CONTENT.problem.map((paragraph) => (
             <p key={paragraph}>{paragraph}</p>
           ))}
-        </DescriptionSection>
+        </Panel>
 
-        <DescriptionSection title="Solution" icon="solution">
-          {DESCRIPTION_CONTENT.solution.map((paragraph) => (
+        <Panel
+          eyebrow="Solution"
+          title="A transparent, explainable screening workflow"
+        >
+          {DESCRIPTION_CONTENT.problem.map((paragraph) => (
             <p key={paragraph}>{paragraph}</p>
           ))}
-        </DescriptionSection>
+        </Panel>
       </div>
 
-      <DescriptionSection title="Overview" icon="overview">
+      <Panel
+        eyebrow="Overview"
+        title="Reframing clinical trial screening as a structured workflow"
+      >
         {DESCRIPTION_CONTENT.overview.map((paragraph) => (
           <p key={paragraph}>{paragraph}</p>
         ))}
-      </DescriptionSection>
+      </Panel>
 
       <DescriptionSection
         title="How It Works"
-        icon="workflow"
         intro="A high-level view of the simulated workflow from candidate selection through review."
       >
         <div className="description-step-flow">
@@ -310,7 +319,6 @@ export default function ClinicalTrialProjectDescription() {
 
       <DescriptionSection
         title="System Architecture"
-        icon="architecture"
         intro="The application combines a modern frontend, API-driven workflow services, and a structured mock data layer."
       >
         <div className="description-architecture-layout">
@@ -341,7 +349,6 @@ export default function ClinicalTrialProjectDescription() {
 
       <DescriptionSection
         title="Agent Workflow"
-        icon="users"
         intro="A closer look at the simulated multi-agent workflow that powers each evaluation."
       >
         <div className="description-agent-layout">
@@ -376,27 +383,22 @@ export default function ClinicalTrialProjectDescription() {
       </DescriptionSection>
 
       <div className="description-two-col">
-        <DescriptionSection title="Results & Impact" icon="sparkles">
-          <ul className="description-bullet-list">
-            {DESCRIPTION_CONTENT.results.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </DescriptionSection>
+        <Panel
+          eyebrow="What this enables"
+          title="Turning a demo into a real clinical workflow system"
+          bullets={DESCRIPTION_CONTENT.results}
+        />
 
-        <DescriptionSection title="Key Takeaways" icon="sparkles">
-          <ul className="description-bullet-list">
-            {DESCRIPTION_CONTENT.takeaways.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </DescriptionSection>
+        <Panel
+          eyebrow="What this enables"
+          title="Designing clinical AI systems for transparency and trust"
+          bullets={DESCRIPTION_CONTENT.takeaways}
+        />
       </div>
 
-      <div className="description-note cardish">
-        This is a simulated environment with mock data for demonstration
-        purposes. The workflow, data, and results are fictional and are not
-        intended for clinical decision-making.
+      <div className="ui-disclaimer">
+        This is a simulated demo using mock data. The workflow, data, and
+        results are illustrative and not intended for clinical decision-making.
       </div>
     </div>
   );
