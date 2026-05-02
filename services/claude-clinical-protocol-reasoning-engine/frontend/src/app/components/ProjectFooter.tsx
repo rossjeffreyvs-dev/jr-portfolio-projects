@@ -17,7 +17,10 @@ export default function ProjectFooter({
             <span className="project-footer-mark">JR</span>
             <span className="project-footer-brand-text">Projects</span>
           </a>
-          <p>Applied AI, data platform, and workflow demos by Jeffrey Ross.</p>
+          <p>
+            Applied AI, data platform, and workflow demos
+            <br /> by Jeffrey Ross.
+          </p>
         </div>
 
         <nav

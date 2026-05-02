@@ -9,7 +9,6 @@ export default function ProjectHero({
 }: ProjectHeroProps) {
   return (
     <section className="project-hero centered">
-      <p className="hero-eyebrow-text">Claude Reasoning Demo</p>
       <h1>Claude Clinical Protocol Reasoning Engine</h1>
 
       <p className="hero-subtitle">

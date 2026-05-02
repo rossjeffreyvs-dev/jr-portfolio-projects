@@ -1578,6 +1578,7 @@ a {
   font-size: clamp(2rem, 4vw, 3.25rem);
   line-height: 1.04;
   letter-spacing: -0.055em;
+  padding: 0;
 }
 
 .insight-strip {
@@ -2141,5 +2142,60 @@ a {
 @media (max-width: 900px) {
   .ui-architecture-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+.ui-step-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.ui-step-list-item {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  align-items: center;
+  gap: 20px;
+  padding: 18px 20px;
+  border: 1px solid #dbe3ef;
+  border-radius: 20px;
+  background: #f8fafc;
+}
+
+.ui-step-list-number {
+  display: inline-flex;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: #eef2ff;
+  color: #1e3a8a;
+  font-size: 0.85rem;
+  font-weight: 900;
+}
+
+.ui-step-list-content h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 4px;
+  color: #0f172a;
+  font-size: 0.98rem;
+  line-height: 1.25;
+  font-weight: 850;
+}
+
+.ui-step-list-content p {
+  margin: 0;
+  color: #52637a;
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
+@media (max-width: 640px) {
+  .ui-step-list-item {
+    grid-template-columns: 1fr;
+    gap: 10px;
   }
 }
