@@ -1,3 +1,6 @@
+import Panel from "./Panel";
+import FeatureListGrid from "./FeatureListGrid";
+
 type IconName =
   | "workflow"
   | "chart"
@@ -196,6 +199,14 @@ const DESCRIPTION_CONTENT: {
   ],
 };
 
+const overviewFeatures = [
+  { icon: "📈", label: "Live FX data retrieval" },
+  { icon: "📰", label: "Market headline aggregation" },
+  { icon: "✨", label: "Streaming AI-generated report" },
+  { icon: "🔁", label: "Progressive user feedback" },
+  { icon: "✉️", label: "Client-ready advisory output" },
+];
+
 function SectionIcon({ name }: { name: IconName }) {
   return (
     <span className="description-icon" aria-hidden="true">
@@ -339,30 +350,31 @@ export default function FxProjectDescription() {
       </section>
 
       <section className="problem-solution-grid">
-        <article className="description-card section-card">
-          <SectionHeader icon="problem" title="Problem" />
-          <div className="description-copy">
-            {DESCRIPTION_CONTENT.problem.map((paragraph) => (
-              <p key={paragraph}>{paragraph}</p>
-            ))}
-          </div>
-        </article>
+        <Panel
+          eyebrow="Problem"
+          title="Fragmented market context and opaque analysis workflows"
+        >
+          {DESCRIPTION_CONTENT.problem.map((paragraph) => (
+            <p key={paragraph}>{paragraph}</p>
+          ))}
+        </Panel>
 
-        <article className="description-card section-card">
-          <SectionHeader icon="solution" title="Solution" />
-          <div className="description-copy">
-            {DESCRIPTION_CONTENT.solution.map((paragraph) => (
-              <p key={paragraph}>{paragraph}</p>
-            ))}
-          </div>
-        </article>
+        <Panel
+          eyebrow="Solution"
+          title="Turning FX analysis into a transparent, real-time workflow"
+        >
+          {DESCRIPTION_CONTENT.solution.map((paragraph) => (
+            <p key={paragraph}>{paragraph}</p>
+          ))}
+        </Panel>
       </section>
 
-      <TextSection
-        icon="overview"
-        title="Overview"
-        paragraphs={DESCRIPTION_CONTENT.overview}
-      />
+      <Panel
+        eyebrow="Overview"
+        title="Reframing FX analysis as a structured, client-ready workflow"
+      >
+        <p>{DESCRIPTION_CONTENT.overview}</p>
+      </Panel>
 
       <section className="description-card section-card">
         <SectionHeader

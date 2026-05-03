@@ -278,7 +278,7 @@ export default function ClinicalTrialProjectDescription() {
           eyebrow="Solution"
           title="A transparent, explainable screening workflow"
         >
-          {DESCRIPTION_CONTENT.problem.map((paragraph) => (
+          {DESCRIPTION_CONTENT.solution.map((paragraph) => (
             <p key={paragraph}>{paragraph}</p>
           ))}
         </Panel>
