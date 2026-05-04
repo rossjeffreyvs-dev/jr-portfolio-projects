@@ -1,3 +1,7 @@
+import Panel from "./Panel";
+import FeatureListGrid from "./FeatureListGrid";
+import FeatureCardGrid from "./FeatureCardList";
+
 type PlaybookAgent = {
   index: string;
   icon: string;
@@ -121,133 +125,96 @@ const PLAYBOOK_CONTENT: {
   ],
 };
 
+const architectureCards = PLAYBOOK_CONTENT.architecture.map((agent) => ({
+  number: agent.index,
+  icon: agent.icon,
+  title: agent.title,
+  description: agent.text,
+}));
+
+const mvpCards = PLAYBOOK_CONTENT.mvpSteps.map((step) => ({
+  number: step.index,
+  icon: step.icon,
+  title: step.title,
+  description: step.description,
+}));
+
 export default function FxPMPlaybook() {
   return (
-    <div className="project-description pm-playbook">
-      <section className="description-card overview-card pm-overview-card">
-        <p className="description-eyebrow">PM Playbook</p>
-        <h2>AI FX Market Intelligence</h2>
-        <p className="description-lede">
-          A product management view of the demo: how the workflow would be
-          discovered, scoped, shipped, measured, and improved through feedback.
-        </p>
+    <div className="project-description pm-playbook content-grid">
+      <Panel
+        eyebrow="PM Playbook"
+        title="AI FX Market Intelligence"
+        body="A product management view of the demo: how the workflow would be discovered, scoped, shipped, measured, and improved through feedback."
+        className="panel-accent-blue"
+        wide
+      >
+        <FeatureListGrid items={PLAYBOOK_CONTENT.highlights} columns={4} />
+      </Panel>
 
-        <div className="description-highlight-grid playbook-highlight-grid">
-          {PLAYBOOK_CONTENT.highlights.map((item) => (
-            <div className="description-highlight" key={item.label}>
-              <span className="playbook-pill-icon" aria-hidden="true">
-                {item.icon}
-              </span>
-              <span>{item.label}</span>
-            </div>
-          ))}
-        </div>
-      </section>
+      <Panel
+        eyebrow="Discovery"
+        title="Problem Framing & Discovery"
+        bullets={PLAYBOOK_CONTENT.discovery}
+        className="ui-panel-list-blue"
+      />
 
-      <section className="problem-solution-grid">
-        <article className="description-card section-card">
-          <p className="description-eyebrow">Discovery</p>
-          <h3>Problem Framing & Discovery</h3>
-          <ul className="check-list">
-            {PLAYBOOK_CONTENT.discovery.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </article>
+      <Panel
+        eyebrow="Strategy"
+        title="Product Vision & Strategy"
+        bullets={PLAYBOOK_CONTENT.strategy}
+        className="ui-panel-list-green"
+      />
 
-        <article className="description-card section-card">
-          <p className="description-eyebrow">Strategy</p>
-          <h3>Product Vision & Strategy</h3>
-          <ul className="check-list">
-            {PLAYBOOK_CONTENT.strategy.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </article>
-      </section>
+      <Panel
+        eyebrow="Solution Design"
+        title="Agent Architecture"
+        body="The product is designed as a multi-step workflow rather than a single black-box AI response."
+        wide
+      >
+        <FeatureCardGrid
+          items={architectureCards}
+          numbered
+          columns={5}
+          ariaLabel="FX agent architecture"
+        />
+      </Panel>
 
-      <section className="description-card section-card">
-        <p className="description-eyebrow">Solution Design</p>
-        <h3>Agent Architecture</h3>
-        <p className="description-lede compact">
-          The product is designed as a multi-step workflow rather than a single
-          black-box AI response.
-        </p>
+      <Panel
+        eyebrow="MVP"
+        title="What This Demo Proves"
+        body="The MVP validates whether users can understand, trust, and act on an AI-assisted FX briefing workflow."
+        wide
+      >
+        <FeatureCardGrid
+          items={mvpCards}
+          numbered
+          columns={5}
+          ariaLabel="FX MVP workflow"
+        />
+      </Panel>
 
-        <div className="fx-playbook-flow">
-          {PLAYBOOK_CONTENT.architecture.map((agent) => (
-            <article className="fx-playbook-flow-card" key={agent.title}>
-              <span className="fx-step-index">{agent.index}</span>
-              <div className="fx-playbook-flow-title">
-                <span className="playbook-pill-icon" aria-hidden="true">
-                  {agent.icon}
-                </span>
-                <strong>{agent.title}</strong>
-              </div>
-              <p>{agent.text}</p>
-            </article>
-          ))}
-        </div>
-      </section>
+      <Panel
+        eyebrow="Measurement"
+        title="Success Metrics"
+        bullets={PLAYBOOK_CONTENT.metrics}
+        className="ui-panel-list"
+      />
 
-      <section className="description-card section-card">
-        <p className="description-eyebrow">MVP</p>
-        <h3>What This Demo Proves</h3>
-        <p className="description-lede compact">
-          The MVP validates whether users can understand, trust, and act on an
-          AI-assisted FX briefing workflow.
-        </p>
+      <Panel
+        eyebrow="Risk"
+        title="Product Risks & Guardrails"
+        bullets={PLAYBOOK_CONTENT.risks}
+        className="ui-panel-list"
+      />
 
-        <div className="fx-mvp-grid">
-          {PLAYBOOK_CONTENT.mvpSteps.map((step) => (
-            <article className="fx-mvp-card" key={step.title}>
-              <span className="fx-step-index">{step.index}</span>
-              <div className="fx-playbook-flow-title">
-                <span className="playbook-pill-icon" aria-hidden="true">
-                  {step.icon}
-                </span>
-                <strong>{step.title}</strong>
-              </div>
-              <p>{step.description}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="takeaway-grid-section">
-        <article className="description-card section-card">
-          <p className="description-eyebrow">Measurement</p>
-          <h3>Success Metrics</h3>
-          <ul className="check-list">
-            {PLAYBOOK_CONTENT.metrics.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </article>
-
-        <article className="description-card section-card">
-          <p className="description-eyebrow">Risk</p>
-          <h3>Product Risks & Guardrails</h3>
-          <ul className="check-list">
-            {PLAYBOOK_CONTENT.risks.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </article>
-      </section>
-
-      <section className="demo-note-card portfolio-signal-card">
-        <div>
-          <p>Portfolio signal</p>
-          <h3>
-            Shows product thinking across discovery, UX, AI orchestration,
-            metrics, and platform deployment.
-          </h3>
-        </div>
-        <span>
-          PM framing → Agent workflow → Streaming UX → Measurable value
-        </span>
-      </section>
+      <Panel
+        eyebrow="Portfolio Signal"
+        title="Product thinking across discovery, UX, AI orchestration, metrics, and platform deployment."
+        body="PM framing → Agent workflow → Streaming UX → Measurable value"
+        className="panel-accent-blue"
+        wide
+      />
     </div>
   );
 }

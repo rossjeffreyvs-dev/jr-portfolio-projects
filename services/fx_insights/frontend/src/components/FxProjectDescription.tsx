@@ -38,6 +38,18 @@ type WorkflowAgent = {
   icon: IconName;
 };
 
+const ICON_EMOJI: Record<IconName, string> = {
+  workflow: "🔀",
+  chart: "📈",
+  news: "📰",
+  sparkles: "✨",
+  client: "✉️",
+  problem: "⚠️",
+  solution: "✅",
+  overview: "📋",
+  architecture: "▦",
+};
+
 const DESCRIPTION_CONTENT: {
   introTitle: string;
   introBody: string;
@@ -199,17 +211,12 @@ const DESCRIPTION_CONTENT: {
   ],
 };
 
-const overviewFeatures = [
-  { icon: "📈", label: "Live FX data retrieval" },
-  { icon: "📰", label: "Market headline aggregation" },
-  { icon: "✨", label: "Streaming AI-generated report" },
-  { icon: "🔁", label: "Progressive user feedback" },
-  { icon: "✉️", label: "Client-ready advisory output" },
-];
-
 function SectionIcon({ name }: { name: IconName }) {
   return (
-    <span className="description-icon" aria-hidden="true">
+    <span
+      className={`description-icon description-icon-${name}`}
+      aria-hidden="true"
+    >
       <svg
         viewBox="0 0 24 24"
         fill="none"
@@ -290,130 +297,82 @@ function SectionIcon({ name }: { name: IconName }) {
   );
 }
 
-function SectionHeader({
-  icon,
-  title,
-  description,
-}: {
-  icon: IconName;
-  title: string;
-  description?: string;
-}) {
-  return (
-    <div className="description-section-header">
-      <SectionIcon name={icon} />
-      <div>
-        <h3>{title}</h3>
-        {description ? <p>{description}</p> : null}
-      </div>
-    </div>
-  );
-}
+export default function FxProjectDescription() {
+  const overviewFeatures = DESCRIPTION_CONTENT.highlights.map((highlight) => ({
+    label: highlight.label,
+    icon: ICON_EMOJI[highlight.icon],
+  }));
 
-function TextSection({
-  icon,
-  title,
-  paragraphs,
-}: {
-  icon: IconName;
-  title: string;
-  paragraphs: string[];
-}) {
   return (
-    <section className="description-card section-card">
-      <SectionHeader icon={icon} title={title} />
-      <div className="description-copy">
-        {paragraphs.map((paragraph) => (
+    <div className="content-grid fx-description-grid">
+      <Panel
+        eyebrow="Project Overview"
+        title={DESCRIPTION_CONTENT.introTitle}
+        body={DESCRIPTION_CONTENT.introBody}
+        className="panel-accent-blue"
+        wide
+      >
+        <FeatureListGrid items={overviewFeatures} columns={5} />
+      </Panel>
+
+      <Panel
+        eyebrow="Problem"
+        title="Fragmented market context and opaque analysis workflows"
+      >
+        {DESCRIPTION_CONTENT.problem.map((paragraph) => (
           <p key={paragraph}>{paragraph}</p>
         ))}
-      </div>
-    </section>
-  );
-}
+      </Panel>
 
-export default function FxProjectDescription() {
-  return (
-    <div className="project-description">
-      <section className="description-card overview-card">
-        <p className="description-eyebrow">Project Overview</p>
-        <h2>{DESCRIPTION_CONTENT.introTitle}</h2>
-        <p className="description-lede">{DESCRIPTION_CONTENT.introBody}</p>
-
-        <div className="description-highlight-grid">
-          {DESCRIPTION_CONTENT.highlights.map((highlight) => (
-            <div className="description-highlight" key={highlight.label}>
-              <SectionIcon name={highlight.icon} />
-              <span>{highlight.label}</span>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="problem-solution-grid">
-        <Panel
-          eyebrow="Problem"
-          title="Fragmented market context and opaque analysis workflows"
-        >
-          {DESCRIPTION_CONTENT.problem.map((paragraph) => (
-            <p key={paragraph}>{paragraph}</p>
-          ))}
-        </Panel>
-
-        <Panel
-          eyebrow="Solution"
-          title="Turning FX analysis into a transparent, real-time workflow"
-        >
-          {DESCRIPTION_CONTENT.solution.map((paragraph) => (
-            <p key={paragraph}>{paragraph}</p>
-          ))}
-        </Panel>
-      </section>
+      <Panel
+        eyebrow="Solution"
+        title="Turning FX analysis into a transparent, real-time workflow"
+      >
+        {DESCRIPTION_CONTENT.solution.map((paragraph) => (
+          <p key={paragraph}>{paragraph}</p>
+        ))}
+      </Panel>
 
       <Panel
         eyebrow="Overview"
         title="Reframing FX analysis as a structured, client-ready workflow"
+        wide
       >
-        <p>{DESCRIPTION_CONTENT.overview}</p>
+        {DESCRIPTION_CONTENT.overview.map((paragraph) => (
+          <p key={paragraph}>{paragraph}</p>
+        ))}
       </Panel>
 
-      <section className="description-card section-card">
-        <SectionHeader
-          icon="workflow"
-          title="How It Works"
-          description="A high-level view of the simulated workflow from market inputs to client report."
-        />
-
-        <div className="workflow-step-grid fx-workflow-grid">
+      <Panel
+        eyebrow="How it works"
+        title="FX market intelligence workflow"
+        body="A high-level view of the simulated workflow from market inputs to client report."
+        wide
+      >
+        <div className="workflow-step-grid">
           {DESCRIPTION_CONTENT.howItWorks.map((step, index) => (
             <div className="workflow-step-pair" key={step.step}>
-              <article className="workflow-step-card fx-workflow-card">
+              <article className="workflow-step-card">
                 <span className="workflow-step-index">
                   {String(index + 1).padStart(2, "0")}
                 </span>
-
                 <div className="workflow-step-title-row">
                   <SectionIcon name={step.icon} />
                   <h4>{step.title}</h4>
                 </div>
-
                 <span>{step.description}</span>
               </article>
-
-              {index < DESCRIPTION_CONTENT.howItWorks.length - 1 ? (
-                <div className="workflow-arrow">→</div>
-              ) : null}
             </div>
           ))}
         </div>
-      </section>
+      </Panel>
 
-      <section className="description-card section-card">
-        <SectionHeader
-          icon="architecture"
-          title="System Architecture"
-          description="The demo is intentionally small, but structured like a production workflow."
-        />
-
+      <Panel
+        eyebrow="System Architecture"
+        title="Frontend, service layer, data APIs, and LLM synthesis"
+        body="The demo is intentionally small, but structured like a production workflow."
+        wide
+      >
         <div className="architecture-column-grid">
           {DESCRIPTION_CONTENT.architecture.map((column) => (
             <article
@@ -430,15 +389,14 @@ export default function FxProjectDescription() {
             </article>
           ))}
         </div>
-      </section>
+      </Panel>
 
-      <section className="description-card section-card">
-        <SectionHeader
-          icon="sparkles"
-          title="Agent Workflow"
-          description="The workflow is modeled as specialized agent responsibilities rather than a single opaque response."
-        />
-
+      <Panel
+        eyebrow="Agent Workflow"
+        title="Specialized responsibilities instead of one opaque response"
+        body="The workflow is modeled as agent responsibilities that make each system step easier to inspect and explain."
+        wide
+      >
         <div className="agent-grid">
           {DESCRIPTION_CONTENT.workflowAgents.map((agent) => (
             <article
@@ -451,35 +409,29 @@ export default function FxProjectDescription() {
             </article>
           ))}
         </div>
-      </section>
+      </Panel>
 
-      <section className="description-card section-card takeaway-grid-section">
-        <div>
-          <SectionHeader icon="solution" title="Results & Portfolio Value" />
-          <ul className="check-list">
-            {DESCRIPTION_CONTENT.results.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </div>
+      <Panel
+        eyebrow="Results & Impact"
+        title="What the demo proves"
+        bullets={DESCRIPTION_CONTENT.results}
+        className="ui-panel-list-blue"
+      />
 
-        <div>
-          <SectionHeader icon="sparkles" title="Key Takeaways" />
-          <ul className="check-list">
-            {DESCRIPTION_CONTENT.takeaways.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </div>
-      </section>
+      <Panel
+        eyebrow="Key Takeaways"
+        title="Turning AI workflows into real product value"
+        bullets={DESCRIPTION_CONTENT.takeaways}
+        className="ui-panel-list-green"
+      />
 
-      <section className="demo-note-card">
-        <div>
-          <p>Demo flow</p>
-          <h3>Use the Demo tab to generate a streaming FX market report.</h3>
-        </div>
-        <span>Rates → News → AI report → Reviewable client summary</span>
-      </section>
+      <Panel
+        eyebrow="Demo flow"
+        title="Use the Demo tab to generate a streaming FX market report"
+        body="Rates → News → AI report → Reviewable client summary"
+        className="panel-accent-blue"
+        wide
+      />
     </div>
   );
 }

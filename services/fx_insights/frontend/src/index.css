@@ -322,11 +322,6 @@ button {
   padding: 28px;
 }
 
-.panel-accent-blue {
-  border-color: #bfdbfe;
-  background: linear-gradient(135deg, #ffffff, #eff6ff);
-}
-
 .workflowGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1315,12 +1310,14 @@ body {
 
 .architecture-column li::before,
 .check-list li::before {
-  content: "âœ“";
+  content: "";
   position: absolute;
   left: 0;
-  top: 0;
-  color: var(--ink);
-  font-weight: 900;
+  top: 0.55em;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #94a3b8;
 }
 
 /* Agent workflow */
@@ -1626,6 +1623,50 @@ body {
   line-height: 1.7;
 }
 
+/* ------------------ */
+/* Description Layout */
+/* ------------------ */
+
+.content-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.content-grid .wide {
+  grid-column: span 2;
+}
+
+.flow-row,
+.feature-grid,
+.claude-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.flow-row span,
+.feature-grid div,
+.claude-feature-grid article {
+  border: 1px solid #dbe3ef;
+  border-radius: 18px;
+  background: #f8fafc;
+  padding: 16px 18px;
+  font-weight: 900;
+  color: #172554;
+  line-height: 1.25;
+}
+
+.claude-feature-grid article {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 86px;
+  background: linear-gradient(135deg, #ffffff, #f8fbff);
+  border-color: #dbeafe;
+}
+
 /* Project Footer */
 .project-footer {
   margin-top: 72px;
@@ -1872,6 +1913,63 @@ body {
   .primary-btn:hover:not(:disabled) {
     transform: none;
   }
+}
+
+/* -------------------------------------------------------------------------- */
+/* FX Colored Icon Chips                                                       */
+/* -------------------------------------------------------------------------- */
+
+.description-icon {
+  border-width: 1px;
+}
+
+.description-icon-chart {
+  color: #2563eb;
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.description-icon-news {
+  color: #7c3aed;
+  background: #f5f3ff;
+  border-color: #ddd6fe;
+}
+
+.description-icon-sparkles {
+  color: #d97706;
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.description-icon-workflow {
+  color: #0891b2;
+  background: #ecfeff;
+  border-color: #a5f3fc;
+}
+
+.description-icon-client {
+  color: #059669;
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+}
+
+.description-icon-problem {
+  color: #dc2626;
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.description-icon-solution {
+  color: #16a34a;
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.description-icon-overview,
+.description-icon-architecture {
+  color: #4f46e5;
+  background: #eef2ff;
+  border-color: #c7d2fe;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -2269,4 +2367,38 @@ body {
   .ui-feature-card {
     min-height: auto;
   }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Two-column list for panels                                                  */
+/* -------------------------------------------------------------------------- */
+
+.ui-clean-list-2col {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 24px; /* tighter vertical + wider horizontal */
+}
+
+/* mobile fallback */
+@media (max-width: 700px) {
+  .ui-clean-list-2col {
+    grid-template-columns: 1fr;
+  }
+}
+
+.descriptionTwoCol {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+@media (max-width: 900px) {
+  .descriptionTwoCol {
+    grid-template-columns: 1fr;
+  }
+}
+
+.panel-accent-blue {
+  border-color: #bfdbfe;
+  background: linear-gradient(135deg, #ffffff, #eff6ff);
 }
