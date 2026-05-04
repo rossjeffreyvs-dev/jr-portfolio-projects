@@ -210,7 +210,7 @@ export default function FxPMPlaybook() {
 
       <Panel
         eyebrow="Portfolio Signal"
-        title="Product thinking across discovery, UX, AI orchestration, metrics, and platform deployment."
+        title="An end-to-end product approach spanning UX, document AI, and workflow design moving from - "
         body="PM framing → Agent workflow → Streaming UX → Measurable value"
         className="panel-accent-blue"
         wide
