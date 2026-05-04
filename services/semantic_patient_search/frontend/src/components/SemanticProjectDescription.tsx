@@ -1,141 +1,120 @@
-import { descriptionHighlights } from "../content/semanticContent";
+import Panel from "./Panel";
+import FeatureListGrid from "./FeatureListGrid";
+import FeatureCardGrid from "./FeatureCardList";
+
+const overviewFeatures = [
+  { icon: "🔎", label: "Natural language search" },
+  { icon: "🧠", label: "Embedding-based matching" },
+  { icon: "📊", label: "Relevance scoring" },
+  { icon: "⚡", label: "Fast cohort discovery" },
+  { icon: "🔗", label: "Cross-source data linking" },
+];
 
 const workflowSteps = [
   {
-    index: "01",
-    icon: "🧾",
-    title: "Assemble profile",
+    number: "01",
+    icon: "📝",
+    title: "User query",
     description:
-      "Combine demographics, diagnoses, medications, labs, and narrative summary into a searchable patient profile.",
+      "A natural language query describes the patient cohort or condition of interest.",
   },
   {
-    index: "02",
-    icon: "🔎",
-    title: "Embed query",
+    number: "02",
+    icon: "🧠",
+    title: "Embedding generation",
     description:
-      "Convert natural-language user intent into a comparable semantic representation.",
+      "The query is transformed into a vector representation capturing semantic meaning.",
   },
   {
-    index: "03",
+    number: "03",
+    icon: "🔍",
+    title: "Similarity search",
+    description:
+      "Patient records are compared using vector similarity to identify relevant matches.",
+  },
+  {
+    number: "04",
     icon: "📊",
-    title: "Score matches",
+    title: "Ranking & scoring",
     description:
-      "Rank patient profiles by conceptual similarity rather than exact keyword overlap.",
+      "Results are ranked based on semantic relevance and supporting data signals.",
   },
   {
-    index: "04",
-    icon: "✨",
-    title: "Explain results",
+    number: "05",
+    icon: "📄",
+    title: "Result exploration",
     description:
-      "Return ranked records with context that explains why each patient matched the query.",
+      "Users review matched patients with context, enabling faster cohort discovery.",
   },
 ];
 
-const featureIcons = ["💬", "🧠", "📚", "✨", "🧪"];
-
 export default function SemanticProjectDescription() {
   return (
-    <section className="descriptionLayout">
-      <section className="descriptionHero cardish section-emphasis">
-        <p className="descriptionKicker">
-          Semantic Healthcare Discovery Workflow
-        </p>
-        <h2>Semantic Patient Search</h2>
-        <p className="descriptionLead">
-          Semantic Patient Search is a healthcare discovery demo that shows how
-          synthetic patient, demographic, and clinical records can be
-          transformed into searchable patient profiles. Instead of relying on
-          exact keyword matches, the system interprets natural-language intent
-          and returns conceptually relevant patient records.
-        </p>
+    <div className="content-grid">
+      {/* ------------------------------ */}
+      {/* Overview (Full Width)          */}
+      {/* ------------------------------ */}
+      <Panel
+        eyebrow="Project Overview"
+        title="Semantic Patient Search Platform"
+        body="This project demonstrates how natural language search and embeddings can be applied to clinical data. Instead of relying on keyword filters, the system identifies patients based on meaning, enabling faster and more intuitive cohort discovery."
+        className="ui-panel-accent-blue"
+        wide
+      >
+        <FeatureListGrid items={overviewFeatures} />
+      </Panel>
 
-        <div className="descriptionHighlightGrid">
-          {descriptionHighlights.map((item, index) => (
-            <article key={item} className="descriptionHighlightCard">
-              <span className="descriptionIcon" aria-hidden="true">
-                {featureIcons[index] ?? "✦"}
-              </span>
-              <span>{item}</span>
-            </article>
-          ))}
-        </div>
-      </section>
+      {/* ------------------------------ */}
+      {/* Problem / Solution (2-col)     */}
+      {/* ------------------------------ */}
+      <Panel
+        eyebrow="Problem"
+        title="Clinical data is difficult to search with traditional tools"
+        body="Clinical datasets are often fragmented, inconsistently structured, and require complex filtering logic. Keyword-based search misses relevant records when terminology varies, slowing down cohort identification and research workflows."
+      />
 
-      <section className="descriptionTwoCol">
-        <article className="descriptionSection cardish section-soft">
-          <div className="descriptionSectionHeader">
-            <span className="descriptionIcon" aria-hidden="true">
-              ?
-            </span>
-            <h3>Problem</h3>
-          </div>
-          <p>
-            Traditional keyword search is brittle in healthcare-style datasets.
-            Relevant records may be missed when query wording does not exactly
-            match diagnosis names, medication names, or narrative descriptions.
-          </p>
-        </article>
+      <Panel
+        eyebrow="Solution"
+        title="Semantic search across patient data"
+        body="By converting both queries and patient data into embeddings, the system enables similarity-based matching. This allows users to find relevant patients even when exact keywords differ, improving recall and usability."
+      />
 
-        <article className="descriptionSection cardish section-soft">
-          <div className="descriptionSectionHeader">
-            <span className="descriptionIcon" aria-hidden="true">
-              ✓
-            </span>
-            <h3>Solution</h3>
-          </div>
-          <p>
-            The app creates a semantic profile for each synthetic patient,
-            embeds both profile and query, then ranks matches using similarity
-            scoring and explanatory context.
-          </p>
-        </article>
-      </section>
+      {/* ------------------------------ */}
+      {/* How It Works (Full Width)      */}
+      {/* ------------------------------ */}
+      <Panel
+        eyebrow="How it works"
+        title="Semantic search workflow"
+        body="The system transforms natural language queries into embeddings, compares them against patient vectors, and returns ranked results with contextual relevance."
+        wide
+      >
+        <FeatureCardGrid items={workflowSteps} columns={5} />
+      </Panel>
 
-      <section className="descriptionSection cardish">
-        <p className="descriptionKicker">Technical Architecture</p>
-        <h3>How the workflow operates</h3>
-        <p className="descriptionSectionIntro">
-          A compact retrieval workflow turns patient context and
-          natural-language intent into ranked, explainable discovery results.
-        </p>
+      {/* ------------------------------ */}
+      {/* Results / Impact (2-col)       */}
+      {/* ------------------------------ */}
+      <Panel
+        eyebrow="Results & Impact"
+        title="Faster and more intuitive cohort discovery"
+        bullets={[
+          "Reduces reliance on complex filter logic",
+          "Improves recall by capturing semantic meaning",
+          "Accelerates research workflows",
+          "Supports exploratory data analysis",
+        ]}
+      />
 
-        <div className="workflowGrid semanticWorkflowGrid">
-          {workflowSteps.map((step) => (
-            <article key={step.title}>
-              <span className="workflowStepIndex">{step.index}</span>
-              <div className="workflowStepTitle">
-                <span className="workflowStepIcon" aria-hidden="true">
-                  {step.icon}
-                </span>
-                <h4>{step.title}</h4>
-              </div>
-              <p>{step.description}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="descriptionTwoCol">
-        <article className="descriptionSection cardish">
-          <p className="descriptionKicker">Why it matters</p>
-          <h3>Discovery should support clinical language</h3>
-          <p>
-            Semantic retrieval is a strong fit for discovery workflows where
-            users describe concepts, risk patterns, or clinical context rather
-            than exact terms.
-          </p>
-        </article>
-
-        <article className="descriptionSection cardish">
-          <p className="descriptionKicker">Portfolio relevance</p>
-          <h3>AI search with product-grade explainability</h3>
-          <p>
-            The project connects AI search, healthcare data platforms, synthetic
-            data design, explainable retrieval, and product strategy in a
-            shareable demo.
-          </p>
-        </article>
-      </section>
-    </section>
+      <Panel
+        eyebrow="Key Takeaways"
+        title="Applying AI to real data workflows"
+        bullets={[
+          "Semantic search improves usability of complex datasets",
+          "Embeddings enable flexible matching beyond keywords",
+          "UX design is critical for trust and adoption",
+          "Combining AI + product design creates practical value",
+        ]}
+      />
+    </div>
   );
 }
