@@ -4,6 +4,7 @@ type PanelProps = {
   eyebrow?: string;
   title: string;
   body?: string;
+  bullets?: ReactNode[];
   children?: ReactNode;
   className?: string;
   wide?: boolean;
@@ -13,6 +14,7 @@ export default function Panel({
   eyebrow,
   title,
   body,
+  bullets,
   children,
   className = "",
   wide = false,
@@ -29,8 +31,14 @@ export default function Panel({
 
       {body ? <p className="ui-panel-body">{body}</p> : null}
 
-      {children ? (
-        <div className="ui-panel-content ui-panel-body">{children}</div>
+      {children ? <div className="ui-panel-content">{children}</div> : null}
+
+      {bullets?.length ? (
+        <ul className="ui-clean-list">
+          {bullets.map((bullet, index) => (
+            <li key={index}>{bullet}</li>
+          ))}
+        </ul>
       ) : null}
     </section>
   );

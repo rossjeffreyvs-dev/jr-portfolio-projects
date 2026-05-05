@@ -1154,3 +1154,235 @@ nextjs-portal,
     text-align: left;
   }
 }
+
+/* -------------------------------------------------------------------------- */
+/* Shared UI Panel + FeatureListGrid support for TrainJazz                    */
+/* -------------------------------------------------------------------------- */
+
+.ui-panel {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid #dbe7f5;
+  border-radius: 24px;
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.06);
+  padding: 28px;
+}
+
+.ui-panel-wide {
+  grid-column: 1 / -1;
+}
+
+.ui-eyebrow {
+  margin: 0 0 8px;
+  color: #64748b;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 900;
+  font-size: 0.72rem;
+}
+
+.ui-panel-title {
+  margin: 0 0 10px;
+  color: #0f172a;
+  letter-spacing: -0.025em;
+  font-size: 1.2rem;
+  line-height: 1.25;
+  font-weight: 900;
+}
+
+.ui-panel-body,
+.ui-panel-content {
+  color: #5f718b;
+  line-height: 1.6;
+  font-size: 0.94rem;
+}
+
+.ui-panel-body {
+  margin: 0;
+}
+
+.ui-panel-content {
+  margin-top: 18px;
+}
+
+.ui-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.ui-feature-card {
+  min-height: 78px;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid #dbe7f5;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.ui-feature-index {
+  display: none;
+}
+
+.ui-feature-card-title {
+  display: contents;
+}
+
+.ui-feature-icon {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  background: #eef4ff;
+  border: 1px solid #d8e7ff;
+  font-size: 1rem;
+  flex: 0 0 auto;
+}
+
+.ui-feature-card strong {
+  display: block;
+  color: #0f172a;
+  font-size: 0.82rem;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  font-weight: 900;
+}
+
+.ui-feature-card p {
+  grid-column: 2;
+  margin: -4px 0 0;
+  color: #64748b;
+  font-size: 0.68rem;
+  line-height: 1.2;
+}
+
+@media (max-width: 1100px) {
+  .ui-feature-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .ui-feature-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ui-panel {
+    padding: 22px;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* TrainJazz PM Playbook Panel Final Overrides                                 */
+/* -------------------------------------------------------------------------- */
+
+.content-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.ui-panel,
+.panel {
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 28px;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.05);
+  padding: 28px;
+}
+
+.ui-panel-wide,
+.panel.wide {
+  grid-column: 1 / -1;
+}
+
+.ui-panel .ui-eyebrow,
+.section-label {
+  margin: 0 0 6px;
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.ui-panel .ui-panel-title,
+.panel h2 {
+  margin: 0 0 12px;
+  color: #2a2220;
+  font-size: 1.2rem;
+  line-height: 1.28;
+  font-weight: 850;
+  letter-spacing: -0.018em;
+}
+
+.ui-panel .ui-panel-body,
+.ui-panel .ui-panel-content,
+.panel p {
+  color: #52637a;
+  font-size: 0.94rem;
+  line-height: 1.6;
+}
+
+.ui-panel .ui-panel-body {
+  margin: 0;
+}
+
+.ui-panel .ui-panel-content {
+  margin-top: 16px;
+}
+
+/* Style both Panel bullets prop and any raw <ul> children */
+.ui-panel .ui-clean-list,
+.ui-panel ul,
+.panel ul {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 9px;
+}
+
+.ui-panel .ui-clean-list li,
+.ui-panel ul li,
+.panel ul li {
+  position: relative;
+  padding-left: 22px;
+  color: #52637a;
+  font-size: 0.94rem;
+  line-height: 1.5;
+}
+
+.ui-panel .ui-clean-list li::before,
+.ui-panel ul li::before,
+.panel ul li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #94a3b8;
+}
+
+.ui-panel strong,
+.panel strong {
+  color: #334155;
+  font-weight: 800;
+}
+
+@media (max-width: 900px) {
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ui-panel-wide,
+  .panel.wide {
+    grid-column: span 1;
+  }
+}
