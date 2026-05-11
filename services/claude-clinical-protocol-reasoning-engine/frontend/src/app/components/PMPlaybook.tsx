@@ -1,5 +1,5 @@
 import Panel from "./Panel";
-import FeatureCardList from "./FeatureCardList";
+import FeatureCardList from "./FeatureCardGrid";
 // import FeatureListGrid from "./FeatureListGrid";
 
 const playbookSteps = [
