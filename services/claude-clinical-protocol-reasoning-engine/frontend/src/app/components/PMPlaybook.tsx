@@ -1,6 +1,6 @@
 import Panel from "./Panel";
-import FeatureCardGrid from "./FeatureCardList";
-import FeatureListGrid from "./FeatureListGrid";
+import FeatureCardList from "./FeatureCardList";
+// import FeatureListGrid from "./FeatureListGrid";
 
 const playbookSteps = [
   {
@@ -102,7 +102,7 @@ export default function PMPlaybook() {
         body="The PM goal is to turn complex eligibility criteria into a transparent, repeatable decision workflow."
         wide
       >
-        <FeatureCardGrid items={playbookSteps} numbered columns={5} />
+        <FeatureCardList items={playbookSteps} numbered columns={5} />
       </Panel>
 
       <Panel eyebrow="Buyer & User" title="Who this is for" bullets={users} />
@@ -122,7 +122,7 @@ export default function PMPlaybook() {
         body="The first version should focus on one high-value loop: evaluate a patient against an active protocol, explain each inclusion and exclusion decision, and route uncertain cases for human review."
         wide
       >
-        <FeatureCardGrid items={mvpSteps} columns={5} />
+        <FeatureCardList items={mvpSteps} columns={5} />
       </Panel>
 
       <Panel
