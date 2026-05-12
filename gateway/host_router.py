@@ -82,6 +82,19 @@ TRAINJAZZ_PUBLIC_PREFIX = "/train-jazz"
 TRAINJAZZ_LEGACY_PUBLIC_PREFIX = "/services/train-jazz"
 
 
+STARTUP_FINANCE_FRONTEND_URL = "http://127.0.0.1:3005"
+STARTUP_FINANCE_API_URL = "http://127.0.0.1:8030"
+
+STARTUP_FINANCE_PUBLIC_PREFIX = "/agentic-startup-finance-ops"
+STARTUP_FINANCE_API_PREFIX = f"{STARTUP_FINANCE_PUBLIC_PREFIX}/api"
+
+STARTUP_FINANCE_HOSTS = {
+    "agentic-startup-finance-ops.jeffrey-ross.me",
+    "startup-finance.local",
+    "startup-finance-ops.local",
+}
+
+
 HOST_MAP = {
     "fx-insights.jeffrey-ross.me": fx_app,
     "semantic-patient-search.jeffrey-ross.me": semantic_app,
@@ -117,8 +130,11 @@ def rewrite_prefixed_api_path(path: str, public_api_prefix: str) -> str:
 def rewrite_prefixed_next_page_path(
     path: str,
     public_prefix: str,
-    internal_page_path: str,
+    internal_page_path: str | None = None,
 ) -> str:
+    if not internal_page_path:
+        return path
+
     if path == public_prefix or path == f"{public_prefix}/":
         return internal_page_path
 
@@ -208,12 +224,40 @@ def route_trainjazz(path: str):
     return None
 
 
+def route_startup_finance(path: str):
+    if path.startswith(STARTUP_FINANCE_API_PREFIX):
+        return proxy_target(
+            STARTUP_FINANCE_API_URL,
+            rewrite_prefixed_api_path(path, STARTUP_FINANCE_API_PREFIX),
+        )
+
+    if is_next_static_asset(path):
+        return proxy_target(STARTUP_FINANCE_FRONTEND_URL, path)
+
+    if path == STARTUP_FINANCE_PUBLIC_PREFIX or path.startswith(
+        f"{STARTUP_FINANCE_PUBLIC_PREFIX}/"
+    ):
+        return proxy_target(STARTUP_FINANCE_FRONTEND_URL, path)
+
+    return None
+
+
 def get_app_for_request(host: str, path: str):
     normalized_host = normalize_host(host)
 
     trainjazz_target = route_trainjazz(path)
     if trainjazz_target:
         return trainjazz_target
+
+    startup_finance_target = route_startup_finance(path)
+    if startup_finance_target:
+        return startup_finance_target
+
+    if normalized_host in STARTUP_FINANCE_HOSTS:
+        return route_startup_finance(path) or proxy_target(
+            STARTUP_FINANCE_FRONTEND_URL,
+            path,
+        )
 
     if normalized_host in CLINICAL_HOSTS:
         return route_clinical(path)

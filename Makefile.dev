@@ -52,6 +52,13 @@ TRAINJAZZ_WEB_DIR := $(TRAINJAZZ_DIR)/apps/web
 TRAINJAZZ_FRONTEND_PORT := 3004
 TRAINJAZZ_PUBLIC_ROUTE := /services/train-jazz
 
+STARTUP_FINANCE_DIR := services/agentic_startup_finance_ops
+STARTUP_FINANCE_API_DIR := $(STARTUP_FINANCE_DIR)/apps/api
+STARTUP_FINANCE_WEB_DIR := $(STARTUP_FINANCE_DIR)/apps/web
+STARTUP_FINANCE_BACKEND_PORT := 8030
+STARTUP_FINANCE_FRONTEND_PORT := 3005
+STARTUP_FINANCE_PUBLIC_ROUTE := /agentic-startup-finance-ops
+
 .DEFAULT_GOAL := help
 
 help:
@@ -103,6 +110,13 @@ help:
 	@echo "  make -f $(MAKEFILE_NAME) trainjazz          - run TrainJazz frontend"
 	@echo "  make -f $(MAKEFILE_NAME) trainjazz-smoke    - quick local health check for TrainJazz"
 	@echo "  make -f $(MAKEFILE_NAME) trainjazz-stop     - kill TrainJazz frontend port"
+	@echo "  make -f $(MAKEFILE_NAME) startup-finance-setup     - install Startup Finance backend Python requirements"
+	@echo "  make -f $(MAKEFILE_NAME) startup-finance-install   - install Startup Finance backend + frontend dependencies"
+	@echo "  make -f $(MAKEFILE_NAME) startup-finance-backend   - run Startup Finance backend locally on port $(STARTUP_FINANCE_BACKEND_PORT)"
+	@echo "  make -f $(MAKEFILE_NAME) startup-finance-frontend  - run Startup Finance frontend locally on port $(STARTUP_FINANCE_FRONTEND_PORT)"
+	@echo "  make -f $(MAKEFILE_NAME) startup-finance           - run Startup Finance backend + frontend together"
+	@echo "  make -f $(MAKEFILE_NAME) startup-finance-smoke     - quick local health checks for Startup Finance endpoints"
+	@echo "  make -f $(MAKEFILE_NAME) startup-finance-stop      - kill Startup Finance frontend/backend ports"
 	@echo "  make -f $(MAKEFILE_NAME) check              - verify key packages are installed"
 	@echo "  make -f $(MAKEFILE_NAME) clean              - remove root virtual environment"
 	@echo "  make -f $(MAKEFILE_NAME) fx-clean           - remove FX frontend node_modules/dist"
@@ -110,6 +124,7 @@ help:
 	@echo "  make -f $(MAKEFILE_NAME) trial-clean        - remove Clinical Trial frontend node_modules/.next"
 	@echo "  make -f $(MAKEFILE_NAME) customer-clean     - remove Customer Lifecycle frontend node_modules/.next"
 	@echo "  make -f $(MAKEFILE_NAME) trainjazz-clean    - remove TrainJazz frontend node_modules/.next"
+	@echo "  make -f $(MAKEFILE_NAME) startup-finance-clean - remove Startup Finance frontend node_modules/.next"
 
 $(VENV)/bin/activate:
 	$(PYTHON) -m venv $(VENV)
@@ -403,6 +418,69 @@ trainjazz-smoke:
 trainjazz-stop:
 	@kill -9 $$(lsof -ti :$(TRAINJAZZ_FRONTEND_PORT)) 2>/dev/null || true
 
+startup-finance-setup: $(VENV)/bin/activate
+	$(PIP) install -r $(STARTUP_FINANCE_API_DIR)/requirements.txt
+
+startup-finance-install: startup-finance-setup
+	cd $(STARTUP_FINANCE_WEB_DIR) && $(NPM) install
+
+startup-finance-backend: startup-finance-setup
+	cd $(STARTUP_FINANCE_API_DIR) && \
+	set -a && [ -f .env ] && source .env || true && set +a && \
+	PYTHONPATH=. $(abspath $(UVICORN)) app.main:app --reload --port $(STARTUP_FINANCE_BACKEND_PORT)
+
+startup-finance-frontend:
+	cd $(STARTUP_FINANCE_WEB_DIR) && PORT=$(STARTUP_FINANCE_FRONTEND_PORT) NEXT_PUBLIC_STARTUP_FINANCE_API_BASE_URL=http://127.0.0.1:$(STARTUP_FINANCE_BACKEND_PORT) $(NPM) run dev
+
+startup-finance-wait:
+	@echo "Waiting for Startup Finance backend on :$(STARTUP_FINANCE_BACKEND_PORT)..."
+	@attempts=0; \
+	until curl -sf http://127.0.0.1:$(STARTUP_FINANCE_BACKEND_PORT)/health > /dev/null; do \
+		attempts=$$((attempts+1)); \
+		if [ $$attempts -ge 30 ]; then \
+			echo "Startup Finance backend failed to become ready."; \
+			exit 1; \
+		fi; \
+		sleep 1; \
+	done
+	@echo "Startup Finance backend is ready."
+
+startup-finance: startup-finance-install
+	@echo "Agentic Startup Finance & Operations Platform is starting..."
+	@echo "Frontend: http://127.0.0.1:$(STARTUP_FINANCE_FRONTEND_PORT)"
+	@echo "Backend:  http://127.0.0.1:$(STARTUP_FINANCE_BACKEND_PORT)"
+	@echo "Gateway:  http://127.0.0.1:8080$(STARTUP_FINANCE_PUBLIC_ROUTE)"
+	@echo ""
+	@echo "Press Ctrl+C to stop both services."
+	@trap 'echo ""; echo "Stopping services..."; kill 0' EXIT INT TERM; \
+	$(MAKE) -f $(MAKEFILE_NAME) startup-finance-backend & \
+	BACKEND_PID=$$!; \
+	$(MAKE) -f $(MAKEFILE_NAME) startup-finance-wait; \
+	$(MAKE) -f $(MAKEFILE_NAME) startup-finance-frontend & \
+	FRONTEND_PID=$$!; \
+	wait $$BACKEND_PID $$FRONTEND_PID
+
+startup-finance-smoke:
+	@echo "Checking backend health on http://127.0.0.1:$(STARTUP_FINANCE_BACKEND_PORT)/health"
+	@curl -fsS http://127.0.0.1:$(STARTUP_FINANCE_BACKEND_PORT)/health > /dev/null || (echo "Backend health check failed" && exit 1)
+	@echo "Checking adaptive question endpoint"
+	@curl -fsS -X POST http://127.0.0.1:$(STARTUP_FINANCE_BACKEND_PORT)/questions/ask \
+		-H "Content-Type: application/json" \
+		-d '{"question":"Which enterprise customers are most likely to churn next quarter?"}' \
+		> /dev/null || (echo "Adaptive workflow check failed" && exit 1)
+	@echo "Checking frontend on http://127.0.0.1:$(STARTUP_FINANCE_FRONTEND_PORT)"
+	@curl -fsS http://127.0.0.1:$(STARTUP_FINANCE_FRONTEND_PORT) > /dev/null || (echo "Frontend check failed" && exit 1)
+	@echo "Startup Finance local smoke check passed"
+
+startup-finance-stop:
+	@kill -9 $$(lsof -ti :$(STARTUP_FINANCE_BACKEND_PORT)) 2>/dev/null || true
+	@kill -9 $$(lsof -ti :$(STARTUP_FINANCE_FRONTEND_PORT)) 2>/dev/null || true
+
+startup-finance-clean:
+	rm -rf $(STARTUP_FINANCE_WEB_DIR)/node_modules
+	rm -rf $(STARTUP_FINANCE_WEB_DIR)/.next
+	rm -rf $(STARTUP_FINANCE_API_DIR)/.pytest_cache
+
 check: $(VENV)/bin/activate
 	@echo "Python:"
 	@$(PY) --version
@@ -440,4 +518,5 @@ trainjazz-clean:
 	customer-setup customer-install customer-backend customer-frontend customer-wait customer customer-smoke customer-stop customer-clean \
 	claude-setup claude-install claude-backend claude-frontend claude-wait claude claude-smoke claude-stop \
 	trainjazz-install trainjazz-frontend trainjazz trainjazz-smoke trainjazz-stop trainjazz-clean \
+	startup-finance-setup startup-finance-install startup-finance-backend startup-finance-frontend startup-finance-wait startup-finance startup-finance-smoke startup-finance-stop startup-finance-clean \
 	check clean

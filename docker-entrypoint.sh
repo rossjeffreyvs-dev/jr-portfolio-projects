@@ -25,6 +25,14 @@ start_claude_api() {
   ) &
 }
 
+start_startup_finance_api() {
+  echo "Starting Startup Finance API on port 8030..."
+  (
+    cd /app/services/agentic_startup_finance_ops/apps/api
+    uvicorn app.main:app --host 0.0.0.0 --port 8030
+  ) &
+}
+
 # --- Clinical Trial Matching ---
 
 start_service \
@@ -69,6 +77,15 @@ start_service \
   "TrainJazz UI on port 3004" \
   env HOSTNAME=0.0.0.0 PORT=3004 \
   node /app/train-jazz-web/server.js
+
+# --- Agentic Startup Finance Ops ---
+
+start_startup_finance_api
+
+start_service \
+  "Startup Finance UI on port 3005" \
+  env HOSTNAME=0.0.0.0 PORT=3005 \
+  node /app/startup-finance-web/server.js
 
 # --- Gateway ---
 

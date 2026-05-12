@@ -68,6 +68,17 @@ COPY services/train-jazz/apps/web/ ./
 RUN npm run build
 
 
+# ---------- Build Agentic Startup Finance Ops Next app ----------
+FROM node:20-bookworm-slim AS startup_finance_builder
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_PUBLIC_STARTUP_FINANCE_API_BASE_URL=/agentic-startup-finance-ops/api
+WORKDIR /build/services/agentic_startup_finance_ops/apps/web
+COPY services/agentic_startup_finance_ops/apps/web/package*.json ./
+RUN npm ci
+COPY services/agentic_startup_finance_ops/apps/web/ ./
+RUN npm run build
+
+
 # ---------- Runtime ----------
 FROM python:3.10-slim
 
@@ -103,11 +114,13 @@ COPY services/fx_insights/backend/requirements.txt fx.txt
 COPY services/semantic_patient_search/backend/requirements.txt sem.txt
 COPY services/clinical_trial_matching_agent/apps/api/requirements.txt clinical_api.txt
 COPY services/claude-clinical-protocol-reasoning-engine/backend/requirements.txt claude_api.txt
+COPY services/agentic_startup_finance_ops/apps/api/requirements.txt startup_finance_api.txt
 
 RUN pip install --no-cache-dir -r fx.txt \
  && pip install --no-cache-dir -r sem.txt \
  && pip install --no-cache-dir -r clinical_api.txt \
- && pip install --no-cache-dir -r claude_api.txt
+ && pip install --no-cache-dir -r claude_api.txt \
+ && pip install --no-cache-dir -r startup_finance_api.txt
 
 # Copy app source
 COPY gateway ./gateway
@@ -175,6 +188,19 @@ COPY --from=trainjazz_builder \
 COPY --from=trainjazz_builder \
   /build/services/train-jazz/apps/web/public \
   /app/train-jazz-web/public
+
+# Copy Agentic Startup Finance Ops standalone build
+COPY --from=startup_finance_builder \
+  /build/services/agentic_startup_finance_ops/apps/web/.next/standalone \
+  /app/startup-finance-web
+
+COPY --from=startup_finance_builder \
+  /build/services/agentic_startup_finance_ops/apps/web/.next/static \
+  /app/startup-finance-web/.next/static
+
+COPY --from=startup_finance_builder \
+  /build/services/agentic_startup_finance_ops/apps/web/public \
+  /app/startup-finance-web/public
 
 COPY docker-entrypoint.sh /app/docker-entrypoint.sh
 RUN chmod +x /app/docker-entrypoint.sh

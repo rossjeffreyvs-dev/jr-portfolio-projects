@@ -3,10 +3,18 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Agentic Startup Finance & Operations Platform",
-  description: "Agentic AI portfolio project for startup finance, runway, revenue risk, and operations workflows."
+  description:
+    "Agentic AI portfolio project for startup finance, runway, revenue risk, and operations workflows.",
+  icons: {
+    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+  },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
       <body>{children}</body>
