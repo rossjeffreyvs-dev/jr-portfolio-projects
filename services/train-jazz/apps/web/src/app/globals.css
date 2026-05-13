@@ -759,7 +759,7 @@ nextjs-portal,
   line-height: 1.55;
 }
 .check-list li::before {
-  content: "✓";
+  content: "âœ“";
   position: absolute;
   left: 0;
   top: 0.12rem;
@@ -882,7 +882,7 @@ nextjs-portal,
 }
 
 .check-list li::before {
-  content: "✓";
+  content: "âœ“";
   position: absolute;
   left: 0;
   top: 0;
@@ -1384,5 +1384,338 @@ nextjs-portal,
   .ui-panel-wide,
   .panel.wide {
     grid-column: span 1;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* TrainJazz Demo Above-the-Fold Density Overrides                             */
+/* -------------------------------------------------------------------------- */
+/*
+  Goal: keep the dashboard panels visible while bringing the Start Audio CTA
+  into view on common laptop screens. These overrides intentionally target the
+  demo pre-audio stack: hero, tabs, status cards, conductor panel, and CTA strip.
+*/
+
+@media (min-width: 981px) {
+  .project-main {
+    padding-top: 34px;
+  }
+
+  .project-hero h1 {
+    font-size: clamp(2.55rem, 3.6vw, 3.45rem);
+    line-height: 0.95;
+    letter-spacing: -0.055em;
+  }
+
+  .hero-subtitle {
+    margin-top: 10px;
+    font-size: 0.98rem;
+    line-height: 1.35;
+  }
+
+  .hero-metrics {
+    margin-top: 20px;
+    gap: 66px;
+  }
+
+  .hero-metrics div {
+    gap: 4px;
+  }
+
+  .hero-metrics strong {
+    font-size: 1.08rem;
+  }
+
+  .hero-metrics span {
+    font-size: 0.74rem;
+  }
+
+  .project-tabs-shell {
+    margin-top: 32px;
+  }
+
+  .project-tabs {
+    margin-bottom: 24px;
+  }
+
+  .project-tabs button {
+    min-width: 168px;
+    border-radius: 16px;
+    padding: 16px 22px;
+    font-size: 0.96rem;
+  }
+
+  .demo-shell {
+    gap: 18px;
+  }
+
+  .status-grid {
+    gap: 14px;
+  }
+
+  .metric-card {
+    border-radius: 18px;
+    padding: 15px 17px;
+  }
+
+  .metric-card span {
+    font-size: 0.72rem;
+    letter-spacing: 0.11em;
+  }
+
+  .metric-card strong {
+    margin-top: 6px;
+    font-size: 1.46rem;
+    line-height: 1.1;
+  }
+
+  .tj-panel.conductor-panel {
+    border-radius: 24px;
+    padding: 24px 28px;
+    gap: 18px;
+  }
+
+  .conductor-panel .section-label,
+  .conductor-panel h2 {
+    margin-bottom: 8px;
+  }
+
+  .conductor-panel h2 {
+    font-size: 1.05rem;
+    line-height: 1.18;
+  }
+
+  .guidance {
+    padding: 12px 14px;
+    border-radius: 14px;
+    line-height: 1.42;
+    font-size: 0.88rem;
+  }
+
+  .conductor-bars {
+    gap: 7px;
+  }
+
+  .bar-row {
+    grid-template-columns: 82px 1fr 42px;
+    gap: 9px;
+    font-size: 0.9rem;
+  }
+
+  .bar {
+    height: 7px;
+  }
+
+  .live-control {
+    padding: 18px 24px;
+    border-radius: 22px;
+  }
+
+  .live-control h2 {
+    margin-bottom: 4px;
+    font-size: 1.02rem;
+  }
+
+  .live-control p {
+    font-size: 0.9rem;
+    line-height: 1.35;
+  }
+
+  .primary-button {
+    min-width: 144px;
+    padding: 14px 22px;
+    border-radius: 15px;
+  }
+}
+
+/* Slightly more aggressive compression for shorter laptop viewports. */
+@media (min-width: 981px) and (max-height: 820px) {
+  .site-header-inner,
+  .siteHeaderInner {
+    min-height: 64px;
+  }
+
+  .brand-mark,
+  .brandBadge {
+    width: 46px;
+    height: 46px;
+    border-radius: 13px;
+    font-size: 18px;
+  }
+
+  .brand,
+  .brandLockup {
+    gap: 12px;
+    font-size: 17px;
+  }
+
+  .top-nav a,
+  .siteNav a {
+    padding-top: 20px;
+    padding-bottom: 17px;
+  }
+
+  .top-nav a.active::after,
+  .siteNav a.active::after {
+    bottom: 8px;
+  }
+
+  .project-main {
+    padding-top: 28px;
+  }
+
+  .project-hero h1 {
+    font-size: clamp(2.35rem, 3.2vw, 3.15rem);
+  }
+
+  .hero-subtitle {
+    margin-top: 8px;
+    font-size: 0.94rem;
+  }
+
+  .hero-metrics {
+    margin-top: 17px;
+  }
+
+  .project-tabs-shell {
+    margin-top: 26px;
+  }
+
+  .project-tabs {
+    margin-bottom: 20px;
+  }
+
+  .project-tabs button {
+    padding: 14px 20px;
+  }
+
+  .metric-card {
+    padding: 13px 16px;
+  }
+
+  .metric-card strong {
+    font-size: 1.38rem;
+  }
+
+  .tj-panel.conductor-panel {
+    padding: 20px 26px;
+  }
+
+  .guidance {
+    padding: 11px 13px;
+  }
+
+  .live-control {
+    padding: 16px 22px;
+  }
+}
+
+@media (max-width: 980px) {
+  .project-tabs-shell {
+    margin-top: 30px;
+  }
+
+  .project-tabs {
+    margin-bottom: 24px;
+  }
+
+  .metric-card {
+    padding: 16px;
+  }
+
+  .tj-panel.conductor-panel {
+    padding: 22px;
+  }
+
+  .live-control {
+    padding: 20px;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* TrainJazz Demo Final Micro-Polish                                           */
+/* -------------------------------------------------------------------------- */
+/*
+  Tightens the final above-the-fold rhythm after moving live train metrics into
+  the hero. Keeps the conductor readable while pulling Start Audio slightly
+  higher and giving the CTA strip a stronger interactive presence.
+*/
+
+@media (min-width: 981px) {
+  .project-tabs-shell {
+    margin-top: 24px;
+  }
+
+  .project-tabs {
+    margin-bottom: 18px;
+  }
+
+  .demo-shell {
+    gap: 16px;
+  }
+
+  .tj-panel.conductor-panel,
+  .panel.conductor-panel {
+    padding: 20px 26px 18px;
+  }
+
+  .conductor-panel {
+    min-height: auto;
+  }
+
+  .conductor-panel .section-label {
+    margin-bottom: 6px;
+  }
+
+  .conductor-panel h2 {
+    margin-bottom: 8px;
+  }
+
+  .guidance {
+    margin-top: 0;
+    padding: 11px 14px;
+  }
+
+  .live-control {
+    min-height: 74px;
+    padding: 17px 24px;
+  }
+
+  .live-control h2 {
+    margin-bottom: 4px;
+  }
+
+  .primary-button {
+    min-height: 44px;
+  }
+
+  .hero-metrics strong {
+    transition:
+      transform 0.18s ease,
+      color 0.18s ease;
+  }
+
+  .hero-metrics div:hover strong {
+    transform: translateY(-1px);
+  }
+}
+
+@media (min-width: 981px) and (max-height: 820px) {
+  .project-tabs-shell {
+    margin-top: 22px;
+  }
+
+  .project-tabs {
+    margin-bottom: 16px;
+  }
+
+  .tj-panel.conductor-panel,
+  .panel.conductor-panel {
+    padding: 18px 24px 16px;
+  }
+
+  .live-control {
+    min-height: 72px;
+    padding: 15px 22px;
   }
 }

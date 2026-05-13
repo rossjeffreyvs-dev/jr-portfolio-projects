@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AIConductorPanel from "./AIConductorPanel";
 import EventFeed from "./EventFeed";
-import MetricCard from "./MetricCard";
 import SubwayLinesPanel from "./SubwayLinesPanel";
 import SubwayMap from "./SubwayMap";
 import { createAIConductor } from "../agents/aiConductor";
@@ -99,6 +98,25 @@ export default function TrainJazzDashboard() {
     };
   }, [addEvent]);
 
+  const statusText = useMemo(() => {
+    if (isLoadingAudio) return "Loading instruments…";
+    if (isPlaying) return "Playing — system live";
+    return "Start Audio below ↓";
+  }, [isLoadingAudio, isPlaying]);
+
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent("trainjazz:hero-metrics", {
+        detail: {
+          statusText,
+          totalTrains: trainState.totalTrains,
+          activeLines: trainState.activeLines,
+          mode: "AI conductor",
+        },
+      }),
+    );
+  }, [statusText, trainState.totalTrains, trainState.activeLines]);
+
   const toggleAudio = async () => {
     if (!engineRef.current) engineRef.current = new TrainJazzAudioEngine();
 
@@ -118,6 +136,7 @@ export default function TrainJazzDashboard() {
         LINE_META,
         addEvent,
       );
+
       setIsPlaying(true);
       addEvent("audio started · AI conductor active");
     } finally {
@@ -125,26 +144,10 @@ export default function TrainJazzDashboard() {
     }
   };
 
-  const statusText = useMemo(() => {
-    if (isLoadingAudio) return "Loading instruments…";
-    if (isPlaying) return "Playing — system live";
-    return "Start Audio below ↓";
-  }, [isLoadingAudio, isPlaying]);
-
   return (
     <div className="demo-shell">
-      {/* STATUS CARDS — ALWAYS VISIBLE */}
-      <div className="status-grid">
-        <MetricCard label="Status" value={statusText} />
-        <MetricCard label="Trains" value={trainState.totalTrains} />
-        <MetricCard label="Active Lines" value={trainState.activeLines} />
-        <MetricCard label="Mode" value="AI conductor" />
-      </div>
-
-      {/* AI CONDUCTOR */}
       <AIConductorPanel conductor={conductor} />
 
-      {/* START / STOP */}
       <section className="live-control">
         <div>
           <h2>Live Subway Sonification</h2>
@@ -168,7 +171,6 @@ export default function TrainJazzDashboard() {
         </button>
       </section>
 
-      {/* DASHBOARD */}
       <section className="tj-dashboard">
         <SubwayLinesPanel trainState={trainState} />
         <SubwayMap trains={visualTrains} />

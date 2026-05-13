@@ -60,7 +60,7 @@ input {
 .site-header-inner {
   max-width: 1120px;
   margin: 0 auto;
-  height: 76px;
+  height: 68px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -73,8 +73,8 @@ input {
   font-weight: 800;
 }
 .brand-mark {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   border: 3px solid var(--navy);
   border-radius: 14px;
   display: grid;
@@ -95,7 +95,7 @@ input {
 }
 .top-nav a {
   position: relative;
-  padding: 1.8rem 0;
+  padding: 1.45rem 0;
 }
 .top-nav a.active {
   color: var(--text);
@@ -105,7 +105,7 @@ input {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 1.05rem;
+  bottom: 0.82rem;
   height: 3px;
   border-radius: 999px;
   background: var(--navy);
@@ -115,56 +115,57 @@ input {
   text-align: center;
   max-width: 980px;
   margin: 0 auto;
-  padding: 3.25rem 1.4rem 1.45rem;
+  padding: 2.2rem 1.4rem 0.75rem;
 }
 
 .hero h1 {
   max-width: 1280px;
   margin: 0 auto;
-  font-size: clamp(1.95rem, 3vw, 2.75rem);
-  line-height: 1.04;
+  font-size: clamp(1.85rem, 2.8vw, 2.45rem);
+  line-height: 1.03;
   letter-spacing: -0.025em;
   font-weight: 900;
 }
 
 .hero p {
-  max-width: 770px;
-  margin: 1rem auto 0;
+  max-width: 760px;
+  margin: 0.72rem auto 0;
   color: var(--muted);
-  line-height: 1.55;
-  font-size: 1rem;
+  line-height: 1.45;
+  font-size: 0.95rem;
 }
 .hero-metrics {
-  margin: 1.75rem auto 0;
+  margin: 1.05rem auto 0;
   display: flex;
   justify-content: center;
-  gap: 4.6rem;
+  gap: 3.1rem;
 }
 .hero-metrics div {
   display: grid;
-  gap: 0.25rem;
+  gap: 0.16rem;
 }
 .hero-metrics strong {
-  font-size: 1.3rem;
+  font-size: 1.08rem;
+  line-height: 1;
 }
 .hero-metrics span {
   color: var(--muted);
-  font-size: 0.76rem;
+  font-size: 0.72rem;
 }
 
 .tabs {
   display: flex;
   justify-content: center;
-  gap: 1rem;
-  padding: 0.9rem 1rem 2.45rem;
+  gap: 0.8rem;
+  padding: 0.55rem 1rem 1.45rem;
 }
 .tabs button {
-  min-width: 170px;
+  min-width: 158px;
   border: 1px solid var(--border);
-  border-radius: 18px;
+  border-radius: 16px;
   background: rgba(255, 255, 255, 0.85);
   color: #43516a;
-  padding: 1rem 1.35rem;
+  padding: 0.75rem 1.05rem;
   font-weight: 800;
   cursor: pointer;
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.03);
@@ -178,7 +179,7 @@ input {
 .page-shell {
   max-width: 1130px;
   margin: 0 auto;
-  padding: 0 1.4rem 5rem;
+  padding: 0 1.4rem 4rem;
 }
 .tab-stack,
 .demo-stack {
@@ -188,8 +189,8 @@ input {
 .panel {
   background: rgba(255, 255, 255, 0.92);
   border: 1px solid var(--border);
-  border-radius: 28px;
-  padding: 1.65rem;
+  border-radius: 26px;
+  padding: 1.45rem;
   box-shadow: var(--soft-shadow);
 }
 .panel-blue {
@@ -437,7 +438,7 @@ p {
 .question-panel {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1.2rem;
+  gap: 0.95rem;
 }
 .question-form {
   display: grid;
@@ -446,8 +447,8 @@ p {
 }
 .question-form input {
   border: 1px solid var(--border);
-  border-radius: 18px;
-  padding: 1rem 1.1rem;
+  border-radius: 16px;
+  padding: 0.82rem 1rem;
   outline: none;
   color: var(--text);
   background: white;
@@ -459,10 +460,10 @@ p {
 .question-form button,
 .scenario-button {
   border: 0;
-  border-radius: 18px;
+  border-radius: 16px;
   background: var(--navy);
   color: white;
-  padding: 0.95rem 1.25rem;
+  padding: 0.82rem 1.1rem;
   font-weight: 900;
   cursor: pointer;
   box-shadow: 0 14px 30px rgba(15, 23, 42, 0.18);
@@ -760,7 +761,7 @@ p {
     bottom: -0.25rem;
   }
   .hero {
-    padding-top: 2.1rem;
+    padding-top: 1.65rem;
   }
   .hero-metrics {
     gap: 1.5rem;
@@ -789,7 +790,7 @@ p {
 
 .founder-scenarios {
   border-top: 1px solid rgba(191, 219, 254, 0.8);
-  padding-top: 1.15rem;
+  padding-top: 0.95rem;
   margin-top: 0.1rem;
 }
 
@@ -870,7 +871,7 @@ p {
 }
 
 .workflow-stream-panel {
-  padding: 1.65rem 1.75rem;
+  padding: 1.4rem 1.55rem;
 }
 
 .stream-header {

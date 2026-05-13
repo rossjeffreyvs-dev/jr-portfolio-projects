@@ -171,9 +171,6 @@ def route_customer_lifecycle(path: str):
             rewrite_prefixed_api_path(path, CUSTOMER_API_PREFIX),
         )
 
-    if is_next_static_asset(path):
-        return proxy_target(CUSTOMER_FRONTEND_URL, path)
-
     if path == CUSTOMER_PUBLIC_PREFIX or path.startswith(f"{CUSTOMER_PUBLIC_PREFIX}/"):
         return proxy_target(
             CUSTOMER_FRONTEND_URL,
@@ -206,9 +203,6 @@ def route_claude(path: str):
     if path.startswith(CLAUDE_API_PREFIXES):
         return proxy_target(CLAUDE_API_URL, path)
 
-    if is_next_static_asset(path):
-        return proxy_target(CLAUDE_FRONTEND_URL, path)
-
     return proxy_target(CLAUDE_FRONTEND_URL, path)
 
 
@@ -231,9 +225,6 @@ def route_startup_finance(path: str):
             rewrite_prefixed_api_path(path, STARTUP_FINANCE_API_PREFIX),
         )
 
-    if is_next_static_asset(path):
-        return proxy_target(STARTUP_FINANCE_FRONTEND_URL, path)
-
     if path == STARTUP_FINANCE_PUBLIC_PREFIX or path.startswith(
         f"{STARTUP_FINANCE_PUBLIC_PREFIX}/"
     ):
@@ -244,6 +235,22 @@ def route_startup_finance(path: str):
 
 def get_app_for_request(host: str, path: str):
     normalized_host = normalize_host(host)
+
+    # Host-specific Next.js assets.
+    # Important: do not let one app globally capture /_next/* for all projects.
+    if is_next_static_asset(path):
+        if normalized_host in CLINICAL_HOSTS:
+            return proxy_target(CLINICAL_FRONTEND_URL, path)
+
+        if normalized_host in STARTUP_FINANCE_HOSTS:
+            return proxy_target(STARTUP_FINANCE_FRONTEND_URL, path)
+
+        if normalized_host in CLAUDE_HOSTS:
+            return proxy_target(CLAUDE_FRONTEND_URL, path)
+
+        # Default public Lightsail /_next assets currently belong to path-based apps.
+        # Customer lifecycle is the main affected path-based project.
+        return proxy_target(CUSTOMER_FRONTEND_URL, path)
 
     trainjazz_target = route_trainjazz(path)
     if trainjazz_target:
