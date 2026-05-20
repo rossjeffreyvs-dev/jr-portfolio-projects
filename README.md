@@ -1,109 +1,187 @@
-# JR Portfolio Projects
+# AI Platform and Workflow Systems Portfolio
 
-A multi-project AI application platform that powers a portfolio of interactive demos, including clinical trial eligibility, semantic patient search, résumé matching, FX insights, and other agentic workflow experiments.
+Applied AI platforms and operational workflow systems spanning healthcare, finance, semantic retrieval, and enterprise SaaS workflows.
 
-This repository is structured as a **shared application platform** rather than a single app. It combines a routing gateway, multiple independently developed services, and deployment tooling for AWS Lightsail so each demo can be exposed through a clean project-specific experience.
+This repository powers a portfolio of interactive AI applications focused on workflow orchestration, explainable decision systems, semantic interfaces, and technical product execution.
 
----
+Rather than isolated prototypes, the projects in this repository are designed as modular, deployable systems that combine:
 
-## Live Project Themes
+- AI-assisted workflow orchestration
+- semantic retrieval and search
+- streaming operational interfaces
+- human-in-the-loop review patterns
+- reusable deployment infrastructure
+- full-stack product architecture
 
-This repo currently includes services for:
+The repository functions as both:
 
-- **Agentic Clinical Trial Eligibility** — multi-step eligibility evaluation with explainable recommendations and human-in-the-loop review
-- **Semantic Patient Search** — natural language search across patient and clinical-style data using meaning-based retrieval
-- **AI Résumé Match** — compares résumés against role descriptions and generates structured fit analysis
-- **AI FX Insights** — summarizes foreign exchange signals into concise client-ready reporting
-- **Smart Thermostat** — agentic workflow demo for decisioning and automation patterns
-
----
-
-## Why this repo exists
-
-The goal of this repository is to showcase how AI products can be designed as **modular, deployable systems** rather than isolated prototypes.
-
-Instead of treating each demo as a one-off app, this codebase explores a reusable pattern:
-
-- a shared **gateway layer** for routing and orchestration
-- individual **services** for each use case
-- reproducible **containerized deployment**
-- support for **subdomain-based project hosting**
-- a structure that can scale from one demo to many
-
-This makes the repository useful as both:
-
-1. a portfolio of applied AI products
-2. a reference architecture for multi-app deployment
+1. a portfolio of applied AI product systems
+2. a shared platform architecture for multi-service deployment
 
 ---
 
-## Repository structure
+## Featured Systems
+
+### Agentic Clinical Trial Eligibility
+
+Multi-step clinical eligibility evaluation workflow with explainable recommendations, patient review flows, and human-in-the-loop decision support.
+
+Capabilities include:
+
+- structured workflow orchestration
+- explainable recommendation generation
+- clinical-style review pipelines
+- streaming workflow activity
+- operational audit visibility
+
+---
+
+### Semantic Patient Search
+
+Natural-language semantic retrieval system for patient and clinical-style data exploration.
+
+Features include:
+
+- meaning-based search
+- semantic ranking
+- structured clinical-style filtering
+- vector-style retrieval workflows
+- operational search interfaces
+
+---
+
+### AI Résumé Match
+
+AI-assisted résumé and role evaluation workflow that compares candidate profiles against job requirements and generates structured fit analysis.
+
+Includes:
+
+- semantic job matching
+- structured scoring
+- recommendation generation
+- workflow-oriented UI patterns
+
+---
+
+### AI FX Insights
+
+AI-generated FX reporting workflow that transforms market signals into concise client-facing summaries.
+
+Features include:
+
+- streaming AI responses
+- financial signal summarization
+- operational reporting flows
+- real-time interface patterns
+
+---
+
+### Agentic Startup Finance and Operations
+
+Operational AI workflow platform for startup finance, revenue analysis, and scenario-driven recommendations.
+
+Includes:
+
+- agent workflow orchestration
+- operational analytics
+- adaptive recommendation flows
+- Stripe-oriented operational modeling
+- streaming tool activity interfaces
+
+---
+
+## Why this Repository Exists
+
+This repository explores how AI-native products can be designed as operational systems rather than isolated demos.
+
+The architecture emphasizes:
+
+- modular service boundaries
+- reusable orchestration patterns
+- scalable deployment workflows
+- shared routing infrastructure
+- product-oriented interaction design
+- explainable workflow visibility
+
+The goal is to demonstrate how applied AI systems can integrate product strategy, workflow orchestration, and hands-on engineering execution.
+
+---
+
+## Platform Architecture
+
+At a high level, the platform works as follows:
+
+1. A shared gateway receives requests for project-specific routes or subdomains
+2. Traffic is routed to independently deployed services
+3. Each service manages its own workflow logic, APIs, and UI behavior
+4. Shared deployment tooling packages the platform into containerized workloads
+5. AWS Lightsail deployment templates expose projects through a unified portfolio layer
+
+This structure allows multiple AI applications to operate within a shared operational platform while maintaining project-level isolation.
+
+---
+
+## Repository Structure
 
 ```text
 .
-├── gateway/                    # shared gateway / routing layer
+├── gateway/                    # shared routing and orchestration layer
 ├── services/
 │   ├── clinical_trial_matching_agent/
-│   ├── fx_insights/
-│   ├── resume_job_analyzer/
 │   ├── semantic_patient_search/
-│   └── smart_thermostat/
-├── scripts/                    # build and deployment automation
-├── Dockerfile                  # container build
-├── Makefile                    # build / deploy helpers
-├── requirements.txt            # Python dependencies
-└── lightsail.json.template     # AWS Lightsail deployment template
+│   ├── resume_job_analyzer/
+│   ├── fx_insights/
+│   ├── agentic_startup_finance_ops/
+│   └── additional workflow experiments
+├── scripts/                    # deployment and build automation
+├── Dockerfile                  # multi-service container build
+├── Makefile                    # build and deployment helpers
+├── requirements.txt
+└── lightsail.json.template
 ```
 
 ---
 
-## Architecture
+## Technology Stack
 
-At a high level, the platform works like this:
-
-1. A gateway receives requests for project-specific routes or subdomains
-2. Traffic is routed to the appropriate service
-3. Each service implements its own product logic, UI, and API behavior
-4. The full platform is packaged and deployed as a containerized workload
-5. Deployment metadata is generated for AWS Lightsail
-
-This pattern supports a cleaner portfolio experience and reduces duplicated deployment setup across demos.
-
----
-
-## Technology stack
-
-Core technologies used across this repository include:
+Core technologies used across the platform include:
 
 - Python
 - FastAPI / Starlette
 - Flask
+- React / Next.js / Vite
+- OpenAI APIs
 - HTTPX
-- OpenAI API
-- Gunicorn / Uvicorn
 - Docker
 - AWS Lightsail
+- Uvicorn / Gunicorn
 
-Some services also work with uploaded documents and structured text processing.
+Platform capabilities include:
+
+- streaming interfaces
+- semantic retrieval workflows
+- document processing
+- operational orchestration patterns
+- containerized multi-service deployment
 
 ---
 
-## Local development
+## Local Development
 
 ### Prerequisites
 
 - Python 3.10+
 - Docker
-- AWS CLI (for deployment workflows)
-- Environment variables for the services you want to run
+- AWS CLI
+- environment variables for AI-enabled services
 
-### Install dependencies
+### Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### Useful commands
+### Useful Commands
 
 ```bash
 make help
@@ -116,38 +194,44 @@ make deploy
 
 ## Deployment
 
-This repository is designed for container deployment to **AWS Lightsail**.
+The platform is designed for containerized deployment on AWS Lightsail.
 
-The deployment flow includes:
+Deployment workflows include:
 
-- building a Linux container image
-- pushing the image to Lightsail
-- generating `lightsail.json`
-- deploying a public gateway container
-- injecting environment variables for service integrations
-
----
-
-## Notes
-
-This repo is an active portfolio workspace, so some services evolve quickly as demos are improved, restructured, or prepared for public presentation.
-
-The focus is on showcasing:
-
-- applied AI product design
-- modular architecture
-- explainable workflows
-- real deployment patterns
+- container image builds
+- Lightsail image publishing
+- automated deployment template generation
+- environment variable injection
+- subdomain and path-based routing
 
 ---
 
-## Related repositories
+## Platform Focus
 
-- Portfolio site: https://github.com/rossjeffreyvs-dev/ross-jeffrey-projects-site
+This repository is an active applied AI portfolio workspace.
+
+Projects evolve continuously as workflows, orchestration patterns, and operational interfaces are refined.
+
+Primary focus areas include:
+
+- AI workflow orchestration
+- operational AI systems
+- semantic retrieval interfaces
+- enterprise data workflows
+- technical product systems
+- explainable AI interaction patterns
+
+---
+
+## Related Repository
+
+Portfolio website:
+
+https://github.com/rossjeffreyvs-dev/ross-jeffrey-projects-site
 
 ---
 
 ## Author
 
 **Jeff Ross**  
-Product and technology leader focused on AI applications, enterprise data platforms, workflow automation, and applied system design.
+Technical product leader focused on AI platforms, workflow systems, enterprise data architecture, and applied operational AI.
