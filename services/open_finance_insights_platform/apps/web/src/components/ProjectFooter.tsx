@@ -1,67 +1,31 @@
-type ProjectFooterProps = {
-  projectName?: string;
-  projectHref?: string;
-};
-
-const portfolioBaseUrl = "https://jeffrey-ross.me";
-
-export default function ProjectFooter({
-  projectName = "JR Projects",
-  projectHref = portfolioBaseUrl,
-}: ProjectFooterProps) {
+export default function ProjectFooter() {
   return (
     <footer className="project-footer">
       <div className="project-footer-inner">
-        <div className="project-footer-brand">
-          <a href={projectHref} className="project-footer-brand-link">
-            <span className="project-footer-mark">JR</span>
-            <span className="project-footer-brand-text">Projects</span>
-          </a>
-          <p>
-            Applied AI, data platform, and workflow demos
-            <br /> by Jeffrey Ross.
-          </p>
+        <div className="footer-brand">
+          <div className="brand-mark small">JR</div>
+          <div>
+            <strong>Projects</strong>
+            <p>Applied AI, data platform, and workflow demos by Jeffrey Ross.</p>
+          </div>
         </div>
-
-        <nav
-          className="project-footer-nav"
-          aria-label="Project footer navigation"
-        >
+        <div className="footer-columns">
           <div>
-            <h3>Portfolio</h3>
-            <a href={`${portfolioBaseUrl}/`}>Home</a>
-            <a href={`${portfolioBaseUrl}/projects`}>Projects</a>
-            <a href={`${portfolioBaseUrl}/blog`}>Blog</a>
+            <span>Portfolio</span>
+            <a href="https://www.jeffrey-ross.me/">Home</a>
+            <a href="https://www.jeffrey-ross.me/projects">Projects</a>
           </div>
-
           <div>
-            <h3>About</h3>
-            <a href={`${portfolioBaseUrl}/profile`}>Profile</a>
-            <a href={`${portfolioBaseUrl}/contact`}>Contact</a>
+            <span>About</span>
+            <a href="https://www.jeffrey-ross.me/about">Profile</a>
+            <a href="https://www.jeffrey-ross.me/contact">Contact</a>
           </div>
-
           <div>
-            <h3>Social</h3>
-            <a
-              href="https://www.linkedin.com/in/jeffrey-ross1"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              LinkedIn
-            </a>
-            <a
-              href="https://github.com/rossjeffreyvs-dev"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Code & Architecture
-            </a>
+            <span>Social</span>
+            <a href="https://www.linkedin.com/in/jeffrey-ross/">LinkedIn</a>
+            <a href="https://github.com/rossjeffreyvs-dev/jr-portfolio-projects">Code & Architecture</a>
           </div>
-        </nav>
-      </div>
-
-      <div className="project-footer-bottom">
-        © {new Date().getFullYear()} {projectName}. All rights reserved.
+        </div>
       </div>
     </footer>
   );

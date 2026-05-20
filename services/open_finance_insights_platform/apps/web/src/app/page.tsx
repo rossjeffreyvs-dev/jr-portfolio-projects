@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import SiteHeader from "@/components/SiteHeader";
+
+import DemoTab from "@/components/DemoTab";
+import DescriptionTab from "@/components/DescriptionTab";
+import PlaybookTab from "@/components/PlaybookTab";
 import ProjectFooter from "@/components/ProjectFooter";
 import ProjectHero from "@/components/ProjectHero";
 import ProjectTabs, { TabKey } from "@/components/ProjectTabs";
-import DescriptionTab from "@/components/DescriptionTab";
-import DemoTab from "@/components/DemoTab";
-import PlaybookTab from "@/components/PlaybookTab";
+import SiteHeader from "@/components/SiteHeader";
 
 export default function Page() {
   const [activeTab, setActiveTab] = useState<TabKey>("description");

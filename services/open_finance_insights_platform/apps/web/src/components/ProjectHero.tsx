@@ -1,34 +1,30 @@
 type ProjectHeroProps = {
-  trialCount: number;
-  patientCount: number;
+  onRunDemo: () => void;
 };
 
-export default function ProjectHero({
-  trialCount,
-  patientCount,
-}: ProjectHeroProps) {
-  return (
-    <section className="project-hero centered">
-      <h1>Claude Clinical Protocol Reasoning Engine</h1>
+const metrics = [
+  { value: "4", label: "Data sources" },
+  { value: "7", label: "CDM entities" },
+  { value: "6", label: "Insight tools" },
+];
 
+export default function ProjectHero({ onRunDemo }: ProjectHeroProps) {
+  return (
+    <section className="hero">
+      <h1>AI-Powered Open Finance Data Platform</h1>
       <p className="hero-subtitle">
-        Interpret eligibility language, evaluate synthetic patient records, and
-        produce transparent clinical protocol reasoning.
+        Normalize mock bank, account, balance, and transaction data into a
+        common financial data model, then run explainable insight workflows
+        across cash flow, recurring payments, and financial health signals.
       </p>
 
-      <div className="hero-metrics centered">
-        <div>
-          <strong>{trialCount || 2}</strong>
-          <span>Loaded trials</span>
-        </div>
-        <div>
-          <strong>{patientCount || 3}</strong>
-          <span>Synthetic patients</span>
-        </div>
-        <div>
-          <strong>1</strong>
-          <span>Reasoning layer</span>
-        </div>
+      <div className="hero-metrics" aria-label="Project metrics">
+        {metrics.map((metric) => (
+          <div key={metric.label}>
+            <strong>{metric.value}</strong>
+            <span>{metric.label}</span>
+          </div>
+        ))}
       </div>
     </section>
   );

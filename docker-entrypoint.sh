@@ -33,6 +33,14 @@ start_startup_finance_api() {
   ) &
 }
 
+start_open_finance_api() {
+  echo "Starting Open Finance API on port 8040..."
+  (
+    cd /app/services/open_finance_insights_platform/apps/api
+    uvicorn app.main:app --host 0.0.0.0 --port 8040
+  ) &
+}
+
 # --- Clinical Trial Matching ---
 
 start_service \
@@ -86,6 +94,15 @@ start_service \
   "Startup Finance UI on port 3005" \
   env HOSTNAME=0.0.0.0 PORT=3005 \
   node /app/startup-finance-web/server.js
+
+# --- Open Finance Insights Platform ---
+
+start_open_finance_api
+
+start_service \
+  "Open Finance UI on port 3006" \
+  env HOSTNAME=0.0.0.0 PORT=3006 \
+  node /app/open-finance-web/server.js
 
 # --- Gateway ---
 

@@ -95,6 +95,20 @@ STARTUP_FINANCE_HOSTS = {
 }
 
 
+OPEN_FINANCE_FRONTEND_URL = "http://127.0.0.1:3006"
+OPEN_FINANCE_API_URL = "http://127.0.0.1:8040"
+
+OPEN_FINANCE_PUBLIC_PREFIX = "/open-finance-insights-platform"
+OPEN_FINANCE_API_PREFIX = f"{OPEN_FINANCE_PUBLIC_PREFIX}/api"
+
+OPEN_FINANCE_HOSTS = {
+    "open-finance-insights-platform.jeffrey-ross.me",
+    "open-finance-insights.jeffrey-ross.me",
+    "open-finance.local",
+    "open-finance-insights.local",
+}
+
+
 HOST_MAP = {
     "fx-insights.jeffrey-ross.me": fx_app,
     "semantic-patient-search.jeffrey-ross.me": semantic_app,
@@ -233,6 +247,21 @@ def route_startup_finance(path: str):
     return None
 
 
+def route_open_finance(path: str):
+    if path.startswith(OPEN_FINANCE_API_PREFIX):
+        return proxy_target(
+            OPEN_FINANCE_API_URL,
+            rewrite_prefixed_api_path(path, OPEN_FINANCE_API_PREFIX),
+        )
+
+    if path == OPEN_FINANCE_PUBLIC_PREFIX or path.startswith(
+        f"{OPEN_FINANCE_PUBLIC_PREFIX}/"
+    ):
+        return proxy_target(OPEN_FINANCE_FRONTEND_URL, path)
+
+    return None
+
+
 def get_app_for_request(host: str, path: str):
     normalized_host = normalize_host(host)
 
@@ -244,6 +273,9 @@ def get_app_for_request(host: str, path: str):
 
         if normalized_host in STARTUP_FINANCE_HOSTS:
             return proxy_target(STARTUP_FINANCE_FRONTEND_URL, path)
+
+        if normalized_host in OPEN_FINANCE_HOSTS:
+            return proxy_target(OPEN_FINANCE_FRONTEND_URL, path)
 
         if normalized_host in CLAUDE_HOSTS:
             return proxy_target(CLAUDE_FRONTEND_URL, path)
@@ -260,9 +292,19 @@ def get_app_for_request(host: str, path: str):
     if startup_finance_target:
         return startup_finance_target
 
+    open_finance_target = route_open_finance(path)
+    if open_finance_target:
+        return open_finance_target
+
     if normalized_host in STARTUP_FINANCE_HOSTS:
         return route_startup_finance(path) or proxy_target(
             STARTUP_FINANCE_FRONTEND_URL,
+            path,
+        )
+
+    if normalized_host in OPEN_FINANCE_HOSTS:
+        return route_open_finance(path) or proxy_target(
+            OPEN_FINANCE_FRONTEND_URL,
             path,
         )
 

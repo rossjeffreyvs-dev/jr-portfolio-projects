@@ -59,6 +59,13 @@ STARTUP_FINANCE_BACKEND_PORT := 8030
 STARTUP_FINANCE_FRONTEND_PORT := 3005
 STARTUP_FINANCE_PUBLIC_ROUTE := /agentic-startup-finance-ops
 
+OPEN_FINANCE_DIR := services/open_finance_insights_platform
+OPEN_FINANCE_API_DIR := $(OPEN_FINANCE_DIR)/apps/api
+OPEN_FINANCE_WEB_DIR := $(OPEN_FINANCE_DIR)/apps/web
+OPEN_FINANCE_BACKEND_PORT := 8040
+OPEN_FINANCE_FRONTEND_PORT := 3006
+OPEN_FINANCE_PUBLIC_ROUTE := /open-finance-insights-platform
+
 .DEFAULT_GOAL := help
 
 help:
@@ -117,6 +124,13 @@ help:
 	@echo "  make -f $(MAKEFILE_NAME) startup-finance           - run Startup Finance backend + frontend together"
 	@echo "  make -f $(MAKEFILE_NAME) startup-finance-smoke     - quick local health checks for Startup Finance endpoints"
 	@echo "  make -f $(MAKEFILE_NAME) startup-finance-stop      - kill Startup Finance frontend/backend ports"
+	@echo "  make -f $(MAKEFILE_NAME) open-finance-setup       - install Open Finance backend Python requirements"
+	@echo "  make -f $(MAKEFILE_NAME) open-finance-install     - install Open Finance backend + frontend dependencies"
+	@echo "  make -f $(MAKEFILE_NAME) open-finance-backend     - run Open Finance backend locally on port $(OPEN_FINANCE_BACKEND_PORT)"
+	@echo "  make -f $(MAKEFILE_NAME) open-finance-frontend    - run Open Finance frontend locally on port $(OPEN_FINANCE_FRONTEND_PORT)"
+	@echo "  make -f $(MAKEFILE_NAME) open-finance             - run Open Finance backend + frontend together"
+	@echo "  make -f $(MAKEFILE_NAME) open-finance-smoke       - quick local health checks for Open Finance endpoints"
+	@echo "  make -f $(MAKEFILE_NAME) open-finance-stop        - kill Open Finance frontend/backend ports"
 	@echo "  make -f $(MAKEFILE_NAME) check              - verify key packages are installed"
 	@echo "  make -f $(MAKEFILE_NAME) clean              - remove root virtual environment"
 	@echo "  make -f $(MAKEFILE_NAME) fx-clean           - remove FX frontend node_modules/dist"
@@ -125,6 +139,7 @@ help:
 	@echo "  make -f $(MAKEFILE_NAME) customer-clean     - remove Customer Lifecycle frontend node_modules/.next"
 	@echo "  make -f $(MAKEFILE_NAME) trainjazz-clean    - remove TrainJazz frontend node_modules/.next"
 	@echo "  make -f $(MAKEFILE_NAME) startup-finance-clean - remove Startup Finance frontend node_modules/.next"
+	@echo "  make -f $(MAKEFILE_NAME) open-finance-clean    - remove Open Finance frontend node_modules/.next"
 
 $(VENV)/bin/activate:
 	$(PYTHON) -m venv $(VENV)
@@ -481,6 +496,68 @@ startup-finance-clean:
 	rm -rf $(STARTUP_FINANCE_WEB_DIR)/.next
 	rm -rf $(STARTUP_FINANCE_API_DIR)/.pytest_cache
 
+open-finance-setup: $(VENV)/bin/activate
+	@if [ -f $(OPEN_FINANCE_API_DIR)/requirements.txt ]; then \
+		$(PIP) install -r $(OPEN_FINANCE_API_DIR)/requirements.txt; \
+	else \
+		$(PIP) install -r requirements.txt; \
+	fi
+
+open-finance-install: open-finance-setup
+	cd $(OPEN_FINANCE_WEB_DIR) && $(NPM) install
+
+open-finance-backend: open-finance-setup
+	cd $(OPEN_FINANCE_API_DIR) && \
+	set -a && [ -f .env ] && source .env || true && set +a && \
+	PYTHONPATH=. $(abspath $(UVICORN)) app.main:app --reload --port $(OPEN_FINANCE_BACKEND_PORT)
+
+open-finance-frontend:
+	cd $(OPEN_FINANCE_WEB_DIR) && PORT=$(OPEN_FINANCE_FRONTEND_PORT) NEXT_PUBLIC_OPEN_FINANCE_API_BASE_URL=http://127.0.0.1:$(OPEN_FINANCE_BACKEND_PORT) $(NPM) run dev
+
+open-finance-wait:
+	@echo "Waiting for Open Finance backend on :$(OPEN_FINANCE_BACKEND_PORT)..."
+	@attempts=0; \
+	until curl -sf http://127.0.0.1:$(OPEN_FINANCE_BACKEND_PORT)/health > /dev/null; do \
+		attempts=$$((attempts+1)); \
+		if [ $$attempts -ge 30 ]; then \
+			echo "Open Finance backend failed to become ready."; \
+			exit 1; \
+		fi; \
+		sleep 1; \
+	done
+	@echo "Open Finance backend is ready."
+
+open-finance: open-finance-install
+	@echo "Open Finance Insights Platform is starting..."
+	@echo "Frontend: http://127.0.0.1:$(OPEN_FINANCE_FRONTEND_PORT)"
+	@echo "Backend:  http://127.0.0.1:$(OPEN_FINANCE_BACKEND_PORT)"
+	@echo "Gateway:  http://127.0.0.1:8080$(OPEN_FINANCE_PUBLIC_ROUTE)"
+	@echo ""
+	@echo "Press Ctrl+C to stop both services."
+	@trap 'echo ""; echo "Stopping services..."; kill 0' EXIT INT TERM; \
+	$(MAKE) -f $(MAKEFILE_NAME) open-finance-backend & \
+	BACKEND_PID=$$!; \
+	$(MAKE) -f $(MAKEFILE_NAME) open-finance-wait; \
+	$(MAKE) -f $(MAKEFILE_NAME) open-finance-frontend & \
+	FRONTEND_PID=$$!; \
+	wait $$BACKEND_PID $$FRONTEND_PID
+
+open-finance-smoke:
+	@echo "Checking backend health on http://127.0.0.1:$(OPEN_FINANCE_BACKEND_PORT)/health"
+	@curl -fsS http://127.0.0.1:$(OPEN_FINANCE_BACKEND_PORT)/health > /dev/null || (echo "Backend health check failed" && exit 1)
+	@echo "Checking frontend on http://127.0.0.1:$(OPEN_FINANCE_FRONTEND_PORT)"
+	@curl -fsS http://127.0.0.1:$(OPEN_FINANCE_FRONTEND_PORT) > /dev/null || (echo "Frontend check failed" && exit 1)
+	@echo "Open Finance local smoke check passed"
+
+open-finance-stop:
+	@kill -9 $$(lsof -ti :$(OPEN_FINANCE_BACKEND_PORT)) 2>/dev/null || true
+	@kill -9 $$(lsof -ti :$(OPEN_FINANCE_FRONTEND_PORT)) 2>/dev/null || true
+
+open-finance-clean:
+	rm -rf $(OPEN_FINANCE_WEB_DIR)/node_modules
+	rm -rf $(OPEN_FINANCE_WEB_DIR)/.next
+	rm -rf $(OPEN_FINANCE_API_DIR)/.pytest_cache
+
 check: $(VENV)/bin/activate
 	@echo "Python:"
 	@$(PY) --version
@@ -519,4 +596,5 @@ trainjazz-clean:
 	claude-setup claude-install claude-backend claude-frontend claude-wait claude claude-smoke claude-stop \
 	trainjazz-install trainjazz-frontend trainjazz trainjazz-smoke trainjazz-stop trainjazz-clean \
 	startup-finance-setup startup-finance-install startup-finance-backend startup-finance-frontend startup-finance-wait startup-finance startup-finance-smoke startup-finance-stop startup-finance-clean \
+	open-finance-setup open-finance-install open-finance-backend open-finance-frontend open-finance-wait open-finance open-finance-smoke open-finance-stop open-finance-clean \
 	check clean

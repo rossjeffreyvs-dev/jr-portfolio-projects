@@ -27,14 +27,9 @@ export default function SiteHeader() {
           <span />
         </button>
 
-        <nav
-          className={`top-nav ${open ? "is-open" : ""}`}
-          aria-label="Project navigation"
-        >
-          <a href="https://www.jeffrey-ross.me">Home</a>
-          <a href="https://www.jeffrey-ross.me/projects" className="active">
-            Projects
-          </a>
+        <nav className={`top-nav ${open ? "is-open" : ""}`} aria-label="Portfolio navigation">
+          <a href="https://www.jeffrey-ross.me/">Home</a>
+          <a href="https://www.jeffrey-ross.me/projects" className="active-link">Projects</a>
           <a href="https://www.jeffrey-ross.me/blog">Blog</a>
           <a href="https://www.jeffrey-ross.me/about">About</a>
           <a href="https://www.jeffrey-ross.me/contact">Contact</a>

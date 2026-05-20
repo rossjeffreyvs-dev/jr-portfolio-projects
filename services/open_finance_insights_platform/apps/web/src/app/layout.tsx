@@ -1,12 +1,19 @@
-import type { Metadata } from "next";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: "AI-Powered Open Finance Data Platform",
-  description: "Portfolio project: common financial data model, transaction intelligence, and AI workflow orchestration.",
+export const metadata = {
+  title: "Projects | Open Finance Insights Platform",
+  description:
+    "AI-powered open finance platform that ingests and normalizes financial data into a common data model to generate explainable cash flow, subscription, and financial health insights.",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
       <body>{children}</body>

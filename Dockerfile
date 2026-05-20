@@ -79,6 +79,19 @@ COPY services/agentic_startup_finance_ops/apps/web/ ./
 RUN npm run build
 
 
+
+
+# ---------- Build Open Finance Insights Platform Next app ----------
+FROM node:20-bookworm-slim AS open_finance_builder
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_PUBLIC_OPEN_FINANCE_API_BASE_URL=/open-finance-insights-platform/api
+WORKDIR /build/services/open_finance_insights_platform/apps/web
+COPY services/open_finance_insights_platform/apps/web/package*.json ./
+RUN npm ci
+COPY services/open_finance_insights_platform/apps/web/ ./
+RUN npm run build
+
+
 # ---------- Runtime ----------
 FROM python:3.10-slim
 
@@ -201,6 +214,19 @@ COPY --from=startup_finance_builder \
 COPY --from=startup_finance_builder \
   /build/services/agentic_startup_finance_ops/apps/web/public \
   /app/startup-finance-web/public
+
+# Copy Open Finance Insights Platform standalone build
+COPY --from=open_finance_builder \
+  /build/services/open_finance_insights_platform/apps/web/.next/standalone \
+  /app/open-finance-web
+
+COPY --from=open_finance_builder \
+  /build/services/open_finance_insights_platform/apps/web/.next/static \
+  /app/open-finance-web/.next/static
+
+COPY --from=open_finance_builder \
+  /build/services/open_finance_insights_platform/apps/web/public \
+  /app/open-finance-web/public
 
 COPY docker-entrypoint.sh /app/docker-entrypoint.sh
 RUN chmod +x /app/docker-entrypoint.sh

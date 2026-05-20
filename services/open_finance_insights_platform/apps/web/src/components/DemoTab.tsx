@@ -1,124 +1,345 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { API_BASE, getFinancialProfile } from "@/lib/api";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-type Profile = {
-  institutions: any[];
-  accounts: any[];
-  transactions: any[];
-  recurring_payments: any[];
-  cash_flow: any;
-  signals: any[];
+type DemoTabProps = {
+  autoRunToken: number;
 };
 
-type WorkflowEvent = { id: string; step: string; detail: string; status: string; artifact?: string };
+type WorkflowStatus = "queued" | "running" | "complete";
 
-export default function DemoTab({ autoRunToken }: { autoRunToken: number }) {
-  const [profile, setProfile] = useState<Profile | null>(null);
+type WorkflowEvent = {
+  title: string;
+  body: string;
+  status: WorkflowStatus;
+};
+
+const suggestedQuestions = [
+  "Analyze this user's financial profile",
+  "Which subscriptions should be reviewed?",
+  "How stable is monthly cash flow?",
+  "What financial health risks are emerging?",
+  "Summarize affordability and runway signals.",
+];
+
+const workflowSteps: WorkflowEvent[] = [
+  {
+    title: "Source data loaded",
+    body: "Loaded mock institutions, connected accounts, balances, and transaction records.",
+    status: "queued",
+  },
+  {
+    title: "Common model created",
+    body: "Mapped provider-style records into account, institution, merchant, category, transaction, cash-flow, and signal entities.",
+    status: "queued",
+  },
+  {
+    title: "Recurring payments detected",
+    body: "Identified payroll deposits, streaming subscriptions, utilities, loan payments, insurance, and repeat obligations.",
+    status: "queued",
+  },
+  {
+    title: "Cash-flow summary generated",
+    body: "Calculated inflow, outflow, discretionary spend, recurring obligations, and monthly runway indicators.",
+    status: "queued",
+  },
+  {
+    title: "Financial signals ranked",
+    body: "Ranked risks and opportunities by evidence strength, severity, confidence, and product relevance.",
+    status: "queued",
+  },
+  {
+    title: "Recommendation ready",
+    body: "Prepared an explainable financial profile summary for review before any user-facing recommendation is accepted.",
+    status: "queued",
+  },
+];
+
+const metrics = [
+  {
+    label: "Connected accounts",
+    value: "4",
+    caption: "Checking, savings, credit, loan",
+  },
+  {
+    label: "Monthly inflow",
+    value: "$12.8k",
+    caption: "Payroll + recurring deposits",
+  },
+  {
+    label: "Recurring charges",
+    value: "9",
+    caption: "Subscriptions and obligations",
+  },
+  {
+    label: "Runway",
+    value: "5.4 mo",
+    caption: "Cash-flow resilience estimate",
+  },
+];
+
+const signals = [
+  {
+    severity: "Opportunity",
+    title: "Three subscription charges appear underused",
+    body: "Streaming, storage, and SaaS charges repeat monthly with low inferred utility.",
+  },
+  {
+    severity: "Risk",
+    title: "Discretionary spend increased 18%",
+    body: "Dining and travel categories rose faster than income over the last period.",
+  },
+  {
+    severity: "Watch",
+    title: "Income timing varies by 6 days",
+    body: "Payroll cadence is stable, but deposit timing creates short-term liquidity gaps.",
+  },
+];
+
+export default function DemoTab({ autoRunToken }: DemoTabProps) {
+  const [question, setQuestion] = useState(suggestedQuestions[0]);
+  const [isRunning, setIsRunning] = useState(false);
   const [events, setEvents] = useState<WorkflowEvent[]>([]);
-  const [running, setRunning] = useState(false);
-  const workflowRef = useRef<HTMLDivElement | null>(null);
+  const [hasRun, setHasRun] = useState(false);
 
-  useEffect(() => { getFinancialProfile().then(setProfile).catch(console.error); }, []);
-  useEffect(() => { if (autoRunToken > 0) runWorkflow(); }, [autoRunToken]);
+  const workflowRef = useRef<HTMLElement | null>(null);
+  const recommendationRef = useRef<HTMLElement | null>(null);
+  const timersRef = useRef<number[]>([]);
 
-  function runWorkflow() {
-    setRunning(true);
-    setEvents([]);
-    workflowRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    const source = new EventSource(`${API_BASE}/open-finance/workflow/stream`);
-    source.onmessage = (message) => {
-      const payload = JSON.parse(message.data);
-      if (payload.type === "profile") {
-        setProfile(payload.payload);
-        setRunning(false);
-        source.close();
-        return;
-      }
-      setEvents((current) => [...current, payload]);
-    };
-    source.onerror = () => {
-      setRunning(false);
-      source.close();
-    };
+  const completedCount = useMemo(
+    () => events.filter((event) => event.status === "complete").length,
+    [events],
+  );
+
+  function clearTimers() {
+    timersRef.current.forEach((timer) => window.clearTimeout(timer));
+    timersRef.current = [];
   }
 
-  const chartData = profile ? [
-    { name: "Income", value: profile.cash_flow.monthly_income },
-    { name: "Outflow", value: profile.cash_flow.monthly_outflow },
-    { name: "Recurring", value: profile.cash_flow.recurring_spend },
-    { name: "Discretionary", value: profile.cash_flow.discretionary_spend },
-  ] : [];
+  function schedule(callback: () => void, delay: number) {
+    const timer = window.setTimeout(callback, delay);
+    timersRef.current.push(timer);
+  }
+
+  function runWorkflow(nextQuestion = question) {
+    clearTimers();
+
+    setQuestion(nextQuestion);
+    setHasRun(true);
+    setIsRunning(true);
+
+    setEvents([
+      {
+        title: "Planning workflow",
+        body: "Preparing the normalized financial profile, CDM mapping sequence, and insight tool plan.",
+        status: "running",
+      },
+    ]);
+
+    schedule(() => {
+      workflowRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 450);
+
+    workflowSteps.forEach((step, index) => {
+      schedule(
+        () => {
+          setEvents((current) => {
+            const completed = current.map((event) =>
+              event.status === "running"
+                ? { ...event, status: "complete" as const }
+                : event,
+            );
+
+            return [...completed, { ...step, status: "running" as const }];
+          });
+        },
+        1100 + index * 1250,
+      );
+    });
+
+    schedule(
+      () => {
+        setEvents((current) =>
+          current.map((event) =>
+            event.status === "running"
+              ? { ...event, status: "complete" as const }
+              : event,
+          ),
+        );
+
+        setIsRunning(false);
+
+        setTimeout(() => {
+          recommendationRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }, 700);
+      },
+      1100 + workflowSteps.length * 1250 + 700,
+    );
+  }
+
+  useEffect(() => {
+    if (autoRunToken > 0) {
+      runWorkflow();
+    }
+
+    return clearTimers;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoRunToken]);
 
   return (
-    <section className="demo-grid">
-      <div className="content-card large" ref={workflowRef}>
-        <div className="section-header-row">
-          <div>
-            <p className="eyebrow">Agent workflow</p>
-            <h2>Analyze this financial profile</h2>
-          </div>
-          <button className="primary-button compact" onClick={runWorkflow}>{running ? "Running..." : "Run Workflow"}</button>
+    <section className="tab-stack">
+      <article className="content-card blue-panel full-span command-center open-finance-command">
+        <p className="eyebrow">Open finance command center</p>
+
+        <h2>Analyze a normalized financial profile</h2>
+
+        <p>
+          The backend loads mock Plaid-style source data, maps it into a common
+          financial model, calls deterministic insight tools, and streams an
+          explainable recommendation workflow.
+        </p>
+
+        <div className="question-row">
+          <input
+            value={question}
+            onChange={(event) => setQuestion(event.target.value)}
+          />
+
+          <button
+            className={`primary-button workflow-run-button ${
+              isRunning ? "is-running" : "is-ready"
+            }`}
+            type="button"
+            onClick={() => runWorkflow()}
+            disabled={isRunning}
+          >
+            <span className="run-button-dot" aria-hidden="true" />
+
+            <span>
+              {isRunning
+                ? "Running Insight Workflow..."
+                : "Run Insight Workflow"}
+            </span>
+          </button>
         </div>
-        <div className="workflow-list">
-          {(events.length ? events : [{ id: "placeholder", step: "Ready", detail: "Run the workflow to stream the tool activity trace.", status: "queued" }]).map((event) => (
-            <div className="workflow-event" key={event.id}>
-              <span className={`status-dot ${event.status}`} />
-              <div><h4>{event.step}</h4><p>{event.detail}</p>{event.artifact && <small>{event.artifact}</small>}</div>
-            </div>
+
+        <div className="suggested-row">
+          <span>Suggested analysis prompts</span>
+          <small>Click any prompt to begin the same CDM workflow</small>
+        </div>
+
+        <div className="scenario-grid">
+          {suggestedQuestions.map((item, index) => (
+            <button
+              key={item}
+              type="button"
+              onClick={() => runWorkflow(item)}
+              disabled={isRunning}
+            >
+              <span>{String(index + 1).padStart(2, "0")}</span>
+              <strong>{item}</strong>
+            </button>
           ))}
         </div>
+      </article>
+
+      <div className="metric-grid">
+        {metrics.map((metric) => (
+          <div className="metric-card" key={metric.label}>
+            <span>{metric.label}</span>
+            <strong>{metric.value}</strong>
+            <p>{metric.caption}</p>
+          </div>
+        ))}
       </div>
 
-      {profile && (
-        <>
-          <div className="content-card">
-            <p className="eyebrow">Cash flow summary</p>
-            <h3>${profile.cash_flow.net_cash_flow.toLocaleString()} net monthly cash flow</h3>
-            <p>{profile.cash_flow.runway_months} months of liquidity runway based on normalized checking and savings balances.</p>
-            <div className="mini-metrics">
-              <span>Income <strong>${profile.cash_flow.monthly_income.toLocaleString()}</strong></span>
-              <span>Outflow <strong>${profile.cash_flow.monthly_outflow.toLocaleString()}</strong></span>
+      <article
+        className="content-card full-span workflow-panel"
+        ref={workflowRef}
+      >
+        {!hasRun ? (
+          <div className="empty-state">
+            <p className="eyebrow">Ready</p>
+
+            <h2>
+              Run a financial profile question to start the agent workflow
+            </h2>
+
+            <p>
+              The first run will populate source ingest, CDM mapping, tool
+              calls, financial signals, recommendations, and review-ready
+              evidence.
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="section-header-row">
+              <div>
+                <p className="eyebrow">Workflow activity</p>
+                <h2>Tool calls and reasoning trace</h2>
+              </div>
+
+              <div
+                className={`progress-pill ${
+                  isRunning ? "is-running" : "is-complete"
+                }`}
+              >
+                {isRunning
+                  ? "Streaming workflow"
+                  : `${completedCount} steps completed`}
+              </div>
             </div>
-          </div>
 
-          <div className="content-card chart-card">
-            <p className="eyebrow">Financial model</p>
-            <h3>Monthly flow by category</h3>
-            <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={chartData}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="name" /><YAxis /><Tooltip /><Bar dataKey="value" /></BarChart>
-            </ResponsiveContainer>
-          </div>
+            <div className="workflow-list">
+              {events.map((event, index) => (
+                <div
+                  className={`workflow-event ${event.status}`}
+                  key={`${event.title}-${index}`}
+                >
+                  <span className={`status-dot ${event.status}`} />
 
-          <div className="content-card full-span">
-            <p className="eyebrow">Recommendations</p>
-            <h3>Risk and opportunity signals</h3>
-            <div className="signals-grid">
-              {profile.signals.map((signal) => (
-                <article className="signal-card" key={signal.id}>
-                  <span className={`severity ${signal.severity}`}>{signal.severity}</span>
-                  <h4>{signal.title}</h4>
-                  <p>{signal.description}</p>
-                  <strong>{signal.recommendation}</strong>
-                </article>
+                  <div>
+                    <small>{event.status}</small>
+                    <h3>{event.title}</h3>
+                    <p>{event.body}</p>
+                  </div>
+                </div>
               ))}
             </div>
-          </div>
+          </>
+        )}
+      </article>
 
-          <div className="content-card full-span">
-            <p className="eyebrow">Common data model preview</p>
-            <h3>Normalized entities</h3>
-            <div className="table-wrap">
-              <table><thead><tr><th>Transaction</th><th>Merchant</th><th>Amount</th><th>Category</th><th>Subcategory</th></tr></thead><tbody>
-                {profile.transactions.slice(0, 8).map((txn) => (
-                  <tr key={txn.id}><td>{txn.date}</td><td>{txn.merchant_name}</td><td>${txn.amount.toLocaleString()}</td><td>{txn.category}</td><td>{txn.subcategory}</td></tr>
-                ))}
-              </tbody></table>
-            </div>
+      {hasRun && (
+        <article
+          className="content-card full-span recommendation-panel"
+          ref={recommendationRef}
+        >
+          <p className="eyebrow">Recommendation panel</p>
+
+          <h2>Financial health signals</h2>
+
+          <p>
+            Signals are intentionally framed as evidence-backed product
+            recommendations rather than automated financial advice.
+          </p>
+
+          <div className="signals-grid">
+            {signals.map((signal) => (
+              <div className="signal-card" key={signal.title}>
+                <span className="severity">{signal.severity}</span>
+                <h3>{signal.title}</h3>
+                <p>{signal.body}</p>
+              </div>
+            ))}
           </div>
-        </>
+        </article>
       )}
     </section>
   );
