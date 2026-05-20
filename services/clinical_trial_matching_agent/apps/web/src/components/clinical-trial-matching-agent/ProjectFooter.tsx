@@ -51,7 +51,7 @@ export default function ProjectFooter({
               target="_blank"
               rel="noopener noreferrer"
             >
-              GitHub
+              Code & Architecture
             </a>
           </div>
         </nav>
