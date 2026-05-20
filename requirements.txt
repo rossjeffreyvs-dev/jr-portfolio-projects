@@ -12,3 +12,4 @@ gunicorn
 python-docx
 requests
 flask-cors
+sse-starlette
