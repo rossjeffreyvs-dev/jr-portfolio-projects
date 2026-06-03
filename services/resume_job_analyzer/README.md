@@ -1,140 +1,72 @@
-# 🧠 Resume-Job Analyzer
+# AI Resume Match Analyzer v2
 
-**AI-powered web app** that compares a candidate’s resume with a job description to highlight strengths, gaps, and key matches.  
-Built with **Python + Flask**, **OpenAI GPT-4o**, and **AWS Lightsail Docker** for simple and secure deployment.
+Modernized Resume Analyzer using the same architecture pattern as the newer portfolio projects:
 
----
+- `apps/api` — FastAPI backend
+- `apps/web` — Next.js frontend
 
-## 🚀 Overview
+## Local development on Windows
 
-Resume-Job Analyzer helps job seekers tailor their resumes by instantly evaluating how well they align with a given job description.
+### 1. Start the API
 
-Simply:
-1. Paste a **job description**
-2. Upload your **resume (PDF)**
-3. Get a visual, AI-generated comparison with ✅ matches and ❌ gaps
-
----
-
-## 🧰 Tech Stack
-
-| Layer | Technologies |
-|-------|---------------|
-| **Frontend** | HTML, CSS (Flask Jinja Templates), Tailwind-like responsive styling |
-| **Backend** | Python 3.10, Flask, Gunicorn |
-| **AI** | OpenAI GPT-4o API for text analysis |
-| **File Parsing** | PyPDF2 |
-| **Environment** | python-dotenv |
-| **Containerization** | Docker + Lightsail Container Service |
-| **Hosting** | AWS Lightsail (Docker Container) |
-
----
-
-## 🖥️ Local Setup
-
-### 1️⃣ Clone the Repository
-```bash
-git clone https://github.com/rossjeffreyvs-dev/resume-job-analyzer.git
-cd resume-job-analyzer
-```
-
-### 2️⃣ Create and Activate a Virtual Environment
-```bash
-python3 -m venv venv
-source venv/bin/activate      # (Mac/Linux)
-venv\Scripts\activate         # (Windows)
-```
-
-### 3️⃣ Install Dependencies
-```bash
+```powershell
+cd C:\Projects\jr-portfolio-projects\services\resume_job_analyzer_v2\apps\api
+python -m venv .venv
+.\.venv\Scripts\activate
 pip install -r requirements.txt
+copy .env.example .env
 ```
 
-### 4️⃣ Create a `.env` File
-```bash
+Edit `.env` and add your OpenAI key:
+
+```env
 OPENAI_API_KEY=your_openai_api_key_here
+OPENAI_MODEL=gpt-4o
 ```
 
-### 5️⃣ Run the Flask App Locally
-```bash
-python app.py
-```
-Visit 👉 [http://localhost:5000](http://localhost:5000)
+Run:
 
----
-
-## 🐳 Deploying to AWS Lightsail (Docker)
-
-### 1️⃣ Build and Push the Image
-```bash
-./deploy.sh
-```
-This script:
-- Builds the Docker image for `linux/amd64`
-- Pushes it to AWS Lightsail’s container registry
-- Deploys it using `lightsail.yaml`
-- Monitors deployment status every 5 seconds
-
-### 2️⃣ Environment Variables in Lightsail
-Once deployed:
-1. Open the AWS Lightsail Console  
-2. Select your **container service → Deployment → Environment Variables**
-3. Add:
-   ```
-   OPENAI_API_KEY=your_openai_api_key_here
-   ```
-
-### 3️⃣ Access Your App
-After deployment reaches the **RUNNING** state, Lightsail will display a URL like:
-
-```
-https://ai-resume-match.<random>.us-east-1.cs.amazonlightsail.com/
+```powershell
+uvicorn app.main:app --reload --port 5000
 ```
 
----
+Validate:
 
-## 📸 Screenshots
+```powershell
+curl.exe http://127.0.0.1:5000/health
+```
 
-> _Add screenshots once deployed to demonstrate the UI and results section._
+Expected:
 
-| Upload & Analyze | AI-Generated Comparison |
-|------------------|--------------------------|
-| ![Upload Screenshot](docs/screenshots/upload.png) | ![Match Screenshot](docs/screenshots/match.png) |
+```json
+{"service":"resume-job-analyzer-api","status":"ok"}
+```
 
----
+### 2. Start the web app
 
-## 🔒 Security Notes
-- Do **not** commit your `.env` file or API keys to GitHub.  
-- `.gitignore` already excludes sensitive files (`.env`, `uploads/`, etc.)
-- Use **environment variables** for all production secrets.
+Open a second PowerShell:
 
----
+```powershell
+cd C:\Projects\jr-portfolio-projects\services\resume_job_analyzer_v2\apps\web
+npm install
+copy .env.local.example .env.local
+npm run dev
+```
 
-## 🧑‍💻 Author
+Open:
 
-**Jeff Ross**  
-💼 [rossjeffreyvs-dev](https://github.com/rossjeffreyvs-dev)  
-🚀 Technical Product Manager & Full-Stack Developer  
-🌐 [jeffrey-ross.me](https://www.jeffrey-ross.me)
+```text
+http://localhost:3002
+```
 
----
+## API endpoints
 
-## ⭐ Support
+```text
+GET  /health
+POST /api/analyze
+POST /api/demo
+```
 
-If you find this project useful, please ⭐ the repo!  
-Your feedback helps others discover it and keeps development going.
+## Migration notes
 
----
-
-## 🗺️ Roadmap
-
-- [ ] Add AI confidence scoring  
-- [ ] Enable multi-file resume comparison  
-- [ ] Save user session reports  
-- [ ] Add LinkedIn job import
-
----
-
-## 📜 License
-
-This project is released under the **MIT License** — feel free to fork, modify, and build upon it.
+This version removes the legacy Flask/Jinja/static structure and replaces it with a project layout consistent with the newer portfolio demos.
