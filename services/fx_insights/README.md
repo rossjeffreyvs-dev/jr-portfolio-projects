@@ -1,47 +1,89 @@
-# FX Insights (Local Dev)
+# FX Insights v2
 
-A small full-stack demo:
-- **Backend:** Python (Lambda-style handler) + Flask dev server
-- **Frontend:** Vite + React + TypeScript + Tailwind
+Modernized FX Insights project using the shared portfolio architecture:
 
-## Prereqs
-- Node.js 18+ (or 20+)
-- Python 3.10+
+- `apps/api` — FastAPI backend
+- `apps/web` — Next.js frontend
 
-## 1) Backend (API)
-```bash
-cd backend
+The root repository Dockerfile remains the deployment source of truth. This service folder intentionally does not include legacy per-service deployment files.
+
+## Local development
+
+### API
+
+```powershell
+cd services\fx_insights\apps\api
+
 python -m venv .venv
-source .venv/bin/activate
+.\.venv\Scripts\activate
+
 pip install -r requirements.txt
+copy .env.example .env
 
-# from repo root, copy env example and fill values
-cd ..
-cp .env.example .env
-# edit .env and add OPENAI_API_KEY and NEWS_API_KEY
-
-cd backend
-python local_server.py
+uvicorn app.main:app --reload --port 5001
 ```
 
-Backend runs at: `http://127.0.0.1:5001`
+Health check:
 
-## 2) Frontend (UI)
-In a new terminal:
-```bash
-cd frontend
+```powershell
+curl.exe http://127.0.0.1:5001/health
+```
+
+### Web
+
+Open a second terminal:
+
+```powershell
+cd services\fx_insights\apps\web
+
 npm install
+copy .env.local.example .env.local
+
 npm run dev
 ```
 
-Frontend runs at: `http://127.0.0.1:5173`
+Open:
 
-The Vite dev server proxies `/api/*` requests to the backend dev server.
+```text
+http://localhost:3003
+```
 
-## 3) Use the app
-Click **Generate Insight Now** to call:
-`/api/insight?base=EUR&symbols=USD,GBP,JPY&countries=us,gb,jp`
+## Environment variables
 
-## Notes
-- If `OPENAI_API_KEY` is missing, the backend returns a helpful placeholder message.
-- MarketAux requires `NEWS_API_KEY`.
+The app works in demo mode without external keys. Add these to `apps/api/.env` when you want live integrations:
+
+```env
+OPENAI_API_KEY=
+OPENAI_MODEL=gpt-4o-mini
+FX_API_KEY=
+NEWS_API_KEY=
+```
+
+If `FX_API_KEY` or `NEWS_API_KEY` are missing, deterministic demo rates and headlines are used. If `OPENAI_API_KEY` is missing, deterministic demo commentary is streamed.
+
+## API endpoints
+
+```text
+GET  /health
+GET  /api/rates
+GET  /api/news
+GET  /api/insight
+POST /api/report
+GET  /api/report/stream
+```
+
+## Migration notes
+
+Removed legacy artifacts:
+
+- Flask development server
+- Lambda-style local wrapper as primary app entrypoint
+- Vite frontend
+- per-service Docker/deploy scripts
+
+Preserved:
+
+- FX rate + news + AI commentary workflow
+- SSE streaming report generation
+- Project Description / Demo / PM Playbook portfolio structure
+- Existing visual design system

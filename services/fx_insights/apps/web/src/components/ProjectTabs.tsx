@@ -1,4 +1,6 @@
-import type { TabKey } from "../App";
+"use client";
+
+import type { TabKey } from "../types/tabs";
 
 type ProjectTabsProps = {
   activeTab: TabKey;

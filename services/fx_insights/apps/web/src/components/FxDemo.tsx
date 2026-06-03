@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 type TabKey = "description" | "demo";
@@ -266,8 +268,27 @@ export default function FxDemo() {
       });
 
       es.addEventListener("stage", (event) => {
-        const message = (event as MessageEvent).data || "";
-        setStageFromMessage(String(message));
+        const raw = String((event as MessageEvent).data || "");
+
+        try {
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === "object") {
+            if (typeof parsed.stage === "string") {
+              setStage(parsed.stage as StageKey);
+            }
+            if (typeof parsed.progress === "number") {
+              setProgress(parsed.progress);
+            }
+            if (typeof parsed.message === "string") {
+              setStageText(resolveStageLabel(parsed.message));
+            }
+            return;
+          }
+        } catch {
+          // Fall back to legacy plain-text stage events.
+        }
+
+        setStageFromMessage(raw);
       });
 
       es.addEventListener("rates", (event) => {

@@ -1,16 +1,17 @@
+"use client";
+
 import { useEffect, useState } from "react";
+import type { TabKey } from "../types/tabs";
 
-import FxDemo from "./components/FxDemo";
-import FxPMPlaybook from "./components/FxPMPlaybook";
-import FxProjectDescription from "./components/FxProjectDescription";
-import ProjectHero from "./components/ProjectHero";
-import ProjectTabs from "./components/ProjectTabs";
-import StandardHeader from "./components/StandardHeader";
-import ProjectFooter from "./components/ProjectFooter";
+import FxDemo from "../components/FxDemo";
+import FxPMPlaybook from "../components/FxPMPlaybook";
+import FxProjectDescription from "../components/FxProjectDescription";
+import ProjectHero from "../components/ProjectHero";
+import ProjectTabs from "../components/ProjectTabs";
+import StandardHeader from "../components/StandardHeader";
+import ProjectFooter from "../components/ProjectFooter";
 
-export type TabKey = "description" | "demo" | "playbook";
-
-export default function App() {
+export default function Page() {
   const [activeTab, setActiveTab] = useState<TabKey>("description");
 
   useEffect(() => {
